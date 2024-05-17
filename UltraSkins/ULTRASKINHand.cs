@@ -2,24 +2,59 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BepInEx;
 using HarmonyLib;
-using UMM;
+
 using Unity.Audio;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+ using PluginConfig.API;
+using System.Reflection;
+
+using PluginConfig.API.Fields;
+using BepInEx.Logging;
 
 namespace UltraSkins
 {
-	[UKPlugin("Tony.UltraSkins",
-        "ULTRASKINS", "1.6.0", 
-        "This mod allows you to swap the textures and colors of your arsenal to your liking. \n Please read the included readme file inside of the ULTRASKINS folder."
-        , true, true)]
-	public class ULTRASKINHand : UKMod
-	{
+   [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
+   [BepInDependency(PluginConfig.PluginConfiguratorController.PLUGIN_GUID, "1.7.0")]
+    
+    public class ULTRASKINHand : BaseUnityPlugin
+    {
+        private PluginConfigurator config;
+        public const string PLUGIN_NAME = "UltraSkins";
+        public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
+        public const string PLUGIN_VERSION = "3.1.0";
+        private string modFolderPath;
 
-		public static Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
+        
+        private static string _modPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+        private static string _skinPath = Path.Combine(_modPath, "Custom");
+
+        public List<string> Paths
+        {
+            get
+            {
+                string[] files = Directory.GetFiles(_skinPath);
+
+                for (int i = 0; i < files.Length; i++)
+                {
+                    files[i] = files[i].Split(Path.DirectorySeparatorChar).Last();
+                }
+
+                return files.ToList();
+            }
+        }
+
+        private List<Sprite> _default;
+        private List<Sprite> _edited;
+
+
+
+
+        public static Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
 		public string[] directories;
 		public string serializedSet = "";
         public bool swapped = false;
@@ -28,29 +63,48 @@ namespace UltraSkins
         static Shader CCE;
         static Shader DE;
         static Cubemap cubemap;
+        public void Start(SkinEventHandler skinEventHandler)
+        {
+            string modFolderPath = skinEventHandler.GetModFolderPath();
+            
+            LoadTextures(modFolderPath);
 
-        public override void OnModLoaded()
+        }
+
+
+            private void Awake()
+        {
+            System.Diagnostics.Debugger.Break();
+            config = PluginConfigurator.Create("Ultraskins", "ultrakill.ultraskins.bobthecorn");
+            BoolField enabler = new BoolField(config.rootPanel, "Enabled", "enabler", true);
+            string pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            config.SetIconWithURL("https://papayos.bobthecorn.net/images/brennan2000sfull.png");
+            // The GUID of the configurator must not be changed as it is used to locate the config file path
+            OnModLoaded();
+
+        }
+        public void OnModLoaded()
         {
 			UKSHarmony = new Harmony("Tony.UltraSkins");
             UKSHarmony.PatchAll(typeof(HarmonyGunPatcher));
             UKSHarmony.PatchAll(typeof(HarmonyProjectilePatcher));
             UKSHarmony.PatchAll();
-		}
+            SkinEventHandler skinEventHandler = new SkinEventHandler();
+            string modFolderPath = skinEventHandler.GetModFolderPath();
+            
+            LoadTextures(modFolderPath);
+            
+        }
 
-		public override void OnModUnload()
-		{
-            bundle0 = null;
-			UKSHarmony.UnpatchSelf();
-			UKSHarmony = null;
-		}
 
         [HarmonyPatch]
         public class HarmonyGunPatcher
         {
-            [HarmonyPatch(typeof(GunControl), "SwitchWeapon", new Type[] { typeof(int), typeof(List<GameObject>), typeof(bool), typeof(bool), typeof(bool) })]
+            [HarmonyPatch(typeof(GunControl), "SwitchWeapon", new Type[] { typeof(int), typeof(List<GameObject>), typeof(bool), typeof(bool), typeof(bool), typeof(bool) })]
             [HarmonyPostfix]
-            public static void SwitchWeaponPost(GunControl __instance, int target, List<GameObject> slot, bool lastUsedSlot = false, bool useRetainedVariation = false, bool scrolled = false)
+            public static void SwitchWeaponPost(GunControl __instance, int target, List<GameObject> slot, bool lastUsedSlot = false, bool useRetainedVariation = false, bool scrolled = false, bool isNextVarBind = false)
             {
+                
                 TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
                 ReloadTextureOverWatch(TOWS);
             }
@@ -272,7 +326,8 @@ namespace UltraSkins
 			    CCE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Special/ULTRAKILL-vertexlit-customcolors-emissive.shader").WaitForCompletion();
 			if (DE == null)
                 DE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Main/ULTRAKILL-vertexlit-emissive.shader").WaitForCompletion();
-			if (cubemap == null)
+                //DE = Addressables.LoadAssetAsync<Shader>("psx/vertexlit/emissive").WaitForCompletion();
+            if (cubemap == null)
                 cubemap = Addressables.LoadAssetAsync<Cubemap>("Assets/Textures/studio_06.exr").WaitForCompletion();
 			CreateSkinGUI();
 		}
@@ -281,7 +336,7 @@ namespace UltraSkins
         {
             foreach (ShopGearChecker shopGearChecker in Resources.FindObjectsOfTypeAll<ShopGearChecker>())
             {
-                string[] dirs = Directory.GetDirectories(modFolder);
+                string[] dirs = Directory.GetDirectories(modFolderPath);
                 directories = dirs;
                 ShopCategory[] SCs = shopGearChecker.GetComponentsInChildren<ShopCategory>(true);
                 GameObject PresetsMenu = Instantiate(shopGearChecker.transform.GetChild(3).GetComponent<ShopButton>().toActivate[0], shopGearChecker.transform);
@@ -381,7 +436,8 @@ namespace UltraSkins
         {
             if (mat != null && mat.mainTexture == null)
                 return null;
-
+            if (DE == null)
+                DE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Main/ULTRAKILL-vertexlit-emissive.shader").WaitForCompletion();
             string textureToResolve = "";
             if (mat && !mat.mainTexture.name.StartsWith("TNR_") && property != "_Cube")
             {
@@ -439,8 +495,9 @@ namespace UltraSkins
 
         public static void PerformTheSwap(Material mat, bool forceswap = false, TextureOverWatch TOW = null, string swapType = "weapon")
         {
-            if (mat && (!mat.name.StartsWith("Swapped_") || forceswap))
+            if (mat && (!mat.name.StartsWith("Swapped_")|| forceswap))
             {
+
                 if (!mat.name.StartsWith("Swapped_"))
                 {
                     mat.name = "Swapped_" + mat.name;
@@ -449,7 +506,7 @@ namespace UltraSkins
                 {
                     mat.shader = CCE;
                 }
-                else if (mat.shader.name == "psx/vertexlit/vertexlit" && DE)
+                else if (mat.shader.name == "psx/vertexlit/vertexlit")
                 {
                     mat.shader = DE;
                 }
@@ -457,19 +514,26 @@ namespace UltraSkins
                 Texture resolvedTexture = new Texture();
                 if (swapType == "weapon")
                 {
+                    
                     string[] textureProperties = mat.GetTexturePropertyNames();
                     foreach (string property in textureProperties)
                     {
+                        Debug.Log("Attempting to swap " + property + " of " + mat.name.ToString());
                         resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, property, property);
                         if (resolvedTexture && resolvedTexture != null && mat.HasProperty(property) && mat.GetTexture(property) != resolvedTexture)
                         {
+                            Debug.Log("swapping " + property + " of " + mat.name.ToString());
                             mat.SetTexture(property, resolvedTexture);
                         }
+
                         if (TOW != null && mat.HasProperty("_EmissiveColor"))
                         {
+                            Debug.Log("swapping " + property + " of " + mat.name.ToString());
                             Color VariantColor = GetVarationColor(TOW);
+                            Color VariantColor2 = new Color(255, 255, 255, 255);
                             mat.SetColor("_EmissiveColor", VariantColor);
                         }
+                        
                     }
                 }
                 else if (swapType == "projectile")
@@ -507,10 +571,14 @@ namespace UltraSkins
             Color VariantColor = new Color(0, 0, 0, 0);
             if (TOW.GetComponentInParent<WeaponIcon>())
             {
+                
                 WeaponIcon WPI = TOW.GetComponentInParent<WeaponIcon>();
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[WPI.variationColor].r,
-                    ColorBlindSettings.Instance.variationColors[WPI.variationColor].g,
-                    ColorBlindSettings.Instance.variationColors[WPI.variationColor].b, 1f);
+                Type type = WPI.GetType();
+                PropertyInfo propertyInfo = type.GetProperty("variationColor", BindingFlags.NonPublic | BindingFlags.Instance);
+                int value = (int)propertyInfo.GetValue(WPI);
+                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[value].r,
+                    ColorBlindSettings.Instance.variationColors[value].g,
+                    ColorBlindSettings.Instance.variationColors[value].b, 1f);
             }
             else if (TOW.GetComponentInParent<Punch>())
             {
@@ -539,15 +607,17 @@ namespace UltraSkins
         }
 
 
-        private void Update()
+        private void Update(SkinEventHandler skinEventHandler)
 		{
-			if (!swapped)
+            modFolderPath = skinEventHandler.GetModFolderPath();
+            if (!swapped)
 			{
-				if (UKMod.PersistentModDataExists("SkinsFolder", "Tony.UltraSkins"))
+				if (Directory.Exists(modFolderPath))
 				{
-					serializedSet = RetrieveStringPersistentModData("SkinsFolder", "Tony.UltraSkins");
-				}
-				ReloadTextures(true);
+					serializedSet = modFolderPath;
+                    
+                }
+				ReloadTextures(false, modFolderPath);
 				swapped = true;
 			}
         }
@@ -563,15 +633,15 @@ namespace UltraSkins
 		{
 			if(firsttime && serializedSet != "")
 			{
-				path = Path.Combine(modFolder, serializedSet);
+				path = serializedSet;
             }
 			else if (firsttime && serializedSet == "")
             {
-				path = Path.Combine(modFolder, "OG Textures");
+                path = path;
             }
             if(path == "")
             {
-				path = Path.Combine(modFolder, "OG Textures");
+                path = path;
             }
             InitOWGameObjects(firsttime);
 			return LoadTextures(path);

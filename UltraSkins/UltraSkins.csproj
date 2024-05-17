@@ -27,10 +27,13 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>libs\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="UMM">
-      <HintPath>libs\UMM.dll</HintPath>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>libs\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Unity.Addressables">
+	  <Reference Include="Assembly-CSharp">
+		  <HintPath>libs\Assembly-CSharp.dll</HintPath>
+	  </Reference>
+	      <Reference Include="Unity.Addressables">
       <HintPath>libs\Unity.Addressables.dll</HintPath>
     </Reference>
     <Reference Include="Unity.ResourceManager">
@@ -41,6 +44,11 @@
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>libs\UnityEngine.UI.dll</HintPath>
+	
     </Reference>
+	  <Reference Include="plugincon">
+		  <HintPath>C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL\BepInEx\plugins\PluginConfigurator\pluginconfigurator.dll</HintPath>
+
+	  </Reference>
   </ItemGroup>
 </Project>
