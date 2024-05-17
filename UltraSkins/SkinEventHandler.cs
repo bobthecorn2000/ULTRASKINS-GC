@@ -36,11 +36,11 @@ namespace UltraSkins
             string gameDirectory = Path.GetDirectoryName(Application.dataPath);
 
             // The mod folder is typically named "BepInEx/plugins" or similar
-            string modFolderName = "BepInEx/plugins"; // Adjust this according to your setup
+            string modFolderName = "BepInEx\\plugins\\ultraskins\\custom"; // Adjust this according to your setup
 
 			// Combine the game directory with the mod folder name to get the full path
-			return "C:\\Program Files (x86)\\Steam\\steamapps\\common\\ULTRAKILL\\BepInEx\\plugins\\ULTRASKINS\\Custom";
-           // return Path.Combine(gameDirectory, modFolderName);
+			//return gameDirectory+modFolderName;
+           return Path.Combine(gameDirectory, modFolderName);
         }
     }
 }

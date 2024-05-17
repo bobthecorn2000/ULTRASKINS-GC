@@ -26,7 +26,7 @@ namespace UltraSkins
         private PluginConfigurator config;
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
-        public const string PLUGIN_VERSION = "3.1.0";
+        public const string PLUGIN_VERSION = "3.1.1";
         private string modFolderPath;
 
         
@@ -518,7 +518,10 @@ namespace UltraSkins
                     string[] textureProperties = mat.GetTexturePropertyNames();
                     foreach (string property in textureProperties)
                     {
+                        
                         Debug.Log("Attempting to swap " + property + " of " + mat.name.ToString());
+                        
+                        
                         resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, property, property);
                         if (resolvedTexture && resolvedTexture != null && mat.HasProperty(property) && mat.GetTexture(property) != resolvedTexture)
                         {
@@ -605,6 +608,7 @@ namespace UltraSkins
             }
             return VariantColor;
         }
+
 
 
         private void Update(SkinEventHandler skinEventHandler)
