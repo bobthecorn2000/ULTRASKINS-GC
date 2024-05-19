@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BepInEx;
+
 using HarmonyLib;
 
 using Unity.Audio;
@@ -15,6 +16,9 @@ using System.Reflection;
 
 using PluginConfig.API.Fields;
 using BepInEx.Logging;
+using static UltraSkins.SkinEventHandler;
+using PluginConfig.API.Functionals;
+using UltraSkinsPacker;
 
 namespace UltraSkins
 {
@@ -23,7 +27,7 @@ namespace UltraSkins
     
     public class ULTRASKINHand : BaseUnityPlugin
     {
-        private PluginConfigurator config;
+        public PluginConfigurator config;
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
         public const string PLUGIN_VERSION = "3.1.1";
@@ -52,8 +56,8 @@ namespace UltraSkins
         private List<Sprite> _edited;
 
 
-
-
+        public string pluginPath;
+        public string folderupdater;
         public static Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
 		public string[] directories;
 		public string serializedSet = "";
@@ -77,25 +81,66 @@ namespace UltraSkins
             System.Diagnostics.Debugger.Break();
             config = PluginConfigurator.Create("Ultraskins", "ultrakill.ultraskins.bobthecorn");
             BoolField enabler = new BoolField(config.rootPanel, "Enabled", "enabler", true);
-            string pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            config.SetIconWithURL("https://papayos.bobthecorn.net/images/brennan2000sfull.png");
+            StringField Pathlocator = new StringField(config.rootPanel, "Folder Name", "foldername", "custom");
+            pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string[] subfolders = Directory.GetDirectories(pluginPath);
+            Dictionary<string, ButtonField> objects = new Dictionary<string, ButtonField>();
+
+            foreach (string subfolder in subfolders)
+            {
+                string folder = Path.GetFileName(subfolder);
+                folderupdater = folder;
+                var button = new ButtonField(config.rootPanel, folder, folder);
+                objects[subfolder] = button;
+
+                button.onClick += () => refreshskins(button.guid);
+
+            }
+
+                SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
+            
+            config.SetIconWithURL("https://gcdn.thunderstore.io/live/repository/icons/bobthecorn-ULTRASKINS_GC-3.1.1.png.256x256_q95_crop.png");
+            Pathlocator.onValueChange += (StringField.StringValueChangeEvent e) =>
+            {
+                // Note how only the division is disabled, but all the fields attached to it are affected as well
+                folderupdater = e.value;
+            };
             // The GUID of the configurator must not be changed as it is used to locate the config file path
             OnModLoaded();
 
         }
         public void OnModLoaded()
         {
-			UKSHarmony = new Harmony("Tony.UltraSkins");
+			UKSHarmony = new Harmony("Gcorn.UltraSkins");
             UKSHarmony.PatchAll(typeof(HarmonyGunPatcher));
             UKSHarmony.PatchAll(typeof(HarmonyProjectilePatcher));
             UKSHarmony.PatchAll();
-            SkinEventHandler skinEventHandler = new SkinEventHandler();
-            string modFolderPath = skinEventHandler.GetModFolderPath();
-            
+            try
+            {
+                SkinEventHandler skinEventHandler = new SkinEventHandler();
+                string modFolderPath = skinEventHandler.GetModFolderPath();
+            }
+            catch (Exception ex) {
+                ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
+            }
             LoadTextures(modFolderPath);
             
         }
 
+         void refreshskins(string clickedButton)
+        {
+            Debug.Log("pannel close:" + clickedButton);
+         StringSerializer serializer = new StringSerializer();
+            string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
+            string dir = Path.GetDirectoryName(dlllocation);
+
+            string filepath = Path.Combine(dir + "\\" + clickedButton);
+            Debug.Log("folderis: " + filepath);
+            serializer.SerializeStringToFile(filepath, Path.Combine(dir + "\\data.USGC"));
+            ReloadTextures(true, filepath);
+            //LoadTextures(filepath);
+         
+        }
 
         [HarmonyPatch]
         public class HarmonyGunPatcher
@@ -316,7 +361,7 @@ namespace UltraSkins
 
         private void Start()
         {
-            SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
+            
         }
 
 		private void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode mode)
@@ -329,7 +374,7 @@ namespace UltraSkins
                 //DE = Addressables.LoadAssetAsync<Shader>("psx/vertexlit/emissive").WaitForCompletion();
             if (cubemap == null)
                 cubemap = Addressables.LoadAssetAsync<Cubemap>("Assets/Textures/studio_06.exr").WaitForCompletion();
-			CreateSkinGUI();
+			//CreateSkinGUI();
 		}
 
         public void CreateSkinGUI()
