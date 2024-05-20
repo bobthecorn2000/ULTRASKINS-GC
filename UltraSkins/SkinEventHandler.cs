@@ -14,7 +14,7 @@ namespace UltraSkins
 {
 	public class SkinEventHandler : MonoBehaviour
 	{
-        static PluginConfigurator config;
+        //static PluginConfigurator config;
 
         public GameObject Activator;
 		public string path;
@@ -107,7 +107,7 @@ namespace UltraSkins
         public static void ExtractSkin(string skinFilePath)
         {
             string extractFolder = Path.Combine(Path.GetDirectoryName(skinFilePath), Path.GetFileNameWithoutExtension(skinFilePath));
-            config = PluginConfigurator.Create("UltraskinsDebug", "ultrakilldebug.ultraskins.bobthecorn");
+            //config = PluginConfigurator.Create("UltraskinsDebug", "ultrakilldebug.ultraskins.bobthecorn");
             try
             {
                 Directory.CreateDirectory(extractFolder);
@@ -124,7 +124,7 @@ namespace UltraSkins
             }
             catch (Exception ex)
             {
-                ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
+               // ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
             }
         }
 
@@ -193,7 +193,7 @@ namespace UltraSkins
                     }
                     catch (Exception ex)
                     {
-                        ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
+                        //ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
                         // Optionally handle or log the exception further
                     }
                 }
@@ -203,7 +203,7 @@ namespace UltraSkins
             }
             catch (Exception ex)
             {
-                ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
+                //ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
             }
         }
 

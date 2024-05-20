@@ -99,7 +99,7 @@ namespace UltraSkins
 
                 SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
             
-            config.SetIconWithURL("https://gcdn.thunderstore.io/live/repository/icons/bobthecorn-ULTRASKINS_GC-3.1.1.png.256x256_q95_crop.png");
+            config.SetIconWithURL("https://github.com/bobthecorn2000/ULTRASKINS-GC/blob/main/UltraSkins/icon.png?raw=true");
             Pathlocator.onValueChange += (StringField.StringValueChangeEvent e) =>
             {
                 // Note how only the division is disabled, but all the fields attached to it are affected as well
@@ -123,6 +123,7 @@ namespace UltraSkins
             catch (Exception ex) {
                 ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
             }
+            ButtonField error = new ButtonField(config.rootPanel, "modpath: "+ modFolderPath.ToString(), "modpath-"+modFolderPath.ToString());
             LoadTextures(modFolderPath);
             
         }
