@@ -7,6 +7,7 @@ UltraSkins is a mod that allows you to change the textures of your arms and the 
 # Install notes 
 After installing you will need to run the game once before the mod will work
 this will generate the files needed for the mod to function
+PLEASE BACKUP YOUR CUSTOM SKINS BEFORE UPDATING OR UNINSTALLING
 
 ## IMPORTANT NOTE
 after a new skin is selected swap your gun once and change your arm once to finish the update
