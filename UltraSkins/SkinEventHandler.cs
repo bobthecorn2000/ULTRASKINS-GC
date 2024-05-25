@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using Ionic.Zlib;
 using System;
-using UltraSkinsPacker;
+
 using PluginConfig.API.Functionals;
 using PluginConfig.API;
 

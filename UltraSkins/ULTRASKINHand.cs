@@ -18,7 +18,8 @@ using PluginConfig.API.Fields;
 using BepInEx.Logging;
 using static UltraSkins.SkinEventHandler;
 using PluginConfig.API.Functionals;
-using UltraSkinsPacker;
+
+
 
 namespace UltraSkins
 {
@@ -67,51 +68,47 @@ namespace UltraSkins
         static Shader CCE;
         static Shader DE;
         static Cubemap cubemap;
-        public void Start(SkinEventHandler skinEventHandler)
-        {
-            string modFolderPath = skinEventHandler.GetModFolderPath();
+        //public void Start(SkinEventHandler skinEventHandler)
+        //{
+        //    string modFolderPath = skinEventHandler.GetModFolderPath();
             
-            LoadTextures(modFolderPath);
-
-        }
+        //    LoadTextures(modFolderPath);
+            
+        //}
 
 
             private void Awake()
         {
             System.Diagnostics.Debugger.Break();
             config = PluginConfigurator.Create("Ultraskins", "ultrakill.ultraskins.bobthecorn");
-            BoolField enabler = new BoolField(config.rootPanel, "Enabled", "enabler", true);
-            StringField Pathlocator = new StringField(config.rootPanel, "Folder Name", "foldername", "custom");
+            
+            
             pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string[] subfolders = Directory.GetDirectories(pluginPath);
             Dictionary<string, ButtonField> objects = new Dictionary<string, ButtonField>();
-
+            ConfigPanel skinfolders = new ConfigPanel(config.rootPanel, "skinfolders", "skinfolders");
             foreach (string subfolder in subfolders)
             {
                 string folder = Path.GetFileName(subfolder);
                 folderupdater = folder;
-                var button = new ButtonField(config.rootPanel, folder, folder);
+                var button = new ButtonField(skinfolders, folder, folder);
                 objects[subfolder] = button;
-
-                button.onClick += () => refreshskins(button.guid);
+                
+                button.onClick += () => refreshskins(skinfolders, button.guid);
 
             }
-
+            
                 SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
             
             config.SetIconWithURL("https://github.com/bobthecorn2000/ULTRASKINS-GC/blob/main/UltraSkins/icon.png?raw=true");
-            Pathlocator.onValueChange += (StringField.StringValueChangeEvent e) =>
-            {
-                // Note how only the division is disabled, but all the fields attached to it are affected as well
-                folderupdater = e.value;
-            };
+            BoolField debuggermode = new BoolField(config.rootPanel, "Debug Mode", "DebugMode", false);
             // The GUID of the configurator must not be changed as it is used to locate the config file path
             OnModLoaded();
 
         }
-        public void OnModLoaded()
-        {
-			UKSHarmony = new Harmony("Gcorn.UltraSkins");
+        public void OnModLoaded(){
+
+            UKSHarmony = new Harmony("Gcorn.UltraSkins");
             UKSHarmony.PatchAll(typeof(HarmonyGunPatcher));
             UKSHarmony.PatchAll(typeof(HarmonyProjectilePatcher));
             UKSHarmony.PatchAll();
@@ -119,19 +116,23 @@ namespace UltraSkins
             {
                 SkinEventHandler skinEventHandler = new SkinEventHandler();
                 string modFolderPath = skinEventHandler.GetModFolderPath();
+                
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
             }
-            ButtonField error = new ButtonField(config.rootPanel, "modpath: "+ modFolderPath.ToString(), "modpath-"+modFolderPath.ToString());
-            LoadTextures(modFolderPath);
+
+
             
+
         }
 
-         void refreshskins(string clickedButton)
+         void refreshskins(ConfigPanel folderpage, string clickedButton)
         {
+            
             Debug.Log("pannel close:" + clickedButton);
-         StringSerializer serializer = new StringSerializer();
+            StringSerializer serializer = new StringSerializer();
             string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
             string dir = Path.GetDirectoryName(dlllocation);
 
@@ -139,8 +140,25 @@ namespace UltraSkins
             Debug.Log("folderis: " + filepath);
             serializer.SerializeStringToFile(filepath, Path.Combine(dir + "\\data.USGC"));
             ReloadTextures(true, filepath);
+            folderpage.ClosePanel();
             //LoadTextures(filepath);
-         
+
+        }
+        void refreshskins()
+        {
+
+            
+            StringSerializer serializer = new StringSerializer();
+            string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
+            string dir = Path.GetDirectoryName(dlllocation);
+
+            
+            
+            string filepath = serializer.DeserializeStringFromFile(Path.Combine(dir + "\\data.USGC"));
+            ReloadTextures(true, filepath);
+
+            //LoadTextures(filepath);
+
         }
 
         [HarmonyPatch]
@@ -375,107 +393,11 @@ namespace UltraSkins
                 //DE = Addressables.LoadAssetAsync<Shader>("psx/vertexlit/emissive").WaitForCompletion();
             if (cubemap == null)
                 cubemap = Addressables.LoadAssetAsync<Cubemap>("Assets/Textures/studio_06.exr").WaitForCompletion();
-			//CreateSkinGUI();
-		}
-
-        public void CreateSkinGUI()
-        {
-            foreach (ShopGearChecker shopGearChecker in Resources.FindObjectsOfTypeAll<ShopGearChecker>())
-            {
-                string[] dirs = Directory.GetDirectories(modFolderPath);
-                directories = dirs;
-                ShopCategory[] SCs = shopGearChecker.GetComponentsInChildren<ShopCategory>(true);
-                GameObject PresetsMenu = Instantiate(shopGearChecker.transform.GetChild(3).GetComponent<ShopButton>().toActivate[0], shopGearChecker.transform);
-                PresetsMenu.name = "ultraskins window";
-                foreach (var varInfo in PresetsMenu.GetComponentsInChildren<VariationInfo>())
-                    GameObject.Destroy(varInfo);
-                PresetsMenu.SetActive(false);
-                foreach (ShopCategory SC in SCs)
-                {
-                    List<GameObject> deactivateobjects = SC.GetComponent<ShopButton>().toDeactivate.ToList();
-                    deactivateobjects.Add(PresetsMenu);
-                    SC.GetComponent<ShopButton>().toDeactivate = deactivateobjects.ToArray();
-                }
-                Transform button = Instantiate(shopGearChecker.transform.GetChild(3), shopGearChecker.transform);
-                button.name = "ultraskins button";
-                button.localPosition = new Vector3(-180f, -85f, -45f);
-                button.localScale = new Vector3(1f, 1f, 1f);
-                button.GetComponent<ShopButton>().toActivate = new GameObject[] { PresetsMenu };
-                List<GameObject> toDeactivate = SCs[0].GetComponent<ShopButton>().toDeactivate.ToList();
-                if (SCs[0].GetComponent<ShopButton>().toActivate.Length != 0)
-				    toDeactivate.Add(SCs[0].GetComponent<ShopButton>().toActivate[0]);
-                toDeactivate.Remove(PresetsMenu);
-                button.GetComponent<ShopButton>().toDeactivate = toDeactivate.ToArray();
-				button.GetComponentInChildren<Text>().text = "ULTRASKINS";
-                button.GetComponent<RectTransform>().SetAsFirstSibling();
-                for (int p = 2; p < PresetsMenu.transform.childCount; p++)
-                {
-                    Destroy(PresetsMenu.transform.GetChild(p).gameObject);
-                }
-                GameObject FolderButton = PresetsMenu.transform.GetChild(1).gameObject;
-                FolderButton.SetActive(true);
-                int numberofpages = (dirs.Length / 3);
-                GameObject pageHandler = Instantiate(new GameObject(), PresetsMenu.transform);
-                pageHandler.name = "Page Handler";
-                pageHandler.transform.localPosition = new Vector3(0, 0, 0);
-                PageEventHandler PGEH = pageHandler.AddComponent<PageEventHandler>();
-                PGEH.UKSH = transform.GetComponent<ULTRASKINHand>();
-                PGEH.pagesamount = numberofpages;
-                for (int e = 0; e < numberofpages + 1; e++)
-                {
-                    GameObject Page = Instantiate(new GameObject(), pageHandler.transform);
-                    Page.name = "Page" + e;
-                    Page.transform.localPosition = new Vector3(0, 0, 0);
-                    for (int d = 0; d < ((e == numberofpages) ? dirs.Length % 3 : 3); d++)
-                    {
-                        int pagebuttonnumber = Mathf.Clamp((e * 3) + d, 0, dirs.Length - 1);
-                        GameObject FoldBut = Instantiate(FolderButton, Page.transform);
-                        FoldBut.name = "button" + pagebuttonnumber;
-                        Destroy(FoldBut.transform.GetChild(2).gameObject);
-                        Destroy(FoldBut.transform.GetChild(4).gameObject);
-                        Destroy(FoldBut.transform.GetChild(5).gameObject);
-                        FoldBut.GetComponentInChildren<Text>().text = Path.GetFileName(dirs[pagebuttonnumber]);
-                        FoldBut.GetComponentInChildren<Text>().transform.localPosition = new Vector3(-325, 15, -15);
-                        FoldBut.transform.localPosition = new Vector3(0, 300 - (85 * d), -15);
-                        GameObject AGO = Instantiate(FoldBut, button.transform);
-                        AGO.SetActive(false);
-                        SkinEventHandler skinEventHandler = FoldBut.gameObject.AddComponent<SkinEventHandler>();
-                        skinEventHandler.UKSH = transform.GetComponent<ULTRASKINHand>();
-                        skinEventHandler.Activator = AGO;
-                        skinEventHandler.path = dirs[pagebuttonnumber];
-                        skinEventHandler.pname = Path.GetFileName(dirs[pagebuttonnumber]);
-                        FoldBut.GetComponent<ShopButton>().toActivate = new GameObject[] { AGO };
-                        FoldBut.GetComponent<ShopButton>().toDeactivate = new GameObject[0];
-                    }
-                    if (e != 0)
-                        Page.gameObject.SetActive(false);
-                }
-                for (int r = 0; r < 2; r++)
-                {
-                    GameObject FoldBut = Instantiate(FolderButton, PresetsMenu.transform);
-                    Destroy(FoldBut.transform.GetChild(2).gameObject);
-                    Destroy(FoldBut.transform.GetChild(4).gameObject);
-                    Destroy(FoldBut.transform.GetChild(5).gameObject);
-                    Destroy(FoldBut.GetComponent<VariationInfo>());
-                    FoldBut.GetComponent<RectTransform>().sizeDelta = new Vector2(180, 80);
-                    FoldBut.gameObject.name = (r == 1) ? "<<" : ">>";
-                    FoldBut.GetComponentInChildren<Text>().text = (r == 1) ? "<<" : ">>";
-                    FoldBut.GetComponentInChildren<Text>().fontSize = 34;
-                    FoldBut.GetComponentInChildren<Text>().transform.localPosition = new Vector3(-95, 15, -15);
-                    FoldBut.transform.localPosition = new Vector3((r == 1) ? -180 : 0, 45, -15);
-                    GameObject AGO = Instantiate(FoldBut, button.transform);
-                    AGO.SetActive(false);
-                    PageButton PEH = FoldBut.gameObject.AddComponent<PageButton>();
-                    PEH.UKSH = transform.GetComponent<ULTRASKINHand>();
-                    PEH.pageEventHandler = PGEH;
-                    PEH.Activator = AGO;
-                    PEH.moveamount = (r == 1) ? -1 : 1;
-                    FoldBut.GetComponent<ShopButton>().toActivate = new GameObject[] { AGO };
-                    FoldBut.GetComponent<ShopButton>().toDeactivate = new GameObject[0];
-                }
-                FolderButton.SetActive(false);
-            }
+            //CreateSkinGUI();
+            refreshskins();
         }
+
+        
 
 
         public static Texture ResolveTheTextureProperty(Material mat, string property, string propertyfallback = "_MainTex")
@@ -720,6 +642,7 @@ namespace UltraSkins
 
 		public string LoadTextures(string fpath = "")
 		{
+            Debug.Log(fpath.ToString());
             autoSwapCache.Clear();
 			bool failed = false;
             DirectoryInfo dir = new DirectoryInfo(fpath);
