@@ -12,7 +12,7 @@ this will generate the files needed for the mod to function
 after a new skin is selected swap your gun once and change your arm once to finish the update
 skinsfolder should go in the folder where the dll is located
 
-r2modman users should be "AppData\Roaming\r2modmanPlus-local\ULTRAKILL\profiles\*profilename*\BepInEx\plugins\bobthecorn-ULTRASKINS_GC\"
+r2modman users should be "AppData\Roaming\r2modmanPlus-local\ULTRAKILL\profiles\\\*profilename\*\BepInEx\plugins\bobthecorn-ULTRASKINS_GC\"
 
 steam users should be in "steamapps\common\ULTRAKILL\BepInEx\plugins\UltraSkins"
 
