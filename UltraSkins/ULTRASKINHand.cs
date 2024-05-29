@@ -31,7 +31,7 @@ namespace UltraSkins
         public PluginConfigurator config;
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
-        public const string PLUGIN_VERSION = "3.1.1";
+        public const string PLUGIN_VERSION = "4.0.0";
         private string modFolderPath;
 
         
