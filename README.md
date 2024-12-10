@@ -17,7 +17,7 @@ r2modman users should be "AppData\Roaming\r2modmanPlus-local\ULTRAKILL\profiles\
 
 steam users should be in "steamapps\common\ULTRAKILL\BepInEx\plugins\UltraSkins"
 
-inside you directory create a folder (name it whatever) and put the skin files in that, (OG-SKINS has been provided as an example of what it should look like)
+inside your directory create a folder (name it whatever) and put the skin files in that, (OG-SKINS has been provided as an example of what it should look like)
 
 ## so whats different and what should i know
 1. removed umm as the manager is outdated, everything should still work
