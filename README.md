@@ -13,10 +13,6 @@ PLEASE BACKUP YOUR CUSTOM SKINS BEFORE UPDATING OR UNINSTALLING
 after a new skin is selected swap your gun once and change your arm once to finish the update
 skinsfolder should go in the folder where the dll is located
 
-r2modman users should be "AppData\Roaming\r2modmanPlus-local\ULTRAKILL\profiles\\\*profilename\*\BepInEx\plugins\bobthecorn-ULTRASKINS_GC\"
-
-steam users should be in "steamapps\common\ULTRAKILL\BepInEx\plugins\UltraSkins"
-
 inside your directory create a folder (name it whatever) and put the skin files in that, (OG-SKINS has been provided as an example of what it should look like)
 
 ## so whats different and what should i know
