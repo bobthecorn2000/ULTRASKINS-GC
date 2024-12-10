@@ -106,10 +106,8 @@ namespace UltraSkins
         }
         public static void ExtractSkin(string skinFilePath)
         {
-            string extractFolder = Path.Combine(Path.GetDirectoryName(skinFilePath), Path.GetFileNameWithoutExtension(skinFilePath));
-            //config = PluginConfigurator.Create("UltraskinsDebug", "ultrakilldebug.ultraskins.bobthecorn");
-            try
-            {
+            string extractFolder = Path.Combine(Path.GetDirectoryName(skinFilePath), Path.GetFileNameWithoutExtension(storage));
+
                 Directory.CreateDirectory(extractFolder);
 
                 using (FileStream zipFileStream = File.OpenRead(skinFilePath))
