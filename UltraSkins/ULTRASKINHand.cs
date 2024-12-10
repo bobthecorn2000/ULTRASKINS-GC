@@ -18,6 +18,7 @@ using PluginConfig.API.Fields;
 using BepInEx.Logging;
 using static UltraSkins.SkinEventHandler;
 using PluginConfig.API.Functionals;
+using System.Net.NetworkInformation;
 
 
 
@@ -31,7 +32,7 @@ namespace UltraSkins
         public PluginConfigurator config;
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
-        public const string PLUGIN_VERSION = "4.0.0";
+        public const string PLUGIN_VERSION = "5.0.0";
         private string modFolderPath;
 
         
@@ -84,19 +85,29 @@ namespace UltraSkins
             
             
             pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string[] subfolders = Directory.GetDirectories(pluginPath);
-            Dictionary<string, ButtonField> objects = new Dictionary<string, ButtonField>();
-            ConfigPanel skinfolders = new ConfigPanel(config.rootPanel, "skinfolders", "skinfolders");
-            foreach (string subfolder in subfolders)
-            {
-                string folder = Path.GetFileName(subfolder);
-                folderupdater = folder;
-                var button = new ButtonField(skinfolders, folder, folder);
-                objects[subfolder] = button;
-                
-                button.onClick += () => refreshskins(skinfolders, button.guid);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+            string skinfolderdir = Path.Combine(appDataPath, AppDataLoc);
+            try { 
+            string[] subfolders = Directory.GetDirectories(skinfolderdir);
+                Dictionary<string, ButtonField> objects = new Dictionary<string, ButtonField>();
+                ConfigPanel skinfolders = new ConfigPanel(config.rootPanel, "skinfolders", "skinfolders");
+                foreach (string subfolder in subfolders)
+                {
+                    string folder = Path.GetFileName(subfolder);
+                    folderupdater = folder;
+                    var button = new ButtonField(skinfolders, folder, folder);
+                    objects[subfolder] = button;
 
+                    button.onClick += () => refreshskins(skinfolders, button.guid);
+
+                }
             }
+            catch
+            {
+                new ButtonField(config.rootPanel, "if your seeing this restart the game things need to finish setting up, if you keep seeing this message something is wrong with your folder setup, Error-\"USHAND-AWAKE\"","USHAND-AWAKE" );
+            }
+            
             
                 SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
             
@@ -120,6 +131,7 @@ namespace UltraSkins
             }
             catch (Exception ex)
             {
+                ButtonField exmessage = new ButtonField(config.rootPanel, ex.Message, ex.Message);
                 ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
             }
 
@@ -134,7 +146,9 @@ namespace UltraSkins
             Debug.Log("pannel close:" + clickedButton);
             StringSerializer serializer = new StringSerializer();
             string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
-            string dir = Path.GetDirectoryName(dlllocation);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+            string dir = Path.Combine(appDataPath, AppDataLoc);
 
             string filepath = Path.Combine(dir + "\\" + clickedButton);
             Debug.Log("folderis: " + filepath);
@@ -149,11 +163,12 @@ namespace UltraSkins
 
             
             StringSerializer serializer = new StringSerializer();
-            string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
-            string dir = Path.GetDirectoryName(dlllocation);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+            string dir = Path.Combine(appDataPath, AppDataLoc);
 
-            
-            
+
+
             string filepath = serializer.DeserializeStringFromFile(Path.Combine(dir + "\\data.USGC"));
             ReloadTextures(true, filepath);
 

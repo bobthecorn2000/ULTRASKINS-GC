@@ -9,6 +9,9 @@ using System;
 
 using PluginConfig.API.Functionals;
 using PluginConfig.API;
+using System.Text.Json;
+using System.Text;
+using UnityEngine.Profiling.Memory.Experimental;
 
 namespace UltraSkins
 {
@@ -20,8 +23,13 @@ namespace UltraSkins
 		public string path;
 		public string pname;
 		public ULTRASKINHand UKSH;
-
-		private void Update()
+        public class Metadata
+        {
+            public string FileVersion { get; set; }
+            public string FileName { get; set; }
+            public string FileDescription { get; set; }
+        }
+        private void Update()
 		{
 			if (Activator != null && Activator.activeSelf)
 			{
@@ -45,8 +53,15 @@ namespace UltraSkins
             //string gameDirectory = Assembly.GetExecutingAssembly().Location;
             //string gameDirectory = Path.GetDirectoryName(Application.dataPath);
             string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
-            string dir = Path.GetDirectoryName(dlllocation);
-            string defloc = Path.Combine(dir + "\\OG-SKINS");
+            string moddir = Path.GetDirectoryName(dlllocation);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+            string dir = Path.Combine(appDataPath, AppDataLoc);
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+                string defloc = Path.Combine(dir + "\\OG-SKINS");
             // The mod folder is typically named "BepInEx/plugins" or similar
             //string modFolderName = "BepInEx\\plugins\\ultraskins\\custom"; // Adjust this according to your setup
             StringSerializer serializer = new StringSerializer();
@@ -57,8 +72,8 @@ namespace UltraSkins
 
             }
             //ExtractSkin("OG-SKINS.GCskin");
-            if (!File.Exists(Path.Combine(dir + "\\OG-SKINS")) &&  File.Exists(Path.Combine(dir + "\\OG-SKINS.GCskin"))) {
-                ExtractSkin(Path.Combine(dir + "\\OG-SKINS.GCskin"));
+            if (!File.Exists(Path.Combine(dir + "\\OG-SKINS")) &&  File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin"))) {
+                ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
             }
             string deserializedData = serializer.DeserializeStringFromFile(filecheck);
             // Combine the game directory with the mod folder name to get the full path
@@ -104,117 +119,100 @@ namespace UltraSkins
                 }
             }
         }
-        public static void ExtractSkin(string skinFilePath)
+        public static void ExtractSkin(string skinFilePath, string storage)
         {
-            string extractFolder = Path.Combine(Path.GetDirectoryName(skinFilePath), Path.GetFileNameWithoutExtension(storage));
+            string extractFolder = Path.Combine(skinFilePath, Path.GetFileNameWithoutExtension(storage));
 
                 Directory.CreateDirectory(extractFolder);
+            
 
-                using (FileStream zipFileStream = File.OpenRead(skinFilePath))
+
+                using (FileStream zipFileStream = File.OpenRead(storage))
                 {
-                    using (ZlibStream zlibStream = new ZlibStream(zipFileStream, Ionic.Zlib.CompressionMode.Decompress))
+
+                    /*if (metadata.FileVersion != CurrentFileVersion)
+                    {
+                        Console.WriteLine($"Warning: File version '{metadata.FileVersion}' is not compatible with the current version '{CurrentFileVersion}'.");
+                        Console.WriteLine("Extraction aborted.");
+                        return;
+                    }
+
+                    Console.WriteLine("Metadata:");
+                    Console.WriteLine($"  File Version: {metadata.FileVersion}");
+                    Console.WriteLine($"  Name: {metadata.FileName}");
+                    Console.WriteLine($"  Description: {metadata.FileDescription}");*/
+
+                    // Decompress the remaining content
+                    using (ZlibStream zlibStream = new ZlibStream(zipFileStream, CompressionMode.Decompress))
                     {
                         ExtractFromZlibStream(zlibStream, extractFolder);
                     }
                 }
 
-              //  Console.WriteLine($"Skin '{skinFilePath}' extracted successfully to '{extractFolder}'.");
+                
             }
-            catch (Exception ex)
-            {
-               // ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
-            }
-        }
+
+        
+
+
 
         static void ExtractFromZlibStream(ZlibStream zlibStream, string extractFolder)
         {
-            try
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            bool MDread = false;
+            int i = 0;
+            while (true)
             {
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                string line;
-
-                // Create the root extraction directory if it doesn't exist
-                Directory.CreateDirectory(extractFolder);
-
-                // Initialize a counter for debug output
-                int fileCount = 0;
-
-                while ((line = ReadLineFromZlibStream(zlibStream)) != null)
+                string relativePath = ReadLineFromZlibStream(zlibStream)?.Trim();
+                if (string.IsNullOrEmpty(relativePath))
+                    break;
+                
+                // Recreate directory structure
+                if (MDread == true)
                 {
-                    // Trim any extraneous characters like newline or carriage return
-                    line = line.Trim();
-
-                    // Get the file name from the full path
-                    string fileName = Path.GetFileName(line);
-
-                    // Ensure valid file name by replacing invalid characters
-                    fileName = ReplaceInvalidFileNameChars(fileName);
-
-                    string filePath = Path.Combine(extractFolder, fileName);
-
-                    try
+                    string targetPath = Path.Combine(extractFolder, relativePath);
+                    string targetDir = Path.GetDirectoryName(targetPath);
+                
+                    if (!Directory.Exists(targetDir))
                     {
-                        // Read file size as a 4-byte integer
-                        byte[] fileSizeBytes = new byte[sizeof(int)];
-                        zlibStream.Read(fileSizeBytes, 0, fileSizeBytes.Length);
-                        int fileSize = BitConverter.ToInt32(fileSizeBytes, 0);
-                        if (!fileName.Contains(".png"))
-                        {
-                            return;
-                        }
-                        // Read file content
-                        using (FileStream fileStream = File.Create(filePath))
-                        {
-                            long bytesRemaining = fileSize;
-                            while (bytesRemaining > 0)
-                            {
-                                int toRead = (int)Math.Min(bytesRemaining, buffer.Length);
-                                bytesRead = zlibStream.Read(buffer, 0, toRead);
-                                if (bytesRead == 0)
-                                {
-                                    throw new Exception("Unexpected end of stream.");
-                                }
-
-                                fileStream.Write(buffer, 0, bytesRead);
-
-                                bytesRemaining -= bytesRead;
-                            }
-                        }
-
-
-
-
-                        // Output debug message for extracted file
-                       // Console.WriteLine($"Extracted file '{filePath}' successfully.");
-                        fileCount++;
+                        Directory.CreateDirectory(targetDir);
                     }
-                    catch (Exception ex)
+                
+                // Read file size
+                byte[] fileSizeBytes = new byte[sizeof(long)];
+                zlibStream.Read(fileSizeBytes, 0, fileSizeBytes.Length);
+                long fileSize = BitConverter.ToInt64(fileSizeBytes, 0);
+
+                // Read and write file content
+                
+                    using (FileStream fileStream = File.Create(targetPath))
                     {
-                        //ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
-                        // Optionally handle or log the exception further
+
+                        long remainingBytes = fileSize;
+                        while (remainingBytes > 0)
+                        {
+                            int toRead = (int)Math.Min(remainingBytes, buffer.Length);
+                            bytesRead = zlibStream.Read(buffer, 0, toRead);
+                            if (bytesRead == 0)
+                                throw new Exception("Unexpected end of stream.");
+
+                            fileStream.Write(buffer, 0, bytesRead);
+                            remainingBytes -= bytesRead;
+                        }
                     }
+                    
+                }
+                else
+                {
+                    //Metadata metadata = JsonSerializer.Deserialize<Metadata>(relativePath);
+
+
+                    MDread = true;
                 }
 
-                // Output total files processed for debug purposes
-               // Console.WriteLine($"Total files processed: {fileCount}");
+
             }
-            catch (Exception ex)
-            {
-                //ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
-            }
-        }
-
-
-
-
-        static string ReplaceInvalidFileNameChars(string fileName)
-        {
-            foreach (char invalidChar in Path.GetInvalidFileNameChars())
-            {
-                fileName = fileName.Replace(invalidChar.ToString(), "_");
-            }
-            return fileName;
         }
 
         static string ReadLineFromZlibStream(ZlibStream zlibStream)
@@ -231,12 +229,15 @@ namespace UltraSkins
                     ms.WriteByte((byte)currentByte);
                 }
 
-                return System.Text.Encoding.UTF8.GetString(ms.ToArray());
+                return Encoding.UTF8.GetString(ms.ToArray());
             }
-            catch
+            catch (Exception e)
             {
+                
                 return null;
             }
         }
+        
     }
 }
+
