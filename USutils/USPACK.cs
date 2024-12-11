@@ -22,7 +22,7 @@ namespace UltraSkinsPacker
             if (args.Length == 0)
             {
                 Console.WriteLine("Drag a folder onto this executable to compress it, or a GCskin file to extract it.");
-                Console.WriteLine("Drag a folder onto this executable to compress it, or a GCskin file to extract it.");
+                
 
 
 
