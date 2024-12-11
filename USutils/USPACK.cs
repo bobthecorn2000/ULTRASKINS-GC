@@ -22,18 +22,10 @@ namespace UltraSkinsPacker
             if (args.Length == 0)
             {
                 Console.WriteLine("Drag a folder onto this executable to compress it, or a GCskin file to extract it.");
-                Console.WriteLine("paste path to folder here");
-                string folderpath = Console.ReadLine();
-                if (folderpath == null)
-                {
-                    Console.WriteLine("error");
-                    return;
-                }
-                else
-                {
-                    ExtractSkin(folderpath);
-                }
-                
+                Console.WriteLine("Drag a folder onto this executable to compress it, or a GCskin file to extract it.");
+
+
+
             }
             if (args.Length == 1) { 
             string path = args[0];
@@ -45,7 +37,30 @@ namespace UltraSkinsPacker
             }
             else if (File.Exists(path) && path.EndsWith(".GCskin", StringComparison.OrdinalIgnoreCase))
             {
-                ExtractSkin(path);
+                    string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+                    string dir = Path.Combine(appDataPath, AppDataLoc);
+                    bool loop = true;
+                    while (loop == true)
+                    {
+                        Console.WriteLine("enter the number of your selected option, then press enter");
+                        Console.WriteLine("1. Install to Ultrakill");
+                        Console.WriteLine("2. Extract file to current directory");
+                        string response = Console.ReadLine();
+                        switch (response) {
+                            case "1":
+                                loop = false;
+                                ExtractSkin(path, dir, true);
+                                
+                                break;
+                            case "2": 
+                                loop = false; 
+                                ExtractSkin(path,path, false);
+                                break;
+                            default: continue;
+                        }
+                    }
+                
             }
             else
             {
@@ -83,8 +98,8 @@ namespace UltraSkinsPacker
                     while (loop == true)
                     {
                         Console.WriteLine("A File with this name already exists");
-                        Console.WriteLine("1. Cancel Extracting");
-                        Console.WriteLine("2. Overwrite Existing Files");
+                        Console.WriteLine("1. Cancel Compressing");
+                        Console.WriteLine("2. Overwrite Existing File");
                         Console.WriteLine("3. Rename the Output");
                         string response = Console.ReadLine();
                         try
@@ -194,9 +209,17 @@ namespace UltraSkinsPacker
             }
         }
 
-        public static void ExtractSkin(string skinFilePath)
+        public static void ExtractSkin(string skinFilePath, string dir, bool installing)
         {
-            string extractFolder = Path.Combine(Path.GetDirectoryName(skinFilePath), Path.GetFileNameWithoutExtension(skinFilePath));
+            string extractFolder = null;
+            if (installing == false) {
+                extractFolder = Path.Combine(Path.GetDirectoryName(dir), Path.GetFileNameWithoutExtension(skinFilePath));
+            }
+            else if (installing == true)
+            {
+                extractFolder = Path.Combine(dir, Path.GetFileNameWithoutExtension(skinFilePath));
+            }
+             
 
             try
             {
