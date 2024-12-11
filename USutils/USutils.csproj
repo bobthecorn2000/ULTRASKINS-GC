@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-
+	<ApplicationIcon>USutils.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
 
     <StartupObject>UltraSkinsPacker.Skinpacker</StartupObject>
