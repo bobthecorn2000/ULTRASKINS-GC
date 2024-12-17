@@ -22,6 +22,8 @@ using System.Net.NetworkInformation;
 
 
 
+
+
 namespace UltraSkins
 {
    [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
@@ -32,7 +34,7 @@ namespace UltraSkins
         public PluginConfigurator config;
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
-        public const string PLUGIN_VERSION = "5.0.0";
+        public const string PLUGIN_VERSION = "5.1.1";
         private string modFolderPath;
 
         
@@ -113,6 +115,7 @@ namespace UltraSkins
             
             config.SetIconWithURL("https://github.com/bobthecorn2000/ULTRASKINS-GC/blob/main/UltraSkins/icon.png?raw=true");
             BoolField debuggermode = new BoolField(config.rootPanel, "Debug Mode", "DebugMode", false);
+            
             // The GUID of the configurator must not be changed as it is used to locate the config file path
             OnModLoaded();
 
@@ -208,7 +211,93 @@ namespace UltraSkins
                 TextureOverWatch[] TOWS = CameraController.Instance.gameObject.GetComponentsInChildren<TextureOverWatch>(true);
                 ReloadTextureOverWatch(TOWS);
             }
+            [HarmonyPatch(typeof(ShotgunHammer))]
+            public static class UpdateMeterPatch
+            {
+                static FieldInfo meterEmissivesField;
+                static FieldInfo meterEmissivesMaskField;
 
+                static UpdateMeterPatch()
+                {
+                    meterEmissivesField = typeof(ShotgunHammer).GetField("meterEmissives", BindingFlags.NonPublic | BindingFlags.Instance);
+                    meterEmissivesMaskField = typeof(ShotgunHammer).GetField("secondaryMeter", BindingFlags.NonPublic | BindingFlags.Instance);
+                }
+
+                [HarmonyPrefix]
+                [HarmonyPatch("OnEnable")]
+                public static void PrefixUpdateMeter(ShotgunHammer __instance)
+                {
+                    if (meterEmissivesField == null)
+                    {
+                        Debug.LogError("Failed to find 'meterEmissives' field.");
+                        return;
+                    }
+                    
+                    var meterEmissives = (Texture[])meterEmissivesField.GetValue(__instance);
+                    var meterMask = (Image)meterEmissivesMaskField.GetValue(__instance);
+                    Texture glow1;
+                    Texture glow2;
+                    Texture glow3;
+                    if (autoSwapCache.ContainsKey("T_DialGlow1")) {
+                        glow1 = autoSwapCache["T_DialGlow1"];
+                    }
+                    else
+                    {
+                        glow1 = meterEmissives[0];
+                    }
+                    if (autoSwapCache.ContainsKey("T_DialGlow2"))
+                    {
+                        glow2 = autoSwapCache["T_DialGlow2"];
+                    }
+                    else
+                    {
+                        glow2 = meterEmissives[1];
+                    }
+                    if (autoSwapCache.ContainsKey("T_DialGlow3"))
+                    {
+                        glow3 = autoSwapCache["T_DialGlow3"];
+                    }
+                    else
+                    {
+                        glow3 = meterEmissives[2];
+                    }
+                    meterEmissives = new Texture[3]
+                        {
+                        glow1,
+                        glow2,
+                        glow3,
+                        };
+                    meterEmissivesField.SetValue(__instance, meterEmissives);
+                    if (autoSwapCache.ContainsKey("T_DialMask"))
+                    {
+                        Texture dialmask = autoSwapCache["T_DialMask"];
+                        
+                        Sprite masksprite = Sprite.Create((Texture2D)dialmask, new Rect(0, 0, dialmask.width, dialmask.height), new Vector2(0.5f, 0.5f));
+                        meterMask.sprite = masksprite;
+                    }
+
+
+
+                    Debug.Log($"[UpdateMeter] Current Tier: {__instance}");
+                    for (int i = 0; i < meterEmissives.Length; i++)
+                    {
+                        Debug.Log($"[UpdateMeter] Texture at index {i}: {meterEmissives[i]?.name}");
+                    }
+                }
+
+                private static Texture2D CreateSolidColorTexture(UnityEngine.Color color)
+                {
+                    var texture = new Texture2D(128, 128);
+                    var pixels = new UnityEngine.Color[128 * 128];
+                    for (int i = 0; i < pixels.Length; i++)
+                    {
+                        pixels[i] = color;
+                    }
+                    texture.SetPixels(pixels);
+                    texture.Apply();
+                    return texture;
+                }
+            }
             [HarmonyPatch(typeof(FistControl), "YesFist")]
             [HarmonyPostfix]
             public static void YesFistPost(FistControl __instance)
@@ -331,7 +420,6 @@ namespace UltraSkins
             {
                 AddTOWs(__instance.gameObject, true);
             }
-
             public static void ReloadTextureOverWatch(TextureOverWatch[] TOWS)
             {
                 foreach (TextureOverWatch TOW in TOWS)
@@ -438,6 +526,9 @@ namespace UltraSkins
                             case "T_RocketLauncher_Desaturated":
                                 textureToResolve = "T_RocketLauncher_Emissive";
                                 break;
+                            case "T_ImpactHammer":
+                                textureToResolve = "T_ImpactHammer_Glow";
+                                break;
                             default:
                                 textureToResolve = mat.mainTexture.name + "_Emissive";
                                 break;
@@ -514,10 +605,17 @@ namespace UltraSkins
 
                         if (TOW != null && mat.HasProperty("_EmissiveColor"))
                         {
+                            
+                            if (mat.name.ToString() == "Swapped_ImpactHammerDial (Instance)")
+                            {
+                                break;
+                            }
+                            else { 
                             Debug.Log("swapping " + property + " of " + mat.name.ToString());
                             Color VariantColor = GetVarationColor(TOW);
                             Color VariantColor2 = new Color(255, 255, 255, 255);
                             mat.SetColor("_EmissiveColor", VariantColor);
+                            }
                         }
                         
                     }
@@ -549,6 +647,7 @@ namespace UltraSkins
 
                     }
                 }
+
             }
         }
 

@@ -18,6 +18,7 @@ namespace UltraSkins
 			{
 				swapType = "projectile";
 			}
+
             if (GetComponentInParent<Grenade>())
             {
                 swapType = GetComponentInParent<Grenade>().rocket ? "rocket": "grenade";

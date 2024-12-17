@@ -12,13 +12,15 @@ using PluginConfig.API;
 using System.Text.Json;
 using System.Text;
 using UnityEngine.Profiling.Memory.Experimental;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace UltraSkins
 {
 	public class SkinEventHandler : MonoBehaviour
 	{
         //static PluginConfigurator config;
-
+        public const string CurrentVersion = "5.1.1";
         public GameObject Activator;
 		public string path;
 		public string pname;
@@ -28,6 +30,11 @@ namespace UltraSkins
             public string FileVersion { get; set; }
             public string FileName { get; set; }
             public string FileDescription { get; set; }
+        }
+        public class saveinfo
+        {
+            public string ModVersion { get; set; }
+            public string SkinLocation { get; set; }
         }
         private void Update()
 		{
@@ -78,7 +85,34 @@ namespace UltraSkins
             string deserializedData = serializer.DeserializeStringFromFile(filecheck);
             // Combine the game directory with the mod folder name to get the full path
             //return gameDirectory+modFolderName;
-            return deserializedData;
+            if (deserializedData == "deserializedData Failed") {
+                serializer.SerializeStringToFile(defloc, filecheck);
+                if (File.Exists(Path.Combine(dir + "\\OG-SKINS")) && File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin")))
+                {
+                    
+                    ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
+                }
+                deserializedData = serializer.DeserializeStringFromFile(filecheck);
+            }
+            if (deserializedData == "Wrong Version")
+            {
+                
+                DirectoryInfo skindir = new DirectoryInfo(Path.Combine(dir + "\\OG-SKINS"));
+
+                foreach (FileInfo fi in skindir.GetFiles())
+                {
+                    try
+                    {
+                        fi.Delete();
+                    }
+                    catch (Exception) { } // Ignore all exceptions
+                }
+
+                ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
+                deserializedData = serializer.DeserializeStringFromFile(filecheck);
+            }
+
+                    return deserializedData;
         }
         public class StringSerializer
         {
@@ -92,11 +126,11 @@ namespace UltraSkins
                 //{
                 //    fileStream.Write(byteArray, 0, byteArray.Length);
                 //}
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    BinaryFormatter formatter = new BinaryFormatter();
-                    formatter.Serialize(fileStream, data);
-                }
+                saveinfo saveinfo = new saveinfo();
+                saveinfo.SkinLocation = data;
+                saveinfo.ModVersion = CurrentVersion;
+                string jsonData = JsonConvert.SerializeObject(saveinfo);
+                File.WriteAllText(filePath, jsonData);
             }
 
             public string DeserializeStringFromFile(string filePath)
@@ -112,11 +146,29 @@ namespace UltraSkins
                 //// Convert byte array to string
                 //string data = System.Text.Encoding.UTF8.GetString(byteArray);
                 //return data;
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
-                {
-                    BinaryFormatter formatter = new BinaryFormatter();
-                    return (string)formatter.Deserialize(fileStream);
+                // Read the JSON data from the file
+                string jsonData = File.ReadAllText(filePath);
+                string data;
+                // Deserialize the JSON data into a saveinfo object
+                try { 
+                saveinfo deserializedData = JsonConvert.DeserializeObject<saveinfo>(jsonData);
+                    data = deserializedData?.SkinLocation;
+                    if (deserializedData.ModVersion != CurrentVersion)
+                    {
+                        SerializeStringToFile(deserializedData?.SkinLocation, filePath);
+                        data = "Wrong Version";
+
+                    }
+                
                 }
+                catch
+                {
+                    data = "deserializedData Failed";
+                    return data;
+                }
+                 
+                // Return the SkinLocation property from the deserialized object
+                return data;
             }
         }
         public static void ExtractSkin(string skinFilePath, string storage)
