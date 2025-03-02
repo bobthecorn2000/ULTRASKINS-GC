@@ -11,17 +11,23 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
- using PluginConfig.API;
+
 using System.Reflection;
 
-using PluginConfig.API.Fields;
+
 using BepInEx.Logging;
 using static UltraSkins.SkinEventHandler;
-using PluginConfig.API.Functionals;
+
 using System.Net.NetworkInformation;
 using HarmonyLib.Tools;
 using static MonoMod.RuntimeDetour.Platforms.DetourNativeMonoPosixPlatform;
 using static UnityEngine.ParticleSystem.PlaybackState;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.AsyncOperations;
+
+
+
+//using UnityEngine.UIElements;
 
 
 
@@ -31,17 +37,19 @@ using static UnityEngine.ParticleSystem.PlaybackState;
 namespace UltraSkins
 {
    [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
-   [BepInDependency(PluginConfig.PluginConfiguratorController.PLUGIN_GUID, "1.7.0")]
+  
     
     public class ULTRASKINHand : BaseUnityPlugin
     {
-        public PluginConfigurator config;
+        public const bool ShouldDoBatonPass = true;
+        public const bool ShouldDoBatonPassUnity = false;
+
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
         public const string PLUGIN_VERSION = "6.0.0";
         private string modFolderPath;
 
-        
+        public static ManualLogSource BatonPassLogger = new ManualLogSource("BatonPass");
         private static string _modPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
         private static string _skinPath = Path.Combine(_modPath, "Custom");
 
@@ -64,10 +72,11 @@ namespace UltraSkins
         private List<Sprite> _edited;
 
 
-        public string pluginPath;
+        public static string pluginPath;
         public string folderupdater;
         public static Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
-		public string[] directories;
+       
+        public string[] directories;
 		public string serializedSet = "";
         public bool swapped = false;
         Harmony UKSHarmony;
@@ -86,54 +95,55 @@ namespace UltraSkins
 
             private void Awake()
         {
+            BepInEx.Logging.Logger.Sources.Add(BatonPassLogger);
             //System.Diagnostics.Debugger.Break();
-            Logger.LogInfo("Attempting to start");
-            config = PluginConfigurator.Create("Ultraskins", "ultrakill.ultraskins.bobthecorn");
-            Logger.LogInfo("Created PluginConfig");
+            BatonPass("Attempting to start");
+
+
 
             pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Logger.LogInfo("Plugin path set to " + pluginPath);
+            BatonPass("Plugin path set to " + pluginPath);
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
             string skinfolderdir = Path.Combine(appDataPath, AppDataLoc);
 
-            Logger.LogInfo("Setting appdatapath, appdataloc and SkinFolderDir to " + "\nAPPDATAPATH:" + appDataPath + "\nAPPDATALOC:" + AppDataLoc + "\nSKINFOLDERDIR:"+ skinfolderdir);
-            try {
-                Logger.LogInfo("Looking for Subfolders");
-                string[] subfolders = Directory.GetDirectories(skinfolderdir);
-                Logger.LogInfo("Done");
-                Dictionary<string, ButtonField> objects = new Dictionary<string, ButtonField>();
-                ConfigPanel skinfolders = new ConfigPanel(config.rootPanel, "skinfolders", "skinfolders");
-                foreach (string subfolder in subfolders)
+            BatonPass("Setting appdatapath, appdataloc and SkinFolderDir to " + "\nAPPDATAPATH:" + appDataPath + "\nAPPDATALOC:" + AppDataLoc + "\nSKINFOLDERDIR:"+ skinfolderdir);
+            BatonPass("Starting addressables");
+            Addressables.InitializeAsync().WaitForCompletion();
+
+            BatonPass("Looking for the Config");
+            var catalog = Addressables.LoadContentCatalogAsync(Path.Combine(pluginPath, "catalog.json"), true).WaitForCompletion();
+            List<string> keys = new List<string>();
+            foreach (var locator in Addressables.ResourceLocators)
+            {
+                foreach (var key in locator.Keys)
                 {
-                    
-                    string folder = Path.GetFileName(subfolder);
-                    Logger.LogInfo("SubFolder: " + folder);
-                    folderupdater = folder;
-                    var button = new ButtonField(skinfolders, folder, folder);
-                    Logger.LogInfo("Making the button");
-                    objects[subfolder] = button;
-                    
-                    button.onClick += () => refreshskins(skinfolders, button.guid);
-                    Logger.LogInfo("OnClick Ready");
+                    keys.Add(key.ToString());
                 }
+            }
+
+            BatonPass($"Registered Addressable Keys:\n{string.Join("\n", keys)}");
+
+            try {
+                BatonPass("Looking for Subfolders");
+                string[] subfolders = Directory.GetDirectories(skinfolderdir);
+                BatonPass("Done");
+
+
+
             }
             catch
             {
                 Logger.LogError("if your seeing this restart the game things need to finish setting up, if you keep seeing this message something is wrong with your folder setup, Error -\"USHAND-AWAKE\"");
-                new ButtonField(config.rootPanel, "if your seeing this restart the game things need to finish setting up, if you keep seeing this message something is wrong with your folder setup, Error-\"USHAND-AWAKE\"","USHAND-AWAKE" );
+                //new ButtonField(config.rootPanel, "if your seeing this restart the game things need to finish setting up, if you keep seeing this message something is wrong with your folder setup, Error-\"USHAND-AWAKE\"","USHAND-AWAKE" );
             }
-            Logger.LogInfo("Finishing setup");
+            BatonPass("Finishing setup");
 
             SceneManager.activeSceneChanged += SceneManagerOnsceneLoaded;
-            Logger.LogInfo("Scenemanager Created");
+            BatonPass("Scenemanager Created");
 
-            config.SetIconWithURL("https://github.com/bobthecorn2000/ULTRASKINS-GC/blob/main/UltraSkins/icon.png?raw=true");
-            Logger.LogInfo("Setting Config icon");
-            BoolField debuggermode = new BoolField(config.rootPanel, "Debug Mode", "DebugMode", false);
-            Logger.LogInfo("Created debug button");
             // The GUID of the configurator must not be changed as it is used to locate the config file path
-            Logger.LogInfo("INIT BATON PASS: ONMODLOADED()");
+            BatonPass("INIT BATON PASS: ONMODLOADED()");
             OnModLoaded(skinfolderdir);
 
         }
@@ -144,16 +154,16 @@ namespace UltraSkins
             UKSHarmony.PatchAll(typeof(HarmonyGunPatcher));
             UKSHarmony.PatchAll(typeof(HarmonyProjectilePatcher));
             UKSHarmony.PatchAll();
-            Logger.LogInfo("BATON PASS: Welcome To Ultraskins, We are on the ONMODLOADED() STEP");
-            refreshskins();
+            BatonPass("BATON PASS: Welcome To Ultraskins, We are on the ONMODLOADED() STEP");
+            
 
             try
             {
-                Logger.LogInfo("Creating the SkinEvent Handler");
+                BatonPass("Creating the SkinEvent Handler");
                 SkinEventHandler skinEventHandler = new SkinEventHandler();
-                Logger.LogInfo("INIT BATON PASS: GETMODFOLDERPATH()");
+                BatonPass("INIT BATON PASS: GETMODFOLDERPATH()");
                 string modFolderPath = skinEventHandler.GetModFolderPath();
-                Logger.LogInfo("BATON PASS: WELCOME BACK TO ONMODLOADED() WE RECIEVED " + modFolderPath);
+                BatonPass("BATON PASS: WELCOME BACK TO ONMODLOADED() WE RECIEVED " + modFolderPath);
                 //LoadTextures("C:\\Users\\andrew fox\\AppData\\Roaming\\bobthecorn2000\\ULTRAKILL\\ultraskinsGC\\BrennanSet");
 
             }
@@ -163,23 +173,22 @@ namespace UltraSkins
                 FileLog.Log("Hear Ye Hear Ye, ULTRASKINS HAS FAILED Error -\"USHAND-ONMODLOADED\"" + ex.ToString());
                 Logger.LogError("Hear Ye Hear Ye, ULTRASKINS HAS FAILED Error -\"USHAND-ONMODLOADED\"" + ex.ToString());
                 Logger.LogError("Hear Ye Hear Ye, ULTRASKINS HAS FAILED Error -\"USHAND-ONMODLOADED\"" + ex.Message);
-                ButtonField exmessage = new ButtonField(config.rootPanel, ex.Message, ex.Message);
-                ButtonField exerror = new ButtonField(config.rootPanel, ex.ToString(), ex.ToString());
+
 
             }
-
+            refreshskins();
 
 
         }
 
-         void refreshskins(ConfigPanel folderpage, string clickedButton)
+         public void refreshskins(string clickedButton)
         {
-            Logger.LogInfo("BATON PASS: WE ARE IN REFRESHSKINS() WE RECIEVED AND HAVE THE CURRENT VARIABLES \n folderpage " + folderpage + "\n clickedButton " + clickedButton);
+            BatonPass("BATON PASS: WE ARE IN REFRESHSKINS() WE RECIEVED AND HAVE THE CURRENT VARIABLES" +  "\n clickedButton " + clickedButton);
             Debug.Log("pannel close:" + clickedButton);
-            Logger.LogInfo("Panal closed for " + clickedButton);
+            BatonPass("Panal closed for " + clickedButton);
             StringSerializer serializer = new StringSerializer();
-            Logger.LogInfo("Created The Serializer");
-            Logger.LogInfo("looking for the dll, appdata paths and merging the directory strings");
+            BatonPass("Created The Serializer");
+            BatonPass("looking for the dll, appdata paths and merging the directory strings");
             string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
             
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -187,26 +196,37 @@ namespace UltraSkins
             string dir = Path.Combine(appDataPath, AppDataLoc);
 
             string filepath = Path.Combine(dir + "\\" + clickedButton);
-            Logger.LogInfo("Done, The folder is " + filepath);
+            BatonPass("Done, The folder is " + filepath);
 
             Debug.Log("folderis: " + filepath);
             serializer.SerializeStringToFile(filepath, Path.Combine(dir + "\\data.USGC"));
-            Logger.LogInfo("Saved to data.USGC");
-            Logger.LogInfo("INIT BATON PASS: RELOADTEXTURES(TRUE,"+ filepath +")");
-            ReloadTextures(true, filepath);
-            Logger.LogInfo("BATON PASS: WELCOME BACK TO REFRESHSKINS()");
-            Logger.LogInfo("Closing panel");
-            folderpage.ClosePanel();
+            BatonPass("Saved to data.USGC");
+            BatonPass("INIT BATON PASS: RELOADTEXTURES(TRUE,"+ filepath +")");
+            string result = ReloadTextures(true, filepath);
+            Color Annoucement = new Color(0, 0, 0, 1);
+            if (result == "Success")
+            {
+                Annoucement = new Color(0, 1, 0, 1);
+            }
+            else if (result == "Failed")
+            {
+                Annoucement = new Color(1, 0, 0, 1);
+            }
+            
+            menucreater.BatonPassAnnoucement(Annoucement, result);
+            BatonPass("BATON PASS: WELCOME BACK TO REFRESHSKINS()");
+            BatonPass("Closing panel");
+            
             //LoadTextures(filepath);
 
         }
         void refreshskins()
         {
 
-            Logger.LogInfo("BATON PASS: WE ARE IN REFRESHSKINS(), THERE ARE NO OTHER ARGUMENTS");
+            BatonPass("BATON PASS: WE ARE IN REFRESHSKINS(), THERE ARE NO OTHER ARGUMENTS");
             StringSerializer serializer = new StringSerializer();
-            Logger.LogInfo("Created The Serializer");
-            Logger.LogInfo("looking for the dll, appdata paths and merging the directory strings");
+            BatonPass("Created The Serializer");
+            BatonPass("looking for the dll, appdata paths and merging the directory strings");
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
             string dir = Path.Combine(appDataPath, AppDataLoc);
@@ -214,8 +234,8 @@ namespace UltraSkins
 
 
             string filepath = serializer.DeserializeStringFromFile(Path.Combine(dir + "\\data.USGC"));
-            Logger.LogInfo("Read data.USGC from " + filepath);
-            Logger.LogInfo("INIT BATON PASS: RELOADTEXTURES(TRUE," + filepath + ")");
+            BatonPass("Read data.USGC from " + filepath);
+            BatonPass("INIT BATON PASS: RELOADTEXTURES(TRUE," + filepath + ")");
             ReloadTextures(true, filepath);
 
             //LoadTextures(filepath);
@@ -245,8 +265,8 @@ namespace UltraSkins
                 }
             }
 
-   
-            
+
+
 
             [HarmonyPatch(typeof(GunControl), "UpdateWeaponList", new Type[] {typeof(bool)})]
             [HarmonyPostfix]
@@ -534,35 +554,48 @@ namespace UltraSkins
         {
             
         }
+        
+
 
 		private void SceneManagerOnsceneLoaded(Scene scene, Scene mode)
 		{
-            Logger.LogInfo("BATON PASS: WE ARE IN SceneManagerOnsceneLoaded()");
+            BatonPass("BATON PASS: WE ARE IN SceneManagerOnsceneLoaded()");
+
+            
+
             swapped = false;
 
-            Logger.LogInfo("Checking for Null CCE");
+
+
+           BatonPass("Checking for Null CCE");
             if (CCE == null)
             {
-                Logger.LogInfo("ITS NULL, CORRECTING");
+                BatonPass("ITS NULL, CORRECTING");
                 CCE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Special/ULTRAKILL-vertexlit-customcolors-emissive.shader").WaitForCompletion();
             }
-            Logger.LogInfo("Checking for Null DE");
+            BatonPass("Checking for Null DE");
             if (DE == null)
             {
-                Logger.LogInfo("ITS NULL, CORRECTING");
+                BatonPass("ITS NULL, CORRECTING");
                 DE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Main/ULTRAKILL-vertexlit-emissive.shader").WaitForCompletion();
             }
 
             //DE = Addressables.LoadAssetAsync<Shader>("psx/vertexlit/emissive").WaitForCompletion();
-            Logger.LogInfo("Checking for Null CUBEMAP");
+            BatonPass("Checking for Null CUBEMAP");
             if (cubemap == null)
             {
-                Logger.LogInfo("ITS NULL, CORRECTING");
+                BatonPass("ITS NULL, CORRECTING");
                 cubemap = Addressables.LoadAssetAsync<Cubemap>("Assets/Textures/studio_06.exr").WaitForCompletion();
             }
             //CreateSkinGUI();
-            Logger.LogInfo("INIT BATON PASS: REFRESHSKINS()");
-            refreshskins();
+            BatonPass("INIT BATON PASS: REFRESHSKINS()");
+            if (mode.name == "b3e7f2f8052488a45b35549efb98d902")
+            {
+                menucreater.makethemenu();
+                refreshskins();
+            }
+            else { menucreater.makethePausemenu(); }
+            
         }
 
         
@@ -575,7 +608,7 @@ namespace UltraSkins
                 return null;
             if (DE == null)
                 DE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Main/ULTRAKILL-vertexlit-emissive.shader").WaitForCompletion();
-            mat.EnableKeyword("EMISSIVE");
+
             string textureToResolve = "";
             if (mat && !mat.mainTexture.name.StartsWith("TNR_") && property != "_Cube")
             {
@@ -598,6 +631,12 @@ namespace UltraSkins
                                 break;
                             default:
                                 textureToResolve = mat.mainTexture.name + "_Emissive";
+                                if (autoSwapCache.ContainsKey(textureToResolve))
+                                {
+                                    mat.EnableKeyword("EMISSIVE");
+                                    mat.SetInt("_UseAlbedoAsEmissive", 0);
+                                }
+
                                 break;
                         }
                         break;
@@ -677,15 +716,18 @@ namespace UltraSkins
                             {
                                 break;
                             }
-                            else { 
-                            //Debug.Log("swapping " + property + " of " + mat.name.ToString());
-                            Color VariantColor = GetVarationColor(TOW);
+                            else {
+
+                                //Debug.Log("swapping " + property + " of " + mat.name.ToString());
+                                Color VariantColor = GetVarationColor(TOW);
                             Color VariantColor2 = new Color(255, 255, 255, 255);
-                            mat.SetColor("_EmissiveColor", VariantColor2);
+                            mat.SetColor("_EmissiveColor", VariantColor);
                             }
                         }
                         
                     }
+                    
+                    
                 }
                 else if (swapType == "projectile")
                 {
@@ -741,6 +783,7 @@ namespace UltraSkins
                         VariantColor = new Color(ColorBlindSettings.Instance.variationColors[2].r,
                     ColorBlindSettings.Instance.variationColors[2].g,
                     ColorBlindSettings.Instance.variationColors[2].b, 1f);
+                        
                         break;
                     case FistType.Standard:
                         VariantColor = new Color(ColorBlindSettings.Instance.variationColors[0].r,
@@ -748,6 +791,7 @@ namespace UltraSkins
                    ColorBlindSettings.Instance.variationColors[0].b, 1f);
                         break;
                 }
+
             }
             else if (TOW.GetComponentInParent<HookArm>())
             {
@@ -784,33 +828,34 @@ namespace UltraSkins
 
         public string ReloadTextures(bool firsttime = false, string path = "")
         {
-            Logger.LogInfo("BATON PASS: WE ARE IN ReloadTextures() We have variables \n FIRSTTIME:" + firsttime + "\n PATH:" + path);
-            Logger.LogInfo("Start Comparing");
+            BatonPass("BATON PASS: WE ARE IN ReloadTextures() We have variables \n FIRSTTIME:" + firsttime + "\n PATH:" + path);
+            BatonPass("Start Comparing");
             if (firsttime && serializedSet != "")
             {
-                Logger.LogInfo("SerializedSet is not empty, and firsttime is true - path will equal serialized set");
+                BatonPass("SerializedSet is not empty, and firsttime is true - path will equal serialized set");
                 path = serializedSet;
             }
             else if (firsttime && serializedSet == "")
             {
-                Logger.LogInfo("SerializedSet is empty, and firsttime is true - path should equal path");
+                BatonPass("SerializedSet is empty, and firsttime is true - path should equal path");
                 path = path;
             }
             if (path == "")
             {
-                Logger.LogInfo("path is empty - path should equal path");
+                BatonPass("path is empty - path should equal path");
                 path = path;
             }
-            Logger.LogInfo("INIT BATON PASS: INITOWGAMEOBJECTS(" + firsttime +")");
+            BatonPass("INIT BATON PASS: INITOWGAMEOBJECTS(" + firsttime +")");
             InitOWGameObjects(firsttime);
-            Logger.LogInfo("BATON PASS: WELCOME BACK TO RELOADTEXTURES()");
-            Logger.LogInfo("INIT BATON PASS: LOADTEXTURES(" + path + ")");
+            BatonPass("BATON PASS: WELCOME BACK TO RELOADTEXTURES()");
+            BatonPass("INIT BATON PASS: LOADTEXTURES(" + path + ")");
             return LoadTextures(path);
 		}
 
 		public static void InitOWGameObjects(bool firsttime = false)
 		{
 			GameObject cam = GameObject.FindGameObjectWithTag("MainCamera");
+            
 			foreach (Renderer renderer in cam.GetComponentsInChildren<Renderer>(true))
 			{
 				if (renderer.gameObject.layer == 13 && !renderer.gameObject.GetComponent<ParticleSystemRenderer>() && !renderer.gameObject.GetComponent<TrailRenderer>() && !renderer.gameObject.GetComponent<LineRenderer>())
@@ -827,23 +872,25 @@ namespace UltraSkins
 					}
 				}
 			}
+            
 		}
 
 		public string LoadTextures(string fpath = "")
 		{
-            Logger.LogInfo("BATON PASS: WE ARE IN LOADTEXTURES() we have the variable FPATH, " + fpath);
+
+            BatonPass("BATON PASS: WE ARE IN LOADTEXTURES() we have the variable FPATH, " + fpath);
             try
             {
                 FileLog.Log("ULTRASKINS IS SEARCHING " + fpath.ToString());
                 Debug.Log("ULTRASKINS IS SEARCHING " + fpath.ToString());
-                Logger.LogInfo("ULTRASKINS IS SEARCHING " + fpath.ToString());
+                BatonPass("ULTRASKINS IS SEARCHING " + fpath.ToString());
                 autoSwapCache.Clear();
                 bool failed = false;
                 DirectoryInfo dir = new DirectoryInfo(fpath);
                 if (!dir.Exists)
                     return "failed";
                 FileInfo[] Files = dir.GetFiles("*.png");
-                Logger.LogInfo("Begining loop");
+                BatonPass("Begining loop");
                 if (Files.Length > 0)
                 {
                     foreach (FileInfo file in Files)
@@ -853,20 +900,20 @@ namespace UltraSkins
                             byte[] data = File.ReadAllBytes(file.FullName);
                             string name = Path.GetFileNameWithoutExtension(file.FullName);
 
-                            Logger.LogInfo("Reading " + file.FullName.ToString());
+                            BatonPass("Reading " + file.FullName.ToString());
 
                             Texture2D texture2D = new Texture2D(2, 2);
                             texture2D.name = name;
 
-                            Logger.LogInfo("creating " + texture2D.name.ToString());
+                            BatonPass("creating " + texture2D.name.ToString());
 
                             texture2D.filterMode = FilterMode.Point;
                             texture2D.LoadImage(data);
-                            Logger.LogInfo("Loading Image Data");
+                            BatonPass("Loading Image Data");
                             texture2D.Apply();
                             if (file.Name == "Railgun_Main_AlphaGlow.png")
                             {
-                                Logger.LogInfo("Its the railgun");
+                                BatonPass("Its the railgun");
 
                                 Texture2D texture2D2 = new Texture2D(2, 2);
                                 byte[] data2 = File.ReadAllBytes(Path.Combine(file.DirectoryName, "Railgun_Main_Emissive.png"));
@@ -874,7 +921,7 @@ namespace UltraSkins
                                 texture2D2.LoadImage(data2);
                                 texture2D2.Apply();
 
-                                Logger.LogInfo("Applying Changes");
+                                BatonPass("Applying Changes");
 
                                 Color[] pixels = texture2D.GetPixels();
                                 Color[] pixels2 = texture2D2.GetPixels();
@@ -883,16 +930,16 @@ namespace UltraSkins
                                     pixels[k].a = pixels2[k].r;
                                 }
                                 texture2D.SetPixels(pixels);
-                                Logger.LogInfo("Setting Colors");
+                                BatonPass("Setting Colors");
                                 texture2D.Apply();
-                                Logger.LogInfo("Applying Colors");
+                                BatonPass("Applying Colors");
                             }
                             Texture texture = new Texture();
-                            Logger.LogInfo("Setting texture ");
+                            BatonPass("Setting texture ");
                             texture = texture2D;
-                            Logger.LogInfo("Setting Variable " + texture.name);
+                            BatonPass("Setting Variable " + texture.name);
                             autoSwapCache.Add(name, texture);
-                            Logger.LogInfo("Adding to Cache " + texture.name + " " + name);
+                            BatonPass("Adding to Cache " + texture.name + " " + name);
                         }
                         else
                         {
@@ -904,15 +951,16 @@ namespace UltraSkins
                     if (!failed)
                     {
                         
-                        Logger.LogInfo("We Got the Textures ");
-                        return "Successfully loaded all Textures from " + Path.GetFileName(fpath) + "!";
+                        BatonPass("We Got the Textures ");
+                        return "Success";
                     }
                 }
-                Logger.LogInfo("HEAR YE HEAR YE The length of the files is zero, Error-\"USHAND-LOADTEXTURES-0INDEX\"" + Files.Length.ToString() + "\n" + Files.ToString());
-                return "Failed to load all textures from " + Path.GetFileName(fpath) + ".\nPlease ensure all of the Texture Files names are Correct, refer to the README file for the correct names and more info.";
+                BatonPass("HEAR YE HEAR YE The length of the files is zero, Error-\"USHAND-LOADTEXTURES-0INDEX\"" + Files.Length.ToString() + "\n" + Files.ToString());
+                return "Failed";
             }
             catch (Exception ex)
             {
+                
                 Debug.Log("HEAR YE HEAR YE, The Search Was Fruitless, Error-\\\"USHAND-LOADTEXTURES-EX\\\"\"" + ex.Message);
                 Debug.Log("HEAR YE HEAR YE, The Search Was Fruitless, Error-\\\"USHAND-LOADTEXTURES-EX\\\"\"" + ex.ToString());
                 Logger.LogError("HEAR YE HEAR YE, The Search Was Fruitless, Error-\\\"USHAND-LOADTEXTURES-EX\\\"\"" + ex.Message);
@@ -921,5 +969,19 @@ namespace UltraSkins
 
             }
         }
-	}
+
+        //Baton Pass handles debug logging for several different types of debuggers
+        
+ 
+        public static void BatonPass(string message)
+        {
+          if (ShouldDoBatonPass == true) { 
+            BatonPassLogger.LogInfo(message);
+                if (ShouldDoBatonPassUnity == true)
+                {
+                    Debug.Log(message);
+                }
+            }
+        }
+    }
 }
