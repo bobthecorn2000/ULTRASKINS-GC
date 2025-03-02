@@ -7,8 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using Ionic.Zlib;
 using System;
 
-using PluginConfig.API.Functionals;
-using PluginConfig.API;
+
 using System.Text.Json;
 using System.Text;
 using UnityEngine.Profiling.Memory.Experimental;
@@ -20,7 +19,7 @@ namespace UltraSkins
 	public class SkinEventHandler : MonoBehaviour
 	{
         //static PluginConfigurator config;
-        public const string CurrentVersion = "5.1.1";
+        public const string CurrentVersion = "6.0.0";
         public GameObject Activator;
 		public string path;
 		public string pname;
@@ -56,6 +55,7 @@ namespace UltraSkins
 		}
         public string GetModFolderPath()
         {
+            
             // Get the path to the current directory where the game executable is located
             //string gameDirectory = Assembly.GetExecutingAssembly().Location;
             //string gameDirectory = Path.GetDirectoryName(Application.dataPath);
@@ -210,6 +210,7 @@ namespace UltraSkins
 
         static void ExtractFromZlibStream(ZlibStream zlibStream, string extractFolder)
         {
+            
             byte[] buffer = new byte[4096];
             int bytesRead;
             bool MDread = false;

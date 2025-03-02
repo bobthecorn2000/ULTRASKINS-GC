@@ -31,12 +31,6 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>libs\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>libs\Assembly-CSharp.dll</HintPath>
-    </Reference>
-	  <Reference Include="Assembly-CSharp">
-		  <HintPath>libs\Assembly-CSharp.dll</HintPath>
-	  </Reference>
 	      <Reference Include="Unity.Addressables">
       <HintPath>libs\Unity.Addressables.dll</HintPath>
     </Reference>
@@ -49,9 +43,13 @@
     <Reference Include="UnityEngine.UI">
       <HintPath>libs\UnityEngine.UI.dll</HintPath>
 	
-    </Reference>
-	  <Reference Include="plugincon">
-		  <HintPath>C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL\BepInEx\plugins\PluginConfigurator\pluginconfigurator.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Unity.TextMeshPro">
+		  <HintPath>libs\Unity.TextMeshPro.dll</HintPath>
+
+	  </Reference>
+	  <Reference Include="NewBlood">
+		  <HintPath>libs\NewBlood.LegacyInput.dll</HintPath>
 
 	  </Reference>
   </ItemGroup>
