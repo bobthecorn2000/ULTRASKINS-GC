@@ -19,7 +19,7 @@ namespace UltraSkins
 	public class SkinEventHandler : MonoBehaviour
 	{
         //static PluginConfigurator config;
-        public const string CurrentVersion = "6.0.0";
+        public const string CurrentVersion = "6.0.1";
         public GameObject Activator;
 		public string path;
 		public string pname;
@@ -79,7 +79,7 @@ namespace UltraSkins
 
             }
             //ExtractSkin("OG-SKINS.GCskin");
-            if (!File.Exists(Path.Combine(dir + "\\OG-SKINS")) &&  File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin"))) {
+            if (!Directory.Exists(Path.Combine(dir + "\\OG-SKINS")) &&  File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin"))) {
                 ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
             }
             string deserializedData = serializer.DeserializeStringFromFile(filecheck);
@@ -87,11 +87,6 @@ namespace UltraSkins
             //return gameDirectory+modFolderName;
             if (deserializedData == "deserializedData Failed") {
                 serializer.SerializeStringToFile(defloc, filecheck);
-                if (File.Exists(Path.Combine(dir + "\\OG-SKINS")) && File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin")))
-                {
-                    
-                    ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
-                }
                 deserializedData = serializer.DeserializeStringFromFile(filecheck);
             }
             if (deserializedData == "Wrong Version")

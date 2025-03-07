@@ -78,8 +78,13 @@ namespace UltraSkins
                     v1cb.variationNumber = 0;
                     v1cb.UpdateColor();
 
-                    Color VariantColorB = new Color(ColorBlindSettings.Instance.variationColors[0].r, ColorBlindSettings.Instance.variationColors[0].g, ColorBlindSettings.Instance.variationColors[0].b, 1f);
-                    CanvasRenderer V1Renderer = V1.GetComponentInChildren<CanvasRenderer>();
+                    Wings = V1.transform.Find("Wings").gameObject;
+                    ColorBlindGet WingCB = Wings.AddComponent<ColorBlindGet>();
+                    WingCB.variationColor = true;
+                    WingCB.variationNumber = 0;
+                    WingCB.UpdateColor();
+                    //Color VariantColorB = new Color(ColorBlindSettings.Instance.variationColors[0].r, ColorBlindSettings.Instance.variationColors[0].g, ColorBlindSettings.Instance.variationColors[0].b, 1f);
+                    //CanvasRenderer V1Renderer = V1.GetComponentInChildren<CanvasRenderer>();
                     //V1Renderer.SetColor(VariantColorB);
 
 
@@ -89,8 +94,8 @@ namespace UltraSkins
                     KBcb.variationNumber = 2;
                     KBcb.UpdateColor();
 
-                    Color VariantColorR = new Color(ColorBlindSettings.Instance.variationColors[2].r, ColorBlindSettings.Instance.variationColors[2].g, ColorBlindSettings.Instance.variationColors[2].b, 1f);
-                    CanvasRenderer KBRenderer = Knuckleblaster.GetComponentInChildren<CanvasRenderer>();
+                    //Color VariantColorR = new Color(ColorBlindSettings.Instance.variationColors[2].r, ColorBlindSettings.Instance.variationColors[2].g, ColorBlindSettings.Instance.variationColors[2].b, 1f);
+                    //CanvasRenderer KBRenderer = Knuckleblaster.GetComponentInChildren<CanvasRenderer>();
 
                     //KBRenderer.SetColor(VariantColorR);
 
@@ -101,8 +106,8 @@ namespace UltraSkins
                     WLcb.variationNumber = 1;
                     WLcb.UpdateColor();
 
-                    Color VariantColorG = new Color(ColorBlindSettings.Instance.variationColors[1].r, ColorBlindSettings.Instance.variationColors[1].g, ColorBlindSettings.Instance.variationColors[1].b, 1f);
-                    CanvasRenderer WLRenderer = Whiplash.GetComponentInChildren<CanvasRenderer>();
+                    //Color VariantColorG = new Color(ColorBlindSettings.Instance.variationColors[1].r, ColorBlindSettings.Instance.variationColors[1].g, ColorBlindSettings.Instance.variationColors[1].b, 1f);
+                    //CanvasRenderer WLRenderer = Whiplash.GetComponentInChildren<CanvasRenderer>();
                     Button oldstart = mainmenu.GetComponentInChildren<Button>();
 
                     //GameObject UltraskinsMenubutton = new GameObject();
