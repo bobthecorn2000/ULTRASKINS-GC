@@ -41,7 +41,7 @@ namespace UltraSkins
     
     public class ULTRASKINHand : BaseUnityPlugin
     {
-        public const bool ShouldDoBatonPass = true;
+        public const bool ShouldDoBatonPass = false;
         public const bool ShouldDoBatonPassUnity = false;
 
         public const string PLUGIN_NAME = "UltraSkins";
