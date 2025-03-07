@@ -753,7 +753,7 @@ namespace UltraSkins
                     if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
                     {
                         mat.SetTexture("_MainTex", resolvedTexture);
-
+                        
                     }
                 }
 

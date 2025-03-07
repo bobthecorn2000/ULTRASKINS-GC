@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UltraSkins", "UltraSkins\Ul
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "USutils", "USutils\USutils.csproj", "{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "USutilsGui", "USutilsGui\USutilsGui.csproj", "{4D954F55-6549-4496-805E-1C5647E85165}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,26 +61,6 @@ Global
 		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Release|x64.Build.0 = Release|Any CPU
 		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Release|x86.ActiveCfg = Release|Any CPU
 		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Release|x86.Build.0 = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|ARM.Build.0 = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|x64.Build.0 = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Debug|x86.Build.0 = Debug|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|ARM.ActiveCfg = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|ARM.Build.0 = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|ARM64.Build.0 = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|x64.ActiveCfg = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|x64.Build.0 = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|x86.ActiveCfg = Release|Any CPU
-		{4D954F55-6549-4496-805E-1C5647E85165}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

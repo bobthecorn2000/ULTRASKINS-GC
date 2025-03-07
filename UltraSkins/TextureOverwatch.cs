@@ -22,6 +22,18 @@ namespace UltraSkins
             if (GetComponentInParent<Grenade>())
             {
                 swapType = GetComponentInParent<Grenade>().rocket ? "rocket": "grenade";
+				if (swapType == "rocket" && GetComponent<ChangeMaterials>())
+				{
+					Material[] chargemats = GetComponent<ChangeMaterials>().materials;
+
+					foreach (Material mat in chargemats)
+					{
+						if (ULTRASKINHand.autoSwapCache.ContainsKey(mat.mainTexture.name))
+						{
+							mat.mainTexture = ULTRASKINHand.autoSwapCache[mat.mainTexture.name];
+						}
+					}
+                }
             }
             if (!renderer)
             {
