@@ -46,7 +46,7 @@ namespace UltraSkins
 
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
-        public const string PLUGIN_VERSION = "6.0.0";
+        public const string PLUGIN_VERSION = "6.0.1";
         private string modFolderPath;
 
         public static ManualLogSource BatonPassLogger = new ManualLogSource("BatonPass");
