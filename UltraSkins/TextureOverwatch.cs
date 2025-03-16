@@ -25,14 +25,17 @@ namespace UltraSkins
 				if (swapType == "rocket" && GetComponent<ChangeMaterials>())
 				{
 					Material[] chargemats = GetComponent<ChangeMaterials>().materials;
-
-					foreach (Material mat in chargemats)
-					{
-						if (ULTRASKINHand.autoSwapCache.ContainsKey(mat.mainTexture.name))
+                    Material newrocketmat = new Material(chargemats[0]);
+					chargemats[0] = newrocketmat;
+                    if (ULTRASKINHand.autoSwapCache.ContainsKey("skull2rocketcharge"))
 						{
-							mat.mainTexture = ULTRASKINHand.autoSwapCache[mat.mainTexture.name];
+						chargemats[0].mainTexture = ULTRASKINHand.autoSwapCache["skull2rocketcharge"];
 						}
-					}
+                    if (ULTRASKINHand.autoSwapCache.ContainsKey("skull2rocketbonuscharge"))
+                    {
+                        chargemats[1].mainTexture = ULTRASKINHand.autoSwapCache["skull2rocketbonuscharge"];
+                    }
+
                 }
             }
             if (!renderer)

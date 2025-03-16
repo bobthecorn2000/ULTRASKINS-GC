@@ -43,10 +43,10 @@ namespace UltraSkins
         static GameObject batonpassGUIInst = null;
         public static void makethemenu()
         {
-            Debug.Log("BATON PASS: WE ARE IN MAKETHEMENU()");
+            BatonPass("BATON PASS: WE ARE IN MAKETHEMENU()");
 
             Scene scene = SceneManager.GetActiveScene();
-            Debug.Log("The Scene is: " + scene.name);
+            BatonPass("The Scene is: " + scene.name);
 
             GameObject canvas = null;
             GameObject mainmenu;
@@ -56,13 +56,13 @@ namespace UltraSkins
                 foreach (var rootCanvas in scene.GetRootGameObjects().Where(obj => obj.name == "Canvas"))
 
                 {
-                    Debug.Log("entered a foreach");
+                    BatonPass("entered a foreach");
                     mainmenu = rootCanvas.transform.Find("Main Menu (1)").gameObject;
-                    Debug.Log("finished search");
-                    Debug.Log("HEARYEE HEAR YEE TRANSFORM IS " + mainmenu.ToString());
+                    BatonPass("finished search");
+                    BatonPass("HEARYEE HEAR YEE TRANSFORM IS " + mainmenu.ToString());
                     GameObject V1;
 
-                    Debug.Log(ColorBlindSettings.Instance.variationColors[2].r + " " + ColorBlindSettings.Instance.variationColors[2].g + " " + ColorBlindSettings.Instance.variationColors[2].b);
+                    BatonPass(ColorBlindSettings.Instance.variationColors[2].r + " " + ColorBlindSettings.Instance.variationColors[2].g + " " + ColorBlindSettings.Instance.variationColors[2].b);
 
 
 
@@ -153,7 +153,7 @@ namespace UltraSkins
                             Transform[] listobjects = UltraskinsConfigmenu.GetComponentsInChildren<Transform>();
                             foreach (Transform objects in listobjects)
                             {
-                                BatonPass(objects.name);
+                                //BatonPass(objects.name);
                             }
                             Editorpanel = UltraskinsConfigmenu.transform.Find("Canvas/editor").gameObject;
                             Editorpanel.SetActive(false);
