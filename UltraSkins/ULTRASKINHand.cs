@@ -46,7 +46,7 @@ namespace UltraSkins
 
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
-        public const string PLUGIN_VERSION = "6.0.1";
+        public const string PLUGIN_VERSION = "6.0.2";
         private string modFolderPath;
 
         public static ManualLogSource BatonPassLogger = new ManualLogSource("BatonPass");
@@ -122,7 +122,7 @@ namespace UltraSkins
                 }
             }
 
-            BatonPass($"Registered Addressable Keys:\n{string.Join("\n", keys)}");
+            //BatonPass($"Registered Addressable Keys:\n{string.Join("\n", keys)}");
 
             try {
                 BatonPass("Looking for Subfolders");
@@ -176,7 +176,7 @@ namespace UltraSkins
 
 
             }
-            refreshskins();
+            //refreshskins();
 
 
         }
@@ -588,11 +588,16 @@ namespace UltraSkins
                 cubemap = Addressables.LoadAssetAsync<Cubemap>("Assets/Textures/studio_06.exr").WaitForCompletion();
             }
             //CreateSkinGUI();
+            BatonPass("The Scene is: " + mode.name);
             BatonPass("INIT BATON PASS: REFRESHSKINS()");
             if (mode.name == "b3e7f2f8052488a45b35549efb98d902")
             {
                 menucreater.makethemenu();
                 refreshskins();
+            }
+            else if (mode.name == "Bootstrap")
+            {
+                BatonPass("Cant make menu, currently straping my boots");
             }
             else { menucreater.makethePausemenu(); }
             
@@ -661,7 +666,7 @@ namespace UltraSkins
                         textureToResolve = (mat.name.Contains("Swapped_AltarUnlitRed") && !mat.mainTexture.name.StartsWith("T_")) ? "skull2rocketbonus" : mat.mainTexture.name.Contains("T_Sakuya") ? "" : "skull2rocket";
                         break;
                     case "THROWITBACK":
-                        textureToResolve = "skull2 compressed";
+                        textureToResolve = "skull2grenade";
                         break;
                     default:
                         textureToResolve = "";

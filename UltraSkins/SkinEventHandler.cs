@@ -19,7 +19,7 @@ namespace UltraSkins
 	public class SkinEventHandler : MonoBehaviour
 	{
         //static PluginConfigurator config;
-        public const string CurrentVersion = "6.0.1";
+        public const string CurrentVersion = "6.0.2";
         public GameObject Activator;
 		public string path;
 		public string pname;
