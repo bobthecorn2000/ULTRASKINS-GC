@@ -119,7 +119,7 @@ namespace UltraSkins
 
             BatonPass("Looking for the Config");
             var catalog = Addressables.LoadContentCatalogAsync(Path.Combine(pluginPath, "catalog.json"), true).WaitForCompletion();
-
+            
             
             //BatonPass($"Registered Addressable Keys:\n{string.Join("\n", keys)}");
 
