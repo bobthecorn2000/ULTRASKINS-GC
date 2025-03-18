@@ -20,5 +20,16 @@ inside your directory create a folder (name it whatever) and put the skin files 
 2. custom colors using the in game color customizer might be a bit funky lookin
 3. jackhammer emissive is untested, feel free to try and add one, i have no idea if it will work, i will include it later
 
+# if building
+to build ultraskins yourself you will need a copy of ultrakill
+in the in the repo navigate to the UltraSkins folder, in it create a folder called libs and add the following from your ultrakill installs ```ULTRAKILL_Data/Managed``` folder
+1. Assembly-CSharp.dll
+2. NewBlood.LegacyInput.dll
+3. Unity.Addressables.dll
+4. Unity.ResourceManager.dll
+5. Unity.TextMeshPro.dll
+6. UnityEngine.AssetBundleModule.dll
+7. UnityEngine.UI.dll
+
 if you have any issues let me know on discord by submitting a bug report here: [https://discord.gg/Gp3bcJFj](https://discord.gg/FtuT5ys)
 or submit an issue on github
