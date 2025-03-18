@@ -41,7 +41,13 @@ namespace UltraSkins
     
     public class ULTRASKINHand : BaseUnityPlugin
     {
-        public const bool ShouldDoBatonPass = false;
+        
+        
+#if DEBUG
+        public const bool ShouldDoBatonPass = true;
+#else
+    public const bool ShouldDoBatonPass = false;
+#endif
         public const bool ShouldDoBatonPassUnity = false;
 
         public const string PLUGIN_NAME = "UltraSkins";
@@ -96,7 +102,7 @@ namespace UltraSkins
             private void Awake()
         {
             BepInEx.Logging.Logger.Sources.Add(BatonPassLogger);
-            //System.Diagnostics.Debugger.Break();
+            
             BatonPass("Attempting to start");
 
 
@@ -109,18 +115,11 @@ namespace UltraSkins
 
             BatonPass("Setting appdatapath, appdataloc and SkinFolderDir to " + "\nAPPDATAPATH:" + appDataPath + "\nAPPDATALOC:" + AppDataLoc + "\nSKINFOLDERDIR:"+ skinfolderdir);
             BatonPass("Starting addressables");
-            Addressables.InitializeAsync().WaitForCompletion();
+            
 
             BatonPass("Looking for the Config");
             var catalog = Addressables.LoadContentCatalogAsync(Path.Combine(pluginPath, "catalog.json"), true).WaitForCompletion();
-            List<string> keys = new List<string>();
-            foreach (var locator in Addressables.ResourceLocators)
-            {
-                foreach (var key in locator.Keys)
-                {
-                    keys.Add(key.ToString());
-                }
-            }
+
 
             //BatonPass($"Registered Addressable Keys:\n{string.Join("\n", keys)}");
 
@@ -380,6 +379,7 @@ namespace UltraSkins
             [HarmonyPostfix]
             public static void SwitchFistPost(FistControl __instance, int orderNum)
             {
+
                 TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
 				ReloadTextureOverWatch(TOWS);
             }
