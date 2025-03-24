@@ -1,30 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BepInEx;
-
-using HarmonyLib;
-using NewBlood;
-using Unity.Audio;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-
-using System.Reflection;
 using static UltraSkins.ULTRASKINHand;
 
-using BepInEx.Logging;
-using static UltraSkins.SkinEventHandler;
-
-using System.Net.NetworkInformation;
-using HarmonyLib.Tools;
-using static MonoMod.RuntimeDetour.Platforms.DetourNativeMonoPosixPlatform;
-using static UnityEngine.ParticleSystem.PlaybackState;
-using UnityEngine.ResourceManagement.ResourceLocations;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using TMPro;
 
 
 
@@ -34,13 +18,15 @@ using TMPro;
 
 namespace UltraSkins
 {
-    internal class menucreater : MonoBehaviour
+    internal class MenuCreator : MonoBehaviour
     {
+
         static string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         static string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
         static string skinfolderdir = Path.Combine(appDataPath, AppDataLoc);
         public static string folderupdater;
         static GameObject batonpassGUIInst = null;
+
         public static void makethemenu()
         {
             BatonPass("BATON PASS: WE ARE IN MAKETHEMENU()");
@@ -50,14 +36,22 @@ namespace UltraSkins
 
             GameObject canvas = null;
             GameObject mainmenu;
+            GameObject fallNoiseOn = null;
+            GameObject fallNoiseOff = null;
             try
             {
+                foreach (var rootsound in scene.GetRootGameObjects().Where(obj => obj.name == "FallSound"))
 
+                {
+                    fallNoiseOn = rootsound.transform.Find("ToOne").gameObject;
+                    fallNoiseOff = rootsound.transform.Find("ToZero").gameObject;
+                }
                 foreach (var rootCanvas in scene.GetRootGameObjects().Where(obj => obj.name == "Canvas"))
 
                 {
                     BatonPass("entered a foreach");
                     mainmenu = rootCanvas.transform.Find("Main Menu (1)").gameObject;
+
                     BatonPass("finished search");
                     BatonPass("HEARYEE HEAR YEE TRANSFORM IS " + mainmenu.ToString());
                     GameObject V1;
@@ -120,25 +114,7 @@ namespace UltraSkins
                     GameObject prefabmenu;
                     GameObject UltraskinsConfigmenu;
                     GameObject Editorpanel;
-                    Addressables.LoadAssetAsync<GameObject>("Assets/BatonpassGUI.prefab").Completed += buttonHandle =>
-                    {
-                        if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
-                        {
-                            GameObject prefab = buttonHandle.Result;
-                            batonpassGUIInst = Instantiate(prefab, canvas.transform);
-                            batonpassGUIInst.SetActive(false);
-                            batonpassGUIInst.transform.localPosition = new Vector3(0, 0, 0);
 
-
-                            // Pass UltraskinsConfigmenu to the listener
-
-                            BatonPass("Successfully loaded and instantiated Baton Pass GUI.");
-                        }
-                        else
-                        {
-                            BatonPass("Failed to load Baton Pass GUI " + buttonHandle.OperationException);
-                        }
-                    };
                     //Addressables.LoadAssetAsync<GameObject>("ultraskinsButton").WaitForCompletion();
                     GameObject leftside = mainmenu.transform.Find("LeftSide").gameObject;
 
@@ -148,7 +124,7 @@ namespace UltraSkins
                         {
                             prefabmenu = handle.Result;
                             UltraskinsConfigmenu = Instantiate(prefabmenu);
-                            
+
 
                             Transform[] listobjects = UltraskinsConfigmenu.GetComponentsInChildren<Transform>();
                             foreach (Transform objects in listobjects)
@@ -156,62 +132,14 @@ namespace UltraSkins
                                 //BatonPass(objects.name);
                             }
                             Editorpanel = UltraskinsConfigmenu.transform.Find("Canvas/editor").gameObject;
+
+                            Animator menuanimator = Editorpanel.gameObject.GetComponent<Animator>();
+                            MenuManager Mman = Editorpanel.AddComponent<MenuManager>();
                             Editorpanel.SetActive(false);
                             BatonPass("looking for content");
-                            string[] subfolders = Directory.GetDirectories(skinfolderdir);
                             GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/Scroll View/Viewport/Content").gameObject;
-                            List<GameObject> loadedButtons = new List<GameObject>();
-                            int buttonsToLoad = subfolders.Length;
-                            int buttonsLoaded = 0;
-
-                            foreach (string subfolder in subfolders)
-                            {
-                                string folder = Path.GetFileName(subfolder);
-                                BatonPass("SubFolder: " + folder);
-                                folderupdater = folder;
-                                ULTRASKINHand handInstance = new ULTRASKINHand();
-
-                                Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsButton.prefab").Completed += buttonHandle =>
-                                {
-                                    if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
-                                    {
-                                        GameObject prefab = buttonHandle.Result;
-                                        GameObject instance = Instantiate(prefab, contentfolder.transform);
-                                        instance.SetActive(true);
-
-                                        Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
-                                        ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                                        ultraskinsbutton.onClick.AddListener(() => handInstance.refreshskins(folder));
-
-                                        loadedButtons.Add(instance); // Add button to list
-
-                                        BatonPass("Successfully loaded and instantiated ultraskinsButton.");
-                                    }
-                                    else
-                                    {
-                                        BatonPass("Failed to load ultraskinsButton: " + buttonHandle.OperationException);
-                                    }
-
-                                    // Check if all buttons are loaded
-                                    buttonsLoaded++;
-                                    if (buttonsLoaded == buttonsToLoad)
-                                    {
-                                        BatonPass("All buttons loaded, setting up activation sequence.");
-                                        ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
-                                        activateanimator.objectsToActivate = loadedButtons.ToArray();
-                                        activateanimator.delay = 0.05f;
-                                        BatonPass("Successfully set up ObjectActivateInSequence.");
-                                    }
-                                };
-                            }
-
-
-
-                            /*                            BatonPass("searching for Viewport");
-                                                        contentfolder = UltraskinsConfigmenu.transform.Find("Viewport").gameObject;
-                                                        BatonPass("searching for content");
-                                                        contentfolder = contentfolder.transform.Find("Content").gameObject;*/
-
+                            ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
+                            Mman.GenerateButtons(skinfolderdir, contentfolder, activateanimator);
 
                             // Now load the ultraskins button
                             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
@@ -226,8 +154,8 @@ namespace UltraSkins
                                     Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
                                     //ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = "ULTRASKINS";
                                     // Pass UltraskinsConfigmenu to the listener
-                                    ultraskinsbutton.onClick.AddListener(() => Openskineditor(mainmenu, Editorpanel));
-                                    Editorpanel.GetComponentInChildren<Button>().onClick.AddListener(() => Closeskineditor(mainmenu, Editorpanel));
+                                    ultraskinsbutton.onClick.AddListener(() => Openskineditor(mainmenu, Editorpanel, fallNoiseOn));
+                                    Editorpanel.GetComponentInChildren<Button>().onClick.AddListener(() => Mman.Closeskineditor(mainmenu, Editorpanel, fallNoiseOff, menuanimator));
                                     BatonPass("Successfully loaded and instantiated ultraskinsButton.");
                                 }
                                 else
@@ -255,10 +183,10 @@ namespace UltraSkins
             return;
         }
 
-        public static void Openskineditor(GameObject mainmenucanvas, GameObject Configmenu)
+        public static void Openskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseon)
         {
             mainmenucanvas.SetActive(false);
-            
+            fallnoiseon.SetActive(true);
             Configmenu.SetActive(true);
 
         }
@@ -277,12 +205,8 @@ namespace UltraSkins
 
             //GameStateManager.Instance.RegisterState(configState);
         }
-        public static void Closeskineditor(GameObject mainmenucanvas, GameObject Configmenu)
-        {
-            mainmenucanvas.SetActive(true);
-            Configmenu.SetActive(false);
-            
-        }
+
+
         public static void Closepauseskineditor(GameObject mainmenucanvas, GameObject Configmenu, OptionsManager controller)
         {
             controller.UnPause();
@@ -290,22 +214,11 @@ namespace UltraSkins
             //mainmenucanvas.SetActive(true);
             //GameStateManager.Instance.PopState("pause");
         }
-        
-        public static void BatonPassAnnoucement(Color bordercolor, string message)
-        {
-            GameObject messagebox = batonpassGUIInst.transform.Find("MessageBox").gameObject;
-            GameObject messageboxOutline = batonpassGUIInst.transform.Find("MessageBox/MessageOutline").gameObject;
-            batonpassGUIInst.SetActive(false);
-            messagebox.SetActive(true);
-            batonpassGUIInst.GetComponentInChildren<TextMeshProUGUI>().text = message;
-            messageboxOutline.GetComponentInChildren<Image>().color = bordercolor;
 
 
-            batonpassGUIInst.SetActive(true);
-        }
 
-        
-            public static void makethePausemenu()
+
+        public static void makethePausemenu()
         {
             Debug.Log("BATON PASS: WE ARE IN MAKETHEPAUSEMENU()");
 
@@ -313,7 +226,7 @@ namespace UltraSkins
             Debug.Log("The Scene is: " + scene.name);
 
             GameObject canvas = null;
-            
+
             try
             {
 
@@ -332,25 +245,7 @@ namespace UltraSkins
                     GameObject UltraskinsConfigmenu;
                     GameObject Pausemenu = rootCanvas.transform.Find("PauseMenu").gameObject;
                     //Addressables.LoadAssetAsync<GameObject>("ultraskinsButton").WaitForCompletion();
-                    Addressables.LoadAssetAsync<GameObject>("Assets/BatonpassGUI.prefab").Completed += buttonHandle =>
-                    {
-                        if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
-                        {
-                            GameObject prefab = buttonHandle.Result;
-                            batonpassGUIInst = Instantiate(prefab, canvas.transform);
-                            batonpassGUIInst.SetActive(false);
-                            batonpassGUIInst.transform.localPosition = new Vector3(0, 0, 0);
-                            
-                           
-                            // Pass UltraskinsConfigmenu to the listener
-                            
-                            BatonPass("Successfully loaded and instantiated Baton Pass GUI.");
-                        }
-                        else
-                        {
-                            BatonPass("Failed to load Baton Pass GUI " + buttonHandle.OperationException);
-                        }
-                    };
+
 
                     Addressables.LoadAssetAsync<GameObject>("Assets/UltraskinsPausedEditmenu.prefab").Completed += handle =>
                     {
@@ -359,7 +254,7 @@ namespace UltraSkins
                             prefabmenu = handle.Result;
                             UltraskinsConfigmenu = Instantiate(prefabmenu);
                             UltraskinsConfigmenu.SetActive(false); // Keep it inactive initially
-
+                            
                             Transform[] listobjects = UltraskinsConfigmenu.GetComponentsInChildren<Transform>();
                             foreach (Transform objects in listobjects)
                             {
@@ -368,35 +263,10 @@ namespace UltraSkins
                             BatonPass("looking for content");
                             string[] subfolders = Directory.GetDirectories(skinfolderdir);
                             GameObject backdrop = UltraskinsConfigmenu.transform.Find("Canvas/Backdrop").gameObject;
+                            MenuManager Mman = backdrop.AddComponent<MenuManager>();
                             GameObject contentfolder = backdrop.transform.Find("Scroll View/Viewport/Content").gameObject;
-                            foreach (string subfolder in subfolders)
-                            {
-
-                                string folder = Path.GetFileName(subfolder);
-                                BatonPass("SubFolder: " + folder);
-                                folderupdater = folder;
-                                ULTRASKINHand handInstance = new ULTRASKINHand();
-                                Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsButton.prefab").Completed += buttonHandle =>
-                                {
-                                    if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
-                                    {
-                                        GameObject prefab = buttonHandle.Result;
-                                        GameObject instance = Instantiate(prefab, contentfolder.transform);
-                                        instance.SetActive(true);
-
-                                        Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
-                                        ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                                        // Pass UltraskinsConfigmenu to the listener
-
-                                        ultraskinsbutton.GetComponentInChildren<Button>().onClick.AddListener(() => handInstance.refreshskins(folder));
-                                        BatonPass("Successfully loaded and instantiated ultraskinsButton.");
-                                    }
-                                    else
-                                    {
-                                        BatonPass("Failed to load ultraskinsButton: " + buttonHandle.OperationException);
-                                    }
-                                };
-                            }
+                            ULTRASKINHand handInstance = ULTRASKINHand.HandInstance;
+                            Mman.GenerateButtons(skinfolderdir, contentfolder);
 
 
 
@@ -407,7 +277,7 @@ namespace UltraSkins
                             BatonPass("contentfolder found");
                             HudOpenEffect activateanimator = backdrop.AddComponent<HudOpenEffect>();
                             MenuEsc men = backdrop.AddComponent<MenuEsc>();
-                           
+
                             BatonPass("set animator to buttons");
                             activateanimator.speed = 30;
 
@@ -432,9 +302,9 @@ namespace UltraSkins
                                     instance.SetActive(true);
                                     instance.transform.localPosition = new Vector3(-100, -90, 0);
                                     Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
-                                    
+
                                     // Pass UltraskinsConfigmenu to the listener
-                                    ultraskinsbutton.onClick.AddListener(() => Openpausedskineditor(Pausemenu, UltraskinsConfigmenu,backdrop,controller));
+                                    ultraskinsbutton.onClick.AddListener(() => Openpausedskineditor(Pausemenu, UltraskinsConfigmenu, backdrop, controller));
                                     UltraskinsConfigmenu.GetComponentInChildren<Button>().onClick.AddListener(() => Closepauseskineditor(Pausemenu, backdrop, controller));
                                     BatonPass("Successfully loaded and instantiated ultraskinsButton.");
                                 }

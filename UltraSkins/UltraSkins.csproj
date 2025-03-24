@@ -4,9 +4,10 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>UltraSkins</AssemblyName>
     <Description>UltraSkins</Description>
-    <Version>1.0.0</Version>
+	  <Version>6.1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -52,5 +53,13 @@
 		  <HintPath>libs\NewBlood.LegacyInput.dll</HintPath>
 
 	  </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\andrew fox\source\repos\ULTRASKINS\UltraSkins\.editorconfig" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="C:\Users\andrew fox\source\repos\ULTRASKINS\UltraSkins\.editorconfig" />
   </ItemGroup>
 </Project>
