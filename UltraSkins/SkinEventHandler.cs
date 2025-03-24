@@ -40,7 +40,7 @@ namespace UltraSkins
 			if (Activator != null && Activator.activeSelf)
 			{
 				Activator.SetActive(false);
-				string message = UKSH.ReloadTextures(false, path);
+				UKSH.ReloadTextures(false, path);
 				string folder = GetModFolderPath();
 				TextureOverWatch[] TOWS = GameObject.FindWithTag("MainCamera").GetComponentsInChildren<TextureOverWatch>(true);
 				foreach (TextureOverWatch TOW in TOWS)
@@ -50,15 +50,17 @@ namespace UltraSkins
 						TOW.enabled = true;
                     }
 				}
-                MonoSingleton<HudMessageReceiver>.Instance.SendHudMessage(message, "", "", 0, false);
+                
 			}
 		}
         public string GetModFolderPath()
         {
-            
+
             // Get the path to the current directory where the game executable is located
             //string gameDirectory = Assembly.GetExecutingAssembly().Location;
             //string gameDirectory = Path.GetDirectoryName(Application.dataPath);
+            
+
             string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
             string moddir = Path.GetDirectoryName(dlllocation);
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -67,6 +69,8 @@ namespace UltraSkins
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
+                
+                
             }
                 string defloc = Path.Combine(dir + "\\OG-SKINS");
             // The mod folder is typically named "BepInEx/plugins" or similar
