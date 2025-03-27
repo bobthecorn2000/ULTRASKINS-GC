@@ -9,10 +9,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static UltraSkins.BPGUIManager;
 using static UltraSkins.SkinEventHandler;
+using static UnityEngine.UIElements.UIRAtlasAllocator;
 
 
 
@@ -70,15 +72,13 @@ namespace UltraSkins
         public static string pluginPath;
         public string folderupdater;
         public static Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
-
+        public Dictionary<string,string> MaterialNames = new Dictionary<string,string>();
         public string[] directories;
         public string serializedSet = "";
         public bool swapped = false;
         Harmony UKSHarmony;
         public static ULTRASKINHand HandInstance { get; private set; }
-        static Shader CCE;
-        static Shader DE;
-        static Cubemap cubemap;
+
         //public void Start(SkinEventHandler skinEventHandler)
         //{
         //    string modFolderPath = skinEventHandler.GetModFolderPath();
@@ -167,9 +167,13 @@ namespace UltraSkins
                 BatonPass("Creating the SkinEvent Handler");
                 SkinEventHandler skinEventHandler = new SkinEventHandler();
                 BatonPass("INIT BATON PASS: GETMODFOLDERPATH()");
-                string modFolderPath = skinEventHandler.GetModFolderPath();
+                string[] modFolderPath = skinEventHandler.GetModFolderPath();
                 BatonPass("BATON PASS: WELCOME BACK TO ONMODLOADED() WE RECIEVED " + modFolderPath);
                 //LoadTextures("C:\\Users\\andrew fox\\AppData\\Roaming\\bobthecorn2000\\ULTRAKILL\\ultraskinsGC\\BrennanSet");
+                HandInstance.MaterialNames.Add("Swapped_weapon_GreenArm (Instance)(Clone) (Instance)", "T_GreenArm");
+                HandInstance.MaterialNames.Add("Swapped_weapon_FeedbackerLit (Instance)(Clone) (Instance)", "T_Feedbacker");
+                HandInstance.MaterialNames.Add("Swapped_weapon_RedArmLit (Instance)(Clone) (Instance)", "v2_armtex");
+                HandInstance.MaterialNames.Add("Swapped_weapon_MainArmLit (Instance)(Clone) (Instance)", "T_MainArm");
 
             }
             catch (Exception ex)
@@ -186,11 +190,10 @@ namespace UltraSkins
 
         }
 
-        public void refreshskins(string clickedButton)
+        public void refreshskins(string[] clickedButtons)
         {
-            BatonPass("BATON PASS: WE ARE IN REFRESHSKINS() WE RECIEVED AND HAVE THE CURRENT VARIABLES" + "\n clickedButton " + clickedButton);
-            Debug.Log("pannel close:" + clickedButton);
-            BatonPass("Panal closed for " + clickedButton);
+            BatonPass("BATON PASS: WE ARE IN REFRESHSKINS()");
+
             StringSerializer serializer = new StringSerializer();
             BatonPass("Created The Serializer");
             BatonPass("looking for the dll, appdata paths and merging the directory strings");
@@ -200,15 +203,25 @@ namespace UltraSkins
             string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
             string dir = Path.Combine(appDataPath, AppDataLoc);
 
-            string filepath = Path.Combine(dir + "\\" + clickedButton);
-            BatonPass("Done, The folder is " + filepath);
+            List<string> filepath = new List<string>();
+            foreach (string clickedButton in clickedButtons)
+            {
+                filepath.Add(Path.Combine(dir + "\\" + clickedButton));
+                BatonPass("added " + dir + "\\" + clickedButton);
+            }
+            string[] filepathArray = filepath.ToArray();
+            foreach (string thing in filepathArray)
+            {
+                BatonPass(thing);
+            }
 
             Debug.Log("folderis: " + filepath);
-            serializer.SerializeStringToFile(filepath, Path.Combine(dir + "\\data.USGC"));
+            serializer.SerializeStringToFile(filepathArray, Path.Combine(dir + "\\data.USGC"));
             BatonPass("Saved to data.USGC");
             BatonPass("INIT BATON PASS: RELOADTEXTURES(TRUE," + filepath + ")");
-            ReloadTextures(false, filepath);
-
+            
+            ReloadTextures(filepathArray,false);
+            
             BatonPass("BATON PASS: WELCOME BACK TO REFRESHSKINS()");
             BatonPass("Closing panel");
 
@@ -228,10 +241,10 @@ namespace UltraSkins
 
 
 
-            string filepath = serializer.DeserializeStringFromFile(Path.Combine(dir + "\\data.USGC"));
+            string[] filepath = serializer.DeserializeStringFromFile(Path.Combine(dir + "\\data.USGC"));
             BatonPass("Read data.USGC from " + filepath);
             BatonPass("INIT BATON PASS: RELOADTEXTURES(TRUE," + filepath + ")");
-            ReloadTextures(true, filepath);
+            ReloadTextures(filepath,true);
 
             //LoadTextures(filepath);
 
@@ -271,94 +284,9 @@ namespace UltraSkins
                 TextureOverWatch[] TOWS = CameraController.Instance.gameObject.GetComponentsInChildren<TextureOverWatch>(true);
                 ReloadTextureOverWatch(TOWS);
             }
-            [HarmonyPatch(typeof(ShotgunHammer))]
-            public static class UpdateMeterPatch
-            {
-                static FieldInfo meterEmissivesField;
-                static FieldInfo meterEmissivesMaskField;
-
-                static UpdateMeterPatch()
-                {
-                    meterEmissivesField = typeof(ShotgunHammer).GetField("meterEmissives", BindingFlags.NonPublic | BindingFlags.Instance);
-                    meterEmissivesMaskField = typeof(ShotgunHammer).GetField("secondaryMeter", BindingFlags.NonPublic | BindingFlags.Instance);
-                }
-
-                [HarmonyPrefix]
-                [HarmonyPatch("OnEnable")]
-                public static void PrefixUpdateMeter(ShotgunHammer __instance)
-                {
-                    if (meterEmissivesField == null)
-                    {
-                        Debug.LogError("Failed to find 'meterEmissives' field.");
-                        return;
-                    }
-
-                    var meterEmissives = (Texture[])meterEmissivesField.GetValue(__instance);
-                    var meterMask = (Image)meterEmissivesMaskField.GetValue(__instance);
-                    Texture glow1;
-                    Texture glow2;
-                    Texture glow3;
-                    if (autoSwapCache.ContainsKey("T_DialGlow1"))
-                    {
-                        glow1 = autoSwapCache["T_DialGlow1"];
-                    }
-                    else
-                    {
-                        glow1 = meterEmissives[0];
-                    }
-                    if (autoSwapCache.ContainsKey("T_DialGlow2"))
-                    {
-                        glow2 = autoSwapCache["T_DialGlow2"];
-                    }
-                    else
-                    {
-                        glow2 = meterEmissives[1];
-                    }
-                    if (autoSwapCache.ContainsKey("T_DialGlow3"))
-                    {
-                        glow3 = autoSwapCache["T_DialGlow3"];
-                    }
-                    else
-                    {
-                        glow3 = meterEmissives[2];
-                    }
-                    meterEmissives = new Texture[3]
-                        {
-                        glow1,
-                        glow2,
-                        glow3,
-                        };
-                    meterEmissivesField.SetValue(__instance, meterEmissives);
-                    if (autoSwapCache.ContainsKey("T_DialMask"))
-                    {
-                        Texture dialmask = autoSwapCache["T_DialMask"];
-
-                        Sprite masksprite = Sprite.Create((Texture2D)dialmask, new Rect(0, 0, dialmask.width, dialmask.height), new Vector2(0.5f, 0.5f));
-                        meterMask.sprite = masksprite;
-                    }
 
 
 
-                    Debug.Log($"[UpdateMeter] Current Tier: {__instance}");
-                    for (int i = 0; i < meterEmissives.Length; i++)
-                    {
-                        Debug.Log($"[UpdateMeter] Texture at index {i}: {meterEmissives[i]?.name}");
-                    }
-                }
-
-                private static Texture2D CreateSolidColorTexture(UnityEngine.Color color)
-                {
-                    var texture = new Texture2D(128, 128);
-                    var pixels = new UnityEngine.Color[128 * 128];
-                    for (int i = 0; i < pixels.Length; i++)
-                    {
-                        pixels[i] = color;
-                    }
-                    texture.SetPixels(pixels);
-                    texture.Apply();
-                    return texture;
-                }
-            }
 
 
             [HarmonyPatch(typeof(FistControl), "YesFist")]
@@ -411,6 +339,7 @@ namespace UltraSkins
                                     {
                                         if (!renderer.gameObject.GetComponent<TextureOverWatch>())
                                         {
+                                            
                                             TextureOverWatch TOW = renderer.gameObject.AddComponent<TextureOverWatch>();
                                         }
                                     }
@@ -429,6 +358,7 @@ namespace UltraSkins
                 TextureOverWatch[] TOWS = __instance.GetComponentsInChildren<TextureOverWatch>(true);
                 ReloadTextureOverWatch(TOWS);
             }
+
 
             [HarmonyPatch(typeof(PlayerTracker), "ChangeToFPS")]
             [HarmonyPostfix]
@@ -496,6 +426,7 @@ namespace UltraSkins
 
             public static void AddTOWs(GameObject gameobject, bool toself = true, bool tochildren = false, bool toparent = false, bool refresh = false)
             {
+                BatonPass("added " + gameobject.name + "to textureoverwatch");
                 if (toself)
                 {
                     if (!gameobject.GetComponent<TextureOverWatch>())
@@ -561,25 +492,7 @@ namespace UltraSkins
 
 
             BatonPass("Checking for Null CCE");
-            if (CCE == null)
-            {
-                BatonPass("ITS NULL, CORRECTING");
-                CCE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Special/ULTRAKILL-vertexlit-customcolors-emissive.shader").WaitForCompletion();
-            }
-            BatonPass("Checking for Null DE");
-            if (DE == null)
-            {
-                BatonPass("ITS NULL, CORRECTING");
-                DE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Main/ULTRAKILL-vertexlit-emissive.shader").WaitForCompletion();
-            }
 
-            //DE = Addressables.LoadAssetAsync<Shader>("psx/vertexlit/emissive").WaitForCompletion();
-            BatonPass("Checking for Null CUBEMAP");
-            if (cubemap == null)
-            {
-                BatonPass("ITS NULL, CORRECTING");
-                cubemap = Addressables.LoadAssetAsync<Cubemap>("Assets/Textures/studio_06.exr").WaitForCompletion();
-            }
             //CreateSkinGUI();
             BatonPass("The Scene is: " + mode.name);
             BatonPass("INIT BATON PASS: REFRESHSKINS()");
@@ -605,36 +518,39 @@ namespace UltraSkins
 
 
 
-        public static Texture ResolveTheTextureProperty(Material mat, string property, string propertyfallback = "_MainTex")
+        public static Texture ResolveTheTextureProperty(Material mat, string property, string texturename, string propertyfallback = "_MainTex")
         {
 
-            if (mat != null && mat.mainTexture == null)
+            if (mat != null && texturename == null)
                 return null;
-            if (DE == null)
-                DE = Addressables.LoadAssetAsync<Shader>("Assets/Shaders/Main/ULTRAKILL-vertexlit-emissive.shader").WaitForCompletion();
 
             string textureToResolve = "";
-            if (mat && !mat.mainTexture.name.StartsWith("TNR_") && property != "_Cube")
+            if (mat && !texturename.StartsWith("TNR_") && property != "_Cube")
             {
                 switch (property)
                 {
                     case "_MainTex":
-                        textureToResolve = mat.mainTexture.name;
+                        textureToResolve = texturename;
                         break;
                     case "_EmissiveTex":
-                        switch (mat.mainTexture.name)
+                        switch (texturename)
                         {
                             case "T_NailgunNew_NoGlow":
                                 textureToResolve = "T_Nailgun_New_Glow";
                                 break;
                             case "T_RocketLauncher_Desaturated":
                                 textureToResolve = "T_RocketLauncher_Emissive";
+                                if (autoSwapCache.ContainsKey(textureToResolve))
+                                {
+                                    mat.EnableKeyword("EMISSIVE");
+                                    mat.SetInt("_UseAlbedoAsEmissive", 0);
+                                }
                                 break;
                             case "T_ImpactHammer":
                                 textureToResolve = "T_ImpactHammer_Glow";
                                 break;
                             default:
-                                textureToResolve = mat.mainTexture.name + "_Emissive";
+                                textureToResolve = texturename + "_Emissive";
                                 if (autoSwapCache.ContainsKey(textureToResolve))
                                 {
                                     mat.EnableKeyword("EMISSIVE");
@@ -662,7 +578,7 @@ namespace UltraSkins
                         }
                         break;
                     case "ROCKIT":
-                        textureToResolve = (mat.name.Contains("Swapped_AltarUnlitRed") && !mat.mainTexture.name.StartsWith("T_")) ? "skull2rocketbonus" : mat.mainTexture.name.Contains("T_Sakuya") ? "" : "skull2rocket";
+                        textureToResolve = (mat.name.Contains("Swapped_rocket_AltarUnlitRed") && !texturename.StartsWith("T_")) ? "skull2rocketbonus" : texturename.Contains("T_Sakuya") ? "" : "skull2rocket";
                         break;
                     case "THROWITBACK":
                         textureToResolve = "skull2grenade";
@@ -676,7 +592,19 @@ namespace UltraSkins
             }
             return mat.GetTexture(propertyfallback);
         }
-
+        string GetTextureName(string materialName)
+        {
+            if (ULTRASKINHand.HandInstance.MaterialNames.TryGetValue(materialName, out string textureName))
+            {
+                // If the material name exists, return the texture name
+                return textureName;
+            }
+            else
+            {
+                // If the material name does not exist, return a default value (e.g., "Texture Not Found")
+                return null;
+            }
+        }
         public static void PerformTheSwap(Material mat, bool forceswap = false, TextureOverWatch TOW = null, string swapType = "weapon")
         {
             if (mat && (!mat.name.StartsWith("Swapped_") || forceswap))
@@ -684,39 +612,40 @@ namespace UltraSkins
 
                 if (!mat.name.StartsWith("Swapped_"))
                 {
-                    mat.name = "Swapped_" + mat.name;
+                    mat.name = "Swapped_" + swapType + "_" + mat.name;
                 }
-                if (mat.shader.name == "psx/vertexlit/vertexlit-customcolors" && CCE)
-                {
-                    mat.shader = CCE;
-                }
-                else if (mat.shader.name == "psx/vertexlit/vertexlit")
-                {
-                    mat.shader = DE;
-                }
+
                 forceswap = false;
                 Texture resolvedTexture = new Texture();
+                string texturename = HandInstance.GetTextureName(mat.name);
+                BatonPass("I should change" + TOW.iChange);
+                BatonPass("requested " + mat.name + " got " + texturename);
+
                 if (swapType == "weapon")
                 {
 
                     string[] textureProperties = mat.GetTexturePropertyNames();
+
                     foreach (string property in textureProperties)
                     {
 
-                        //Debug.Log("Attempting to swap " + property + " of " + mat.name.ToString());
 
 
-                        resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, property, property);
+
+                        resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, property, texturename, property);
+                        //BatonPass("Attempting to swap " + property + " of " + mat.name.ToString() + " with " + resolvedTexture.name.ToString());
                         if (resolvedTexture && resolvedTexture != null && mat.HasProperty(property) && mat.GetTexture(property) != resolvedTexture)
                         {
                             //Debug.Log("swapping " + property + " of " + mat.name.ToString());
+
                             mat.SetTexture(property, resolvedTexture);
+
                         }
 
                         if (TOW != null && mat.HasProperty("_EmissiveColor"))
                         {
 
-                            if (mat.name.ToString() == "Swapped_ImpactHammerDial (Instance)")
+                            if (mat.name.ToString() == "Swapped_weapon_ImpactHammerDial (Instance)")
                             {
                                 break;
                             }
@@ -736,27 +665,30 @@ namespace UltraSkins
                 }
                 else if (swapType == "projectile")
                 {
-                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "_MainTex");
+                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "_MainTex", texturename);
                     if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
                     {
+
                         mat.SetTexture("_MainTex", resolvedTexture);
 
                     }
                 }
                 else if (swapType == "grenade")
                 {
-                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "THROWITBACK");
+                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "THROWITBACK", texturename);
                     if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
                     {
+
                         mat.SetTexture("_MainTex", resolvedTexture);
 
                     }
                 }
                 else if (swapType == "rocket")
                 {
-                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "ROCKIT");
+                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "ROCKIT", texturename);
                     if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
                     {
+
                         mat.SetTexture("_MainTex", resolvedTexture);
 
                     }
@@ -764,6 +696,76 @@ namespace UltraSkins
 
             }
         }
+
+
+        public static void SwapTheDial(TextureOverWatch TOW)
+        {
+            FieldInfo meterEmissivesField = typeof(ShotgunHammer).GetField("meterEmissives", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo meterEmissivesMaskField = typeof(ShotgunHammer).GetField("secondaryMeter", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (meterEmissivesField == null)
+            {
+                Debug.LogError("Failed to find 'meterEmissives' field.");
+                return;
+            }
+            ShotgunHammer shotgunHammer = TOW.GetComponentInParent<ShotgunHammer>();
+            var meterEmissives = (Texture[])meterEmissivesField.GetValue(shotgunHammer);
+            var meterMask = (Image)meterEmissivesMaskField.GetValue(shotgunHammer);
+            Texture glow1;
+            Texture glow2;
+            Texture glow3;
+            if (autoSwapCache.ContainsKey("T_DialGlow1"))
+            {
+                glow1 = autoSwapCache["T_DialGlow1"];
+            }
+            else
+            {
+                glow1 = meterEmissives[0];
+            }
+            if (autoSwapCache.ContainsKey("T_DialGlow2"))
+            {
+                glow2 = autoSwapCache["T_DialGlow2"];
+            }
+            else
+            {
+                glow2 = meterEmissives[1];
+            }
+            if (autoSwapCache.ContainsKey("T_DialGlow3"))
+            {
+                glow3 = autoSwapCache["T_DialGlow3"];
+            }
+            else
+            {
+                glow3 = meterEmissives[2];
+            }
+            meterEmissives = new Texture[3]
+                {
+                        glow1,
+                        glow2,
+                        glow3,
+                };
+            meterEmissivesField.SetValue(shotgunHammer, meterEmissives);
+            if (autoSwapCache.ContainsKey("T_DialMask"))
+            {
+                Texture dialmask = autoSwapCache["T_DialMask"];
+
+                Sprite masksprite = Sprite.Create((Texture2D)dialmask, new Rect(0, 0, dialmask.width, dialmask.height), new Vector2(0.5f, 0.5f));
+                meterMask.sprite = masksprite;
+            }
+
+
+
+            Debug.Log($"[UpdateMeter] Current Tier: {shotgunHammer}");
+            for (int i = 0; i < meterEmissives.Length; i++)
+            {
+                Debug.Log($"[UpdateMeter] Texture at index {i}: {meterEmissives[i]?.name}");
+            }
+        }
+        
+
+
+
+
 
         public static Color GetVarationColor(TextureOverWatch TOW)
         {
@@ -831,36 +833,49 @@ namespace UltraSkins
             return false;
         }
 
-        public async void ReloadTextures(bool firsttime = false, string path = "")
+        public async void ReloadTextures(string[] path, bool firsttime = false)
         {
             BatonPass("BATON PASS: WE ARE IN ReloadTextures() We have variables \n FIRSTTIME:" + firsttime + "\n PATH:" + path);
             BatonPass("Start Comparing");
-            if (firsttime && serializedSet != "")
-            {
-                BatonPass("SerializedSet is not empty, and firsttime is true - path will equal serialized set");
-                path = serializedSet;
-            }
-            else if (firsttime && serializedSet == "")
-            {
-                BatonPass("SerializedSet is empty, and firsttime is true - path should equal path");
-#pragma warning disable CS1717 // Assignment made to same variable
-                path = path;
 
-            }
-            if (path == "")
-            {
-                BatonPass("path is empty - path should equal path");
-                path = path;
-            }
 #pragma warning restore CS1717 // Assignment made to same variable
             BatonPass("INIT BATON PASS: INITOWGAMEOBJECTS(" + firsttime + ")");
 
             BatonPass("BATON PASS: WELCOME BACK TO RELOADTEXTURES()");
             BatonPass("INIT BATON PASS: LOADTEXTURES(" + path + ")");
-            await LoadTextures(path, firsttime);
+            if (!firsttime)
+            {
+                MenuManager.MMinstance.DisableButtons();
+                await LoadTextures(path, firsttime);
+                MenuManager.MMinstance.EnableButtons();
+            }
+            else
+            {
+                await LoadTextures(path, firsttime);
+            }
             InitOWGameObjects(firsttime);
-        }
+            foreach (var kvp in ULTRASKINHand.HandInstance.MaterialNames)
+            {
+                BatonPass($"Key: {kvp.Key}, Value: {kvp.Value}");
+            }
+/*            var textures = Resources.FindObjectsOfTypeAll<Texture2D>();
+                        foreach (var tex in textures)
+                        {
+                            if (!AssetInUse(tex))
+                            {
+                                BatonPass($"Unused Texture: {tex.name} - Potential leak");
+                            }
+                        }*/
 
+        }
+        bool AssetInUse(UnityEngine.Object asset)
+        {
+            return Resources.FindObjectsOfTypeAll<Component>().Any(c =>
+                c is Renderer r && r.sharedMaterials.Any(m =>
+                    m && m.HasProperty("_MainTex") && m.mainTexture == asset) ||
+                c is Image img && img.sprite && img.sprite.texture == asset ||
+                c is RawImage rawImg && rawImg.texture == asset);
+        }
         public static void InitOWGameObjects(bool firsttime = false)
         {
             GameObject cam = GameObject.FindGameObjectWithTag("MainCamera");
@@ -883,154 +898,146 @@ namespace UltraSkins
             }
 
         }
-        public async Task LoadTextures(string fpath = "", bool firsttime = false)
+        
+        public async Task LoadTextures(string[] fpaths, bool firsttime = false)
         {
-            BatonPass("BATON PASS: WE ARE IN LOADTEXTURES() we have the variable FPATH, " + fpath);
+            BatonPass("BATON PASS: WE ARE IN LOADTEXTURES() we have the variable FPATH");
             if (firsttime == false)
             {
                 BPGUI.ShowGUI("Loading");
 
             }
 
-            try
+            foreach (string fpath in fpaths)
             {
-                FileLog.Log("ULTRASKINS IS SEARCHING " + fpath.ToString());
-                Debug.Log("ULTRASKINS IS SEARCHING " + fpath.ToString());
-                BatonPass("ULTRASKINS IS SEARCHING " + fpath.ToString());
 
-                autoSwapCache.Clear();
-                bool failed = false;
-
-                DirectoryInfo dir = new DirectoryInfo(fpath);
-
-                if (!dir.Exists)
+                try
                 {
-                    BPGUI.BatonPassAnnoucement(Color.red, "failed");
-                    return; // Exit early if the directory doesn't exist
-                }
+                    FileLog.Log("ULTRASKINS IS SEARCHING " + fpath.ToString());
+                    Debug.Log("ULTRASKINS IS SEARCHING " + fpath.ToString());
+                    BatonPass("ULTRASKINS IS SEARCHING " + fpath.ToString());
 
-                FileInfo[] Files = dir.GetFiles("*.png");
-                BatonPass("Beginning loop");
 
-                if (Files.Length > 0)
-                {
-                    int totalFiles = Files.Length;
-                    int filesLoaded = 0;
-                    BPGUI.EnableTerminal(10);
-                    BPGUI.ShowProgressBar();
+                    //autoSwapCache.Clear();
+                    bool failed = false;
 
-                    foreach (FileInfo file in Files)
+                    DirectoryInfo dir = new DirectoryInfo(fpath);
+
+                    if (!dir.Exists)
                     {
-                        if (file.Exists)
+                        BPGUI.BatonPassAnnoucement(Color.red, "failed");
+                        return; // Exit early if the directory doesn't exist
+                    }
+
+                    FileInfo[] Files = dir.GetFiles("*.png");
+                    BatonPass("Beginning loop");
+
+                    if (Files.Length > 0)
+                    {
+                        int totalFiles = Files.Length;
+                        int filesLoaded = 0;
+                        BPGUI.EnableTerminal(10);
+                        BPGUI.ShowProgressBar();
+
+                        foreach (FileInfo file in Files)
                         {
-                            try
+                            if (file.Exists)
                             {
-                                // Read file asynchronously
-                                byte[] data = await File.ReadAllBytesAsync(file.FullName);
-                                string name = Path.GetFileNameWithoutExtension(file.FullName);
-
-                                BatonPass("Reading " + file.FullName.ToString());
-
-                                Texture2D texture2D = new Texture2D(2, 2);
-                                texture2D.name = name;
-
-                                BatonPass("Creating " + texture2D.name);
-                                BPGUI.AddTermLine("Creating " + texture2D.name);
-                                texture2D.filterMode = FilterMode.Point;
-                                texture2D.LoadImage(data);
-                                BatonPass("Loading Image Data");
-                                texture2D.Apply();
-
-                                // Handling Railgun textures
-                                if (file.Name == "Railgun_Main_AlphaGlow.png")
+                                try
                                 {
-                                    BatonPass("It's the railgun");
 
-                                    Texture2D texture2D2 = new Texture2D(2, 2);
-                                    byte[] data2 = await File.ReadAllBytesAsync(Path.Combine(file.DirectoryName, "Railgun_Main_Emissive.png"));
-                                    texture2D2.filterMode = FilterMode.Point;
-                                    texture2D2.LoadImage(data2);
-                                    texture2D2.Apply();
-
-                                    BatonPass("Applying Changes");
-
-                                    Color[] pixels = texture2D.GetPixels();
-                                    Color[] pixels2 = texture2D2.GetPixels();
-                                    for (int k = 0; k < pixels.Length; k++)
+                                    // Read file asynchronously
+                                    byte[] data = await File.ReadAllBytesAsync(file.FullName);
+                                    string name = Path.GetFileNameWithoutExtension(file.FullName);
+                                    if (autoSwapCache.ContainsKey(name))
                                     {
-                                        pixels[k].a = pixels2[k].r;
+                                        Texture workingfile = autoSwapCache[name];
+                                        UnityEngine.Object.Destroy(workingfile);
+                                        autoSwapCache.Remove(name);
                                     }
-                                    texture2D.SetPixels(pixels);
-                                    BatonPass("Setting Colors");
+
+                                    BatonPass("Reading " + file.FullName.ToString());
+
+                                    Texture2D texture2D = new Texture2D(2, 2);
+                                    texture2D.name = name;
+
+                                    BatonPass("Creating " + texture2D.name);
+                                    BPGUI.AddTermLine("Creating " + texture2D.name);
+                                    texture2D.filterMode = FilterMode.Point;
+                                    texture2D.LoadImage(data);
+                                    BatonPass("Loading Image Data");
                                     texture2D.Apply();
-                                    BatonPass("Applying Colors");
+
+
+
+
+                                    // Cache the texture
+                                    Texture texture = texture2D;
+                                    BatonPass("Setting texture");
+                                    autoSwapCache.Add(name, texture);
+                                    BatonPass("Adding to Cache " + texture.name + " " + name);
+
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError("Error reading or processing texture file: " + file.Name + " Error: " + ex.Message);
+                                    failed = true;
+                                    BPGUI.DisableTerminal();
+                                    BPGUI.BatonPassAnnoucement(Color.red, "failed");
                                 }
 
-                                // Cache the texture
-                                Texture texture = texture2D;
-                                BatonPass("Setting texture");
-                                autoSwapCache.Add(name, texture);
-                                BatonPass("Adding to Cache " + texture.name + " " + name);
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                Logger.LogError("Error reading or processing texture file: " + file.Name + " Error: " + ex.Message);
+                                Logger.LogError("HEAR YE HEAR YE, They got away, Error -\"USHAND-LOADTEXTURES-CACHEFAIL\"");
                                 failed = true;
                                 BPGUI.DisableTerminal();
                                 BPGUI.BatonPassAnnoucement(Color.red, "failed");
                             }
 
+                            // Update progress (assuming a method for progress update exists, like updating a progress bar in UI)
+                            filesLoaded++;
+                            float progress = (float)filesLoaded / totalFiles;
+
+                            progress = progress * 100;
+
+                            BatonPass($"Progress: {progress:F2}%");
+                            BPGUI.updatebar(progress);
+
+
                         }
-                        else
+
+                        if (!failed)
                         {
-                            Logger.LogError("HEAR YE HEAR YE, They got away, Error -\"USHAND-LOADTEXTURES-CACHEFAIL\"");
-                            failed = true;
+                            BatonPass("We Got the Textures ");
                             BPGUI.DisableTerminal();
-                            BPGUI.BatonPassAnnoucement(Color.red, "failed");
+                            BPGUI.HideProgressBar();
+                            BPGUI.BatonPassAnnoucement(Color.green, "success");
                         }
-
-                        // Update progress (assuming a method for progress update exists, like updating a progress bar in UI)
-                        filesLoaded++;
-                        float progress = (float)filesLoaded / totalFiles;
-
-                        progress = progress * 100;
-
-                        BatonPass($"Progress: {progress:F2}%");
-                        BPGUI.updatebar(progress);
-                        // You could use a UI slider to display this progress, for example:
-
                     }
-
-                    if (!failed)
+                    else
                     {
-                        BatonPass("We Got the Textures ");
+                        BatonPass("HEAR YE HEAR YE The length of the files is zero, Error-\"USHAND-LOADTEXTURES-0INDEX\"");
                         BPGUI.DisableTerminal();
                         BPGUI.HideProgressBar();
-                        BPGUI.BatonPassAnnoucement(Color.green, "success");
+                        BPGUI.BatonPassAnnoucement(Color.red, "No files found in " + fpath);
                     }
-                }
-                else
-                {
-                    BatonPass("HEAR YE HEAR YE The length of the files is zero, Error-\"USHAND-LOADTEXTURES-0INDEX\"");
-                    BPGUI.DisableTerminal();
-                    BPGUI.HideProgressBar();
-                    BPGUI.BatonPassAnnoucement(Color.red, "No files found");
-                }
-                if (firsttime == false)
-                {
-                    BPGUI.HideGUI(2);
-                }
 
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.Log("HEAR YE HEAR YE, The Search Was Fruitless, Error-\"USHAND-LOADTEXTURES-EX\" " + ex.Message);
+                    Debug.Log("HEAR YE HEAR YE, The Search Was Fruitless, Error-\"USHAND-LOADTEXTURES-EX\" " + ex.ToString());
+                    Logger.LogError("HEAR YE HEAR YE, The Search Was Fruitless, Error-\"USHAND-LOADTEXTURES-EX\" " + ex.Message);
+                    Logger.LogError("HEAR YE HEAR YE, The Search Was Fruitless, Error-\"USHAND-LOADTEXTURES-EX\" " + ex.ToString());
+                    BPGUI.BatonPassAnnoucement(Color.red, "Failed to load all textures from " + Path.GetFileName(fpath) + ".\nPlease ensure all of the Texture Files names are Correct, refer to the README file for the correct names and more info.");
+                }
             }
-            catch (Exception ex)
+            if (firsttime == false)
             {
-                Debug.Log("HEAR YE HEAR YE, The Search Was Fruitless, Error-\"USHAND-LOADTEXTURES-EX\" " + ex.Message);
-                Debug.Log("HEAR YE HEAR YE, The Search Was Fruitless, Error-\"USHAND-LOADTEXTURES-EX\" " + ex.ToString());
-                Logger.LogError("HEAR YE HEAR YE, The Search Was Fruitless, Error-\"USHAND-LOADTEXTURES-EX\" " + ex.Message);
-                Logger.LogError("HEAR YE HEAR YE, The Search Was Fruitless, Error-\"USHAND-LOADTEXTURES-EX\" " + ex.ToString());
-                BPGUI.BatonPassAnnoucement(Color.red, "Failed to load all textures from " + Path.GetFileName(fpath) + ".\nPlease ensure all of the Texture Files names are Correct, refer to the README file for the correct names and more info.");
+                BPGUI.HideGUI(2);
             }
-
         }
 
         //Baton Pass handles debug logging for several different types of debuggers
