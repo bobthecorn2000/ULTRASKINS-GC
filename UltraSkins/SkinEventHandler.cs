@@ -33,16 +33,17 @@ namespace UltraSkins
         public class saveinfo
         {
             public string ModVersion { get; set; }
-            public string SkinLocation { get; set; }
+            public string[] SkinLocation { get; set; }
         }
-        private void Update()
+/*        private void Update()
 		{
 			if (Activator != null && Activator.activeSelf)
 			{
 				Activator.SetActive(false);
 				UKSH.ReloadTextures(false, path);
-				string folder = GetModFolderPath();
+				string[] folder = GetModFolderPath();
 				TextureOverWatch[] TOWS = GameObject.FindWithTag("MainCamera").GetComponentsInChildren<TextureOverWatch>(true);
+                ULTRASKINHand.BatonPass("update ran");
 				foreach (TextureOverWatch TOW in TOWS)
 				{
 					if (TOW && TOW.gameObject)
@@ -52,8 +53,8 @@ namespace UltraSkins
 				}
                 
 			}
-		}
-        public string GetModFolderPath()
+		}*/
+        public string[] GetModFolderPath()
         {
 
             // Get the path to the current directory where the game executable is located
@@ -72,7 +73,8 @@ namespace UltraSkins
                 
                 
             }
-                string defloc = Path.Combine(dir + "\\OG-SKINS");
+            string[] defloc = new string[] { Path.Combine(dir, "OG-SKINS") };
+
             // The mod folder is typically named "BepInEx/plugins" or similar
             //string modFolderName = "BepInEx\\plugins\\ultraskins\\custom"; // Adjust this according to your setup
             StringSerializer serializer = new StringSerializer();
@@ -82,18 +84,20 @@ namespace UltraSkins
                 serializer.SerializeStringToFile(defloc, filecheck);
 
             }
+
             //ExtractSkin("OG-SKINS.GCskin");
             if (!Directory.Exists(Path.Combine(dir + "\\OG-SKINS")) &&  File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin"))) {
                 ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
             }
-            string deserializedData = serializer.DeserializeStringFromFile(filecheck);
+
+            string[] deserializedData = serializer.DeserializeStringFromFile(filecheck);
             // Combine the game directory with the mod folder name to get the full path
             //return gameDirectory+modFolderName;
-            if (deserializedData == "deserializedData Failed") {
+            if (deserializedData[0] == "deserializedData Failed") {
                 serializer.SerializeStringToFile(defloc, filecheck);
                 deserializedData = serializer.DeserializeStringFromFile(filecheck);
             }
-            if (deserializedData == "Wrong Version")
+            if (deserializedData[0] == "Wrong Version")
             {
                 
                 DirectoryInfo skindir = new DirectoryInfo(Path.Combine(dir + "\\OG-SKINS"));
@@ -115,7 +119,7 @@ namespace UltraSkins
         }
         public class StringSerializer
         {
-            public void SerializeStringToFile(string data, string filePath)
+            public void SerializeStringToFile(string[] data, string filePath)
             {
                 //// Convert string to byte array
                 //byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(data);
@@ -129,10 +133,11 @@ namespace UltraSkins
                 saveinfo.SkinLocation = data;
                 saveinfo.ModVersion = CurrentVersion;
                 string jsonData = JsonConvert.SerializeObject(saveinfo);
+                ULTRASKINHand.BatonPass("Encoding " + jsonData );
                 File.WriteAllText(filePath, jsonData);
             }
 
-            public string DeserializeStringFromFile(string filePath)
+            public string[] DeserializeStringFromFile(string filePath)
             {
                 // Read byte array from file
                 //byte[] byteArray;
@@ -147,7 +152,7 @@ namespace UltraSkins
                 //return data;
                 // Read the JSON data from the file
                 string jsonData = File.ReadAllText(filePath);
-                string data;
+                string[] data = new string[] { "deserializedData Failed" };
                 // Deserialize the JSON data into a saveinfo object
                 try { 
                 saveinfo deserializedData = JsonConvert.DeserializeObject<saveinfo>(jsonData);
@@ -155,18 +160,20 @@ namespace UltraSkins
                     if (deserializedData.ModVersion != CurrentVersion)
                     {
                         SerializeStringToFile(deserializedData?.SkinLocation, filePath);
-                        data = "Wrong Version";
+                        ULTRASKINHand.BatonPass("Wrong version, correcting");
+                        return new string[] { "Wrong Version" };
 
                     }
                 
                 }
                 catch
                 {
-                    data = "deserializedData Failed";
-                    return data;
+                    ULTRASKINHand.BatonPass("deserializedData Failed");
+                    return new string[] { "deserializedData Failed" };
                 }
-                 
+
                 // Return the SkinLocation property from the deserialized object
+                ULTRASKINHand.BatonPass("returning " + data.ToString());
                 return data;
             }
         }

@@ -270,10 +270,7 @@ namespace UltraSkins
 
 
 
-                            /*                            BatonPass("searching for Viewport");
-                                                        contentfolder = UltraskinsConfigmenu.transform.Find("Viewport").gameObject;
-                                                        BatonPass("searching for content");
-                                                        contentfolder = contentfolder.transform.Find("Content").gameObject;*/
+
                             BatonPass("contentfolder found");
                             HudOpenEffect activateanimator = backdrop.AddComponent<HudOpenEffect>();
                             MenuEsc men = backdrop.AddComponent<MenuEsc>();

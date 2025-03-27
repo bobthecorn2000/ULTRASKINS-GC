@@ -33,16 +33,22 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using TMPro;
 using UnityEngine.Experimental.GlobalIllumination;
 using System.Collections;
+using UnityEngine.Rendering;
+using JetBrains.Annotations;
 
 namespace UltraSkins
 {
     internal class MenuManager : MonoBehaviour
     {
+        
         ULTRASKINHand handInstance = ULTRASKINHand.HandInstance;
         internal static MenuManager  MMinstance { get; private set; }
-        
+        List<GameObject> loadedButtons = new List<GameObject>();
+        Dictionary<string, Button> AvailbleSkins = new Dictionary<string, Button>();
+
         void Awake() {
             MMinstance = this;
+
         }
         public void Closeskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseoff, Animator animator)
         {
@@ -69,7 +75,8 @@ namespace UltraSkins
         public void GenerateButtons(string skinfolderdir, GameObject contentfolder, ObjectActivateInSequence activateanimator)
         {
             string[] subfolders = Directory.GetDirectories(skinfolderdir);
-            string folder = null;
+            
+            AvailbleSkins.Clear();
             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsButton.prefab").Completed += buttonHandle =>
             {
                 if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
@@ -77,18 +84,19 @@ namespace UltraSkins
 
                     int buttonsToLoad = subfolders.Length;
                     int buttonsLoaded = 0;
-                    List<GameObject> loadedButtons = new List<GameObject>();
+                   
                     GameObject prefab = buttonHandle.Result;
                     foreach (string subfolder in subfolders)
                     {
-                        folder = Path.GetFileName(subfolder);
+                        string folder = Path.GetFileName(subfolder);
                         GameObject instance = Instantiate(prefab, contentfolder.transform);
                         instance.SetActive(true);
 
                         Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
                         ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                        ultraskinsbutton.onClick.AddListener(() => handInstance.refreshskins(folder));
-
+                        string[] folders = new string[] { folder };
+                        ultraskinsbutton.onClick.AddListener(() => handInstance.refreshskins(folders));
+                        AvailbleSkins.Add(folder, ultraskinsbutton);
                         loadedButtons.Add(instance); // Add button to list
 
                         BatonPass("Successfully loaded and instantiated ultraskinsButton.");
@@ -117,7 +125,8 @@ namespace UltraSkins
         public void GenerateButtons(string skinfolderdir, GameObject contentfolder)
         {
             string[] subfolders = Directory.GetDirectories(skinfolderdir);
-            string folder = null;
+            
+            AvailbleSkins.Clear();
             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsButton.prefab").Completed += buttonHandle =>
             {
                 if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
@@ -125,20 +134,26 @@ namespace UltraSkins
 
                     int buttonsToLoad = subfolders.Length;
                     int buttonsLoaded = 0;
-                    List<GameObject> loadedButtons = new List<GameObject>();
+                    foreach (var button in loadedButtons)
+                    {
+                        Destroy(button); // Destroy old button GameObjects
+                    }
+                    loadedButtons.Clear();
                     GameObject prefab = buttonHandle.Result;
                     foreach (string subfolder in subfolders)
                     {
-                        folder = Path.GetFileName(subfolder);
+                        string folder = Path.GetFileName(subfolder);
                         GameObject instance = Instantiate(prefab, contentfolder.transform);
                         instance.SetActive(true);
 
                         Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
                         ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                        ultraskinsbutton.onClick.AddListener(() => handInstance.refreshskins(folder));
+                        
+                        string[] folders = new string[] { folder};
+                        ultraskinsbutton.onClick.AddListener(() => handInstance.refreshskins(folders));
 
                         loadedButtons.Add(instance); // Add button to list
-
+                        AvailbleSkins.Add(folder, ultraskinsbutton);
                         BatonPass("Successfully loaded and instantiated ultraskinsButton.");
 
                         buttonsLoaded++;
@@ -154,6 +169,27 @@ namespace UltraSkins
                 // Check if all buttons are loaded
 
             };
+        }
+
+        public void applyskins()
+        {
+
+        }
+
+
+        public void DisableButtons()
+        {
+            foreach (var button in AvailbleSkins.Values)
+            {
+              button.interactable = false;
+            }
+        }
+        public void EnableButtons()
+        {
+            foreach (var button in AvailbleSkins.Values)
+            {
+                button.interactable = true;
+            }
         }
     }
 }
