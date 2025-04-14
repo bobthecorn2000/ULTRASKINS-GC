@@ -30,6 +30,7 @@ in the in the repo navigate to the UltraSkins folder, in it create a folder call
 5. Unity.TextMeshPro.dll
 6. UnityEngine.AssetBundleModule.dll
 7. UnityEngine.UI.dll
+8. plog.dll
 
 if you have any issues let me know on discord by submitting a bug report here: [https://discord.gg/Gp3bcJFj](https://discord.gg/FtuT5ys)
 or submit an issue on github
