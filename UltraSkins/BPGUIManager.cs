@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
-namespace UltraSkins
+namespace BatonPassLogger.GUI
 {
     [ConfigureSingleton(SingletonFlags.PersistAutoInstance)]
     internal class BPGUIManager : MonoSingleton<BPGUIManager>

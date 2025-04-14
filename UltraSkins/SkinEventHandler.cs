@@ -7,14 +7,14 @@ using System.Runtime.Serialization.Formatters.Binary;
 using Ionic.Zlib;
 using System;
 
-
+using BatonPassLogger;
 using System.Text.Json;
 using System.Text;
 using UnityEngine.Profiling.Memory.Experimental;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
-namespace UltraSkins
+namespace UltraSkins.Utils
 {
 	public class SkinEventHandler : MonoBehaviour
 	{
@@ -133,7 +133,7 @@ namespace UltraSkins
                 saveinfo.SkinLocation = data;
                 saveinfo.ModVersion = CurrentVersion;
                 string jsonData = JsonConvert.SerializeObject(saveinfo);
-                ULTRASKINHand.BatonPass("Encoding " + jsonData );
+                BatonPass.Info("Encoding " + jsonData );
                 File.WriteAllText(filePath, jsonData);
             }
 
@@ -160,7 +160,7 @@ namespace UltraSkins
                     if (deserializedData.ModVersion != CurrentVersion)
                     {
                         SerializeStringToFile(deserializedData?.SkinLocation, filePath);
-                        ULTRASKINHand.BatonPass("Wrong version, correcting");
+                        BatonPass.Info("Wrong version, correcting");
                         return new string[] { "Wrong Version" };
 
                     }
@@ -168,12 +168,12 @@ namespace UltraSkins
                 }
                 catch
                 {
-                    ULTRASKINHand.BatonPass("deserializedData Failed");
+                    BatonPass.Error("deserializedData Failed");
                     return new string[] { "deserializedData Failed" };
                 }
 
                 // Return the SkinLocation property from the deserialized object
-                ULTRASKINHand.BatonPass("returning " + data.ToString());
+                BatonPass.Error("returning " + data.ToString());
                 return data;
             }
         }
