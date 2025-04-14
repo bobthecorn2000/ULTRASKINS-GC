@@ -32,6 +32,12 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>libs\Assembly-CSharp.dll</HintPath>
     </Reference>
+	  <Reference Include="usUI">
+		  <HintPath>unity\usUI.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Plog">
+		  <HintPath>libs\plog.dll</HintPath>
+	  </Reference>
 	      <Reference Include="Unity.Addressables">
       <HintPath>libs\Unity.Addressables.dll</HintPath>
     </Reference>

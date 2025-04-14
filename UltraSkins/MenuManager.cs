@@ -1,42 +1,18 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BepInEx;
-
-using HarmonyLib;
-using NewBlood;
-using Unity.Audio;
-using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-
-using System.Reflection;
-using static UltraSkins.ULTRASKINHand;
-
-using BepInEx.Logging;
-using static UltraSkins.SkinEventHandler;
-
-using System.Net.NetworkInformation;
-using HarmonyLib.Tools;
-using static MonoMod.RuntimeDetour.Platforms.DetourNativeMonoPosixPlatform;
-using static UnityEngine.ParticleSystem.PlaybackState;
-using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using TMPro;
-using UnityEngine.Experimental.GlobalIllumination;
-using System.Collections;
-using UnityEngine.Rendering;
-using JetBrains.Annotations;
+using UltraSkins;
+using BatonPassLogger;
 
-namespace UltraSkins
+
+namespace UltraSkins.UI
 {
     internal class MenuManager : MonoBehaviour
     {
@@ -50,8 +26,9 @@ namespace UltraSkins
             MMinstance = this;
 
         }
-        public void Closeskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseoff, Animator animator)
+        public void Closeskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseoff, Animator animator,ObjectActivateInSequence oais,GameObject content)
         {
+            MMinstance.orderifier(oais, content);
             fallnoiseoff.SetActive(true);
 
             animator.Play("menuclose");
@@ -94,34 +71,54 @@ namespace UltraSkins
 
                         Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
                         ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                        string[] folders = new string[] { folder };
-                        ultraskinsbutton.onClick.AddListener(() => handInstance.refreshskins(folders));
+                        
+                        if (handInstance.filepathArray.Contains(subfolder))
+                        {
+                            int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
+                            BatonPass.Debug(instance.name +"/"+ subfolder + "/" + index);
+                            instance.GetComponent<ButtonEnableManager>().IsEnabled = true;
+                            instance.transform.SetSiblingIndex(index);
+                        }
+                        instance.GetComponent<ButtonEnableManager>().filePath = folder;
                         AvailbleSkins.Add(folder, ultraskinsbutton);
-                        loadedButtons.Add(instance); // Add button to list
+                         // Add button to list
 
-                        BatonPass("Successfully loaded and instantiated ultraskinsButton.");
+                        BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
 
                         buttonsLoaded++;
                         if (buttonsLoaded == buttonsToLoad)
                         {
-                            BatonPass("All buttons loaded, setting up activation sequence.");
-
-                            activateanimator.objectsToActivate = loadedButtons.ToArray();
-                            activateanimator.delay = 0.05f;
-                            BatonPass("Successfully set up ObjectActivateInSequence.");
+                            orderifier(activateanimator, contentfolder);
                         }
                     }
 
                 }
                 else
                 {
-                    BatonPass("Failed to load ultraskinsButton: " + buttonHandle.OperationException);
+                    BatonPass.Error("Failed to load ultraskinsButton: " + buttonHandle.OperationException.Message);
+                    BatonPass.Error("Ultraskins will still work, but skin changes via the menu will be disabled. CODE -\"MMAN-GENERATEBUTTONS-MAINMENU-ASSET_BUNDLE_FAILED\"");
                 }
 
                 // Check if all buttons are loaded
 
             };
         }
+
+        void orderifier(ObjectActivateInSequence activateanimator,GameObject contentfolder)
+        {
+            loadedButtons.Clear();
+            foreach (Transform child in contentfolder.transform)
+            {
+                loadedButtons.Add(child.gameObject);
+            }
+
+            BatonPass.Debug("All buttons loaded, setting up activation sequence.");
+
+            activateanimator.objectsToActivate = loadedButtons.ToArray();
+            activateanimator.delay = 0.05f;
+            BatonPass.Debug("Successfully set up ObjectActivateInSequence.");
+        }
+
         public void GenerateButtons(string skinfolderdir, GameObject contentfolder)
         {
             string[] subfolders = Directory.GetDirectories(skinfolderdir);
@@ -148,13 +145,19 @@ namespace UltraSkins
 
                         Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
                         ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                        
-                        string[] folders = new string[] { folder};
-                        ultraskinsbutton.onClick.AddListener(() => handInstance.refreshskins(folders));
+                        if (handInstance.filepathArray.Contains(subfolder))
+                        {
+                            int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
+                            instance.GetComponent<ButtonEnableManager>().IsEnabled = true;
+                            instance.transform.SetSiblingIndex(index);
+                        }
+                        instance.GetComponent<ButtonEnableManager>().filePath = folder;
+                        string[] folders = new string[] { folder };
+
 
                         loadedButtons.Add(instance); // Add button to list
                         AvailbleSkins.Add(folder, ultraskinsbutton);
-                        BatonPass("Successfully loaded and instantiated ultraskinsButton.");
+                        BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
 
                         buttonsLoaded++;
 
@@ -163,7 +166,8 @@ namespace UltraSkins
                 }
                 else
                 {
-                    BatonPass("Failed to load ultraskinsButton: " + buttonHandle.OperationException);
+                    BatonPass.Error("Failed to load ultraskinsButton: " + buttonHandle.OperationException.Message);
+                    BatonPass.Error("Ultraskins will still work, but skin changes via the menu will be disabled. CODE -\"MMAN-GENERATEBUTTONS-PAUSEMENU-ASSET_BUNDLE_FAILED\"");
                 }
 
                 // Check if all buttons are loaded
@@ -171,8 +175,27 @@ namespace UltraSkins
             };
         }
 
-        public void applyskins()
+        public void applyskins(GameObject content)
         {
+            
+            List<string> validButtons = new List<string>();
+            foreach (Transform childTransform in content.transform) { 
+            BatonPass.Debug(childTransform.name);
+            }
+            BatonPass.Debug("starting apply process");
+            foreach (Transform child in content.transform)
+            {
+                GameObject USbutton = child.gameObject;
+                BatonPass.Debug("working on " + USbutton.name);
+                ButtonEnableManager bem = USbutton.GetComponent<ButtonEnableManager>();
+                if (bem.IsEnabled)
+                {
+                    validButtons.Add(bem.filePath);
+                }
+            }
+            string[] paths = validButtons.ToArray();
+            handInstance.refreshskins(paths);
+
 
         }
 

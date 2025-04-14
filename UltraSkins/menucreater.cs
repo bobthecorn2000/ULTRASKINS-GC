@@ -1,13 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using TMPro;
+using UltraSkins;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static UltraSkins.ULTRASKINHand;
+using BatonPassLogger;
 
 
 
@@ -16,7 +18,7 @@ using static UltraSkins.ULTRASKINHand;
 //using UnityEngine.UIElements;
 
 
-namespace UltraSkins
+namespace UltraSkins.UI
 {
     internal class MenuCreator : MonoBehaviour
     {
@@ -26,14 +28,14 @@ namespace UltraSkins
         static string skinfolderdir = Path.Combine(appDataPath, AppDataLoc);
         public static string folderupdater;
         static GameObject batonpassGUIInst = null;
-
+        
         public static void makethemenu()
         {
-            BatonPass("BATON PASS: WE ARE IN MAKETHEMENU()");
+            BatonPass.Debug("BATON PASS: WE ARE IN MAKETHEMENU()");
 
             Scene scene = SceneManager.GetActiveScene();
-            BatonPass("The Scene is: " + scene.name);
-
+            BatonPass.Info("The Scene is: " + scene.name);
+            
             GameObject canvas = null;
             GameObject mainmenu;
             GameObject fallNoiseOn = null;
@@ -49,14 +51,14 @@ namespace UltraSkins
                 foreach (var rootCanvas in scene.GetRootGameObjects().Where(obj => obj.name == "Canvas"))
 
                 {
-                    BatonPass("entered a foreach");
+                    BatonPass.Info("entered a foreach");
                     mainmenu = rootCanvas.transform.Find("Main Menu (1)").gameObject;
 
-                    BatonPass("finished search");
-                    BatonPass("HEARYEE HEAR YEE TRANSFORM IS " + mainmenu.ToString());
+                    BatonPass.Info("finished search");
+                    BatonPass.Info("HEARYEE HEAR YEE TRANSFORM IS " + mainmenu.ToString());
                     GameObject V1;
 
-                    BatonPass(ColorBlindSettings.Instance.variationColors[2].r + " " + ColorBlindSettings.Instance.variationColors[2].g + " " + ColorBlindSettings.Instance.variationColors[2].b);
+                    BatonPass.Info(ColorBlindSettings.Instance.variationColors[2].r + " " + ColorBlindSettings.Instance.variationColors[2].g + " " + ColorBlindSettings.Instance.variationColors[2].b);
 
 
 
@@ -136,8 +138,10 @@ namespace UltraSkins
                             Animator menuanimator = Editorpanel.gameObject.GetComponent<Animator>();
                             MenuManager Mman = Editorpanel.AddComponent<MenuManager>();
                             Editorpanel.SetActive(false);
-                            BatonPass("looking for content");
-                            GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/Scroll View/Viewport/Content").gameObject;
+                            BatonPass.Info("looking for content");
+                            GameObject ReturnButton = Editorpanel.transform.Find("PanelLeft/ReturnButton").gameObject;
+                            GameObject ApplyButton = Editorpanel.transform.Find("PanelLeft/Apply").gameObject;
+                            GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/PanelLeft/Scroll View/Viewport/Content").gameObject;
                             ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
                             Mman.GenerateButtons(skinfolderdir, contentfolder, activateanimator);
 
@@ -155,18 +159,21 @@ namespace UltraSkins
                                     //ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = "ULTRASKINS";
                                     // Pass UltraskinsConfigmenu to the listener
                                     ultraskinsbutton.onClick.AddListener(() => Openskineditor(mainmenu, Editorpanel, fallNoiseOn));
-                                    Editorpanel.GetComponentInChildren<Button>().onClick.AddListener(() => Mman.Closeskineditor(mainmenu, Editorpanel, fallNoiseOff, menuanimator));
-                                    BatonPass("Successfully loaded and instantiated ultraskinsButton.");
+                                    ReturnButton.GetComponent<Button>().onClick.AddListener(() => Mman.Closeskineditor(mainmenu, Editorpanel, fallNoiseOff, menuanimator,activateanimator,contentfolder));
+                                    ApplyButton.GetComponent<Button>().onClick.AddListener(() => Mman.applyskins(contentfolder));
+                                    BatonPass.Debug("Successfully loaded and instantiated ultraskinsMenuButton.");
                                 }
                                 else
                                 {
-                                    BatonPass("Failed to load ultraskinsButton: " + buttonHandle.OperationException);
+                                    BatonPass.Error("Failed to load ultraskinsMenuButton: " + buttonHandle.OperationException.Message);
+                                    BatonPass.Error("Ultraskins will still work, but the button to access the config menu was disabled. CODE -\"MCREATE-MAKETHEMENU-USBUTTON-ASSET_BUNDLE_FAILED\"");
                                 }
                             };
                         }
                         else
                         {
-                            BatonPass("Failed to load UltraskinsConfigmenu: " + handle.OperationException);
+                            BatonPass.Error("Failed to load UltraskinsConfigmenu: " + handle.OperationException.Message);
+                            BatonPass.Error("Ultraskins will still work, but the menu will be disabled. CODE -\"MCREATE-MAKETHEMENU-CONFIGMENU-ASSET_BUNDLE_FAILED\"");
                         }
                     };
 
@@ -177,14 +184,16 @@ namespace UltraSkins
             }
             catch (Exception e)
             {
-                Debug.Log("HEAR YEE HEAR YEE mainmenu not loaded " + e.ToString());
+                BatonPass.Error("HEAR YEE HEAR YEE MainConfigMenu not loaded " + e.ToString());
+                BatonPass.Error("Ultraskins may still work, but the MainConfigMenu will not be accessible. CODE -\"MCREATE-MAKETHEMENU-EX\"");
             }
-            Debug.Log("INIT BATON PASS: We are returning");
+            BatonPass.Debug("INIT BATON PASS: We are returning");
             return;
         }
 
         public static void Openskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseon)
         {
+            BatonPass.Debug("opened the editor");
             mainmenucanvas.SetActive(false);
             fallnoiseon.SetActive(true);
             Configmenu.SetActive(true);
@@ -220,10 +229,10 @@ namespace UltraSkins
 
         public static void makethePausemenu()
         {
-            Debug.Log("BATON PASS: WE ARE IN MAKETHEPAUSEMENU()");
+            BatonPass.Debug("BATON PASS: WE ARE IN MAKETHEPAUSEMENU()");
 
             Scene scene = SceneManager.GetActiveScene();
-            Debug.Log("The Scene is: " + scene.name);
+            BatonPass.Info("The Scene is: " + scene.name);
 
             GameObject canvas = null;
 
@@ -258,9 +267,9 @@ namespace UltraSkins
                             Transform[] listobjects = UltraskinsConfigmenu.GetComponentsInChildren<Transform>();
                             foreach (Transform objects in listobjects)
                             {
-                                BatonPass(objects.name);
+                                BatonPass.Debug(objects.name);
                             }
-                            BatonPass("looking for content");
+                            BatonPass.Debug("looking for content");
                             string[] subfolders = Directory.GetDirectories(skinfolderdir);
                             GameObject backdrop = UltraskinsConfigmenu.transform.Find("Canvas/Backdrop").gameObject;
                             MenuManager Mman = backdrop.AddComponent<MenuManager>();
@@ -271,14 +280,14 @@ namespace UltraSkins
 
 
 
-                            BatonPass("contentfolder found");
+                            BatonPass.Debug("contentfolder found");
                             HudOpenEffect activateanimator = backdrop.AddComponent<HudOpenEffect>();
                             MenuEsc men = backdrop.AddComponent<MenuEsc>();
 
-                            BatonPass("set animator to buttons");
+                            BatonPass.Debug("set animator to buttons");
                             activateanimator.speed = 30;
 
-                            BatonPass("Successfully loaded and instantiated UltraskinsConfigmenu.");
+                            BatonPass.Debug("Successfully loaded and instantiated UltraskinsConfigmenu.");
                             //GameState configState = new GameState("pause", backdrop);
                             GameObject gamecontroller = null;
                             foreach (var rootcontroller in scene.GetRootGameObjects().Where(obj => obj.name == "GameController"))
@@ -287,7 +296,7 @@ namespace UltraSkins
                             }
                             ;
 
-                            BatonPass("Successfully loaded the gamecontroller");
+                            BatonPass.Debug("Successfully loaded the gamecontroller");
                             OptionsManager controller = gamecontroller.GetComponentInChildren<OptionsManager>();
                             // Now load the ultraskins button
                             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
@@ -303,17 +312,19 @@ namespace UltraSkins
                                     // Pass UltraskinsConfigmenu to the listener
                                     ultraskinsbutton.onClick.AddListener(() => Openpausedskineditor(Pausemenu, UltraskinsConfigmenu, backdrop, controller));
                                     UltraskinsConfigmenu.GetComponentInChildren<Button>().onClick.AddListener(() => Closepauseskineditor(Pausemenu, backdrop, controller));
-                                    BatonPass("Successfully loaded and instantiated ultraskinsButton.");
+                                    BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
                                 }
                                 else
                                 {
-                                    BatonPass("Failed to load ultraskinsButton: " + buttonHandle.OperationException);
+                                    BatonPass.Error("HEAR YEE HEAR YEE UltraskinsPausedConfigmenu not loaded " + buttonHandle.OperationException.Message);
+                                    BatonPass.Error("Ultraskins will still work, but the button to access the config menu was disabled. CODE -\"MCREATE-MAKETHEPAUSEMENU-USBUTTON-ASSET_BUNDLE_FAILED\"");
                                 }
                             };
                         }
                         else
                         {
-                            BatonPass("Failed to load UltraskinsConfigmenu: " + handle.OperationException);
+                            BatonPass.Error("Failed to load UltraskinsPausedConfigmenu: " + handle.OperationException.Message);
+                            BatonPass.Error("Ultraskins will still work, but the menu will be disabled. CODE -\"MCREATE-MAKETHEPAUSEMENU-CONFIGMENU-ASSET_BUNDLE_FAILED\"");
                         }
                     };
 
@@ -324,9 +335,10 @@ namespace UltraSkins
             }
             catch (Exception e)
             {
-                Debug.Log("HEAR YEE HEAR YEE mainmenu not loaded " + e.ToString());
+                BatonPass.Error("HEAR YEE HEAR YEE PausedConfigMenu not loaded " + e.ToString());
+                BatonPass.Error("Ultraskins may still work, but the PausedConfigMenu will not be accessible. CODE -\"MCREATE-MAKETHEPAUSEMENU-EX\"");
             }
-            Debug.Log("INIT BATON PASS: We are returning");
+            BatonPass.Debug("INIT BATON PASS: We are returning");
             return;
         }
     }
