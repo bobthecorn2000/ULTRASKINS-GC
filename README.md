@@ -18,7 +18,7 @@ inside your directory create a folder (name it whatever) and put the skin files 
 ## so whats different and what should i know
 1. removed umm as the manager is outdated, everything should still work
 2. custom colors using the in game color customizer might be a bit funky lookin
-3. jackhammer emissive is untested, feel free to try and add one, i have no idea if it will work, i will include it later
+3. pluginconfig is no longer needed
 
 # if building
 to build ultraskins yourself you will need a copy of ultrakill
