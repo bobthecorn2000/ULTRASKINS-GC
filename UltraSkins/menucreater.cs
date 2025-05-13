@@ -10,7 +10,8 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using BatonPassLogger;
-
+using Unity.Audio;
+using System.Collections.Generic;
 
 
 
@@ -35,7 +36,7 @@ namespace UltraSkins.UI
 
             Scene scene = SceneManager.GetActiveScene();
             BatonPass.Info("The Scene is: " + scene.name);
-            
+            List<TextureOverWatch> PTOW = null;
             GameObject canvas = null;
             GameObject mainmenu;
             GameObject fallNoiseOn = null;
@@ -143,7 +144,7 @@ namespace UltraSkins.UI
                             GameObject ApplyButton = Editorpanel.transform.Find("PanelLeft/Apply").gameObject;
                             GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/PanelLeft/Scroll View/Viewport/Content").gameObject;
                             ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
-                            Mman.GenerateButtons(skinfolderdir, contentfolder, activateanimator);
+                            Mman.GenerateButtons(contentfolder, activateanimator);
 
                             // Now load the ultraskins button
                             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
@@ -177,8 +178,25 @@ namespace UltraSkins.UI
                         }
                     };
 
+                    /*Addressables.LoadAssetAsync<GameObject>("Assets/Settings.prefab").Completed += Settingshandle =>
+                    {
+                        if (Settingshandle.Status == AsyncOperationStatus.Succeeded)
+                        {
+                            BatonPass.Debug("Creating the Settings Menu");
+                            GameObject prefab = Settingshandle.Result;
+                            GameObject instance = Instantiate(prefab);
+                            GameObject PreviewFather = instance.transform.Find("previewfather").gameObject;
+                            PTOW.Clear();
+                            PTOW = ULTRASKINHand.HarmonyGunPatcher.AddTOWs(PreviewFather, false, true);
+                            BatonPass.Success("Added TOW");
+                        }
+                        else
+                        {
+                            BatonPass.Error("Failed to load UltraskinsSettignsmenu: " + Settingshandle.OperationException.Message);
+                            BatonPass.Error("Ultraskins will still work, but the menu will be disabled. CODE -\"MCREATE-MAKETHEMENU-SETTINGMENU-ASSET_BUNDLE_FAILED\"");
+                        }
 
-
+                    };*/
 
                 }
             }
@@ -270,12 +288,12 @@ namespace UltraSkins.UI
                                 BatonPass.Debug(objects.name);
                             }
                             BatonPass.Debug("looking for content");
-                            string[] subfolders = Directory.GetDirectories(skinfolderdir);
+                            
                             GameObject backdrop = UltraskinsConfigmenu.transform.Find("Canvas/Backdrop").gameObject;
                             MenuManager Mman = backdrop.AddComponent<MenuManager>();
                             GameObject contentfolder = backdrop.transform.Find("Scroll View/Viewport/Content").gameObject;
                             ULTRASKINHand handInstance = ULTRASKINHand.HandInstance;
-                            Mman.GenerateButtons(skinfolderdir, contentfolder);
+                            Mman.GenerateButtons(contentfolder);
 
 
 

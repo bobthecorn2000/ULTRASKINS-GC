@@ -13,6 +13,7 @@ using System.Text;
 using UnityEngine.Profiling.Memory.Experimental;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace UltraSkins.Utils
 {
@@ -20,6 +21,8 @@ namespace UltraSkins.Utils
 	{
         //static PluginConfigurator config;
         public const string CurrentVersion = "6.0.2";
+        static string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
+        
         public GameObject Activator;
 		public string path;
 		public string pname;
@@ -54,40 +57,120 @@ namespace UltraSkins.Utils
                 
 			}
 		}*/
+
+        public static string getDataFile()
+        {
+            
+            string moddir = Path.GetDirectoryName(dlllocation);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+            string GCdir = Path.Combine(appDataPath, AppDataLoc);
+            string[] profileInfo = GetThunderstoreProfileName();
+            string ProfDir = null;
+            
+            if (profileInfo != null && profileInfo.Length == 2)
+            {
+                string profileName = profileInfo[0];
+                string profileType = profileInfo[1];
+                ProfDir = Path.Combine(GCdir, "SaveData", profileType, profileName, "data.USGC");
+                
+            }
+            else
+            {
+                ProfDir = Path.Combine(GCdir, "SaveData", "Global", "data.USGC");
+            }
+                return ProfDir;
+        }
         public string[] GetModFolderPath()
         {
-
+            BatonPass.Debug("BATON PASS: GETMODFOLDERPATH()");
             // Get the path to the current directory where the game executable is located
             //string gameDirectory = Assembly.GetExecutingAssembly().Location;
             //string gameDirectory = Path.GetDirectoryName(Application.dataPath);
             
 
-            string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
+            
             string moddir = Path.GetDirectoryName(dlllocation);
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-            string dir = Path.Combine(appDataPath, AppDataLoc);
-            if (!Directory.Exists(dir))
+            string GCdir = Path.Combine(appDataPath, AppDataLoc);
+            string VerDir = Path.Combine(GCdir, "Versions", CurrentVersion);
+            
+            string ProfDir = null;
+            string[] profileInfo = GetThunderstoreProfileName();
+            if (profileInfo != null && profileInfo.Length == 2)
             {
-                Directory.CreateDirectory(dir);
+                string profileName = profileInfo[0];
+                string profileType = profileInfo[1];
+                ProfDir = Path.Combine(GCdir, "SaveData", profileType, profileName);
+            }
+            else
+            {
+              ProfDir = Path.Combine(GCdir, "SaveData", "Global");
+            }
+            string GlobalDir = Path.Combine(GCdir, "Global");
+            string[] parts = dlllocation.Split(Path.DirectorySeparatorChar);
+            string savelocation = null;
+
+
+
+
+
+
+            BatonPass.Debug("Checking Directories");
+            if (!Directory.Exists(GCdir))
+            {
+                BatonPass.Warn("The AppData Directiory is missing. Fixing");
+                Directory.CreateDirectory(GCdir);
+                BatonPass.Success("Fixed");
                 
                 
             }
-            string[] defloc = new string[] { Path.Combine(dir, "OG-SKINS") };
+            if (!Directory.Exists(VerDir))
+            
+                {
+                BatonPass.Warn("The Versions Directiory is missing. Fixing");
+                Directory.CreateDirectory(VerDir);
+                BatonPass.Success("Fixed");
+            }
+            if (ProfDir != null)
+            {
+                if (!Directory.Exists(ProfDir))
 
-            // The mod folder is typically named "BepInEx/plugins" or similar
-            //string modFolderName = "BepInEx\\plugins\\ultraskins\\custom"; // Adjust this according to your setup
-            StringSerializer serializer = new StringSerializer();
-            string filecheck = Path.Combine(dir + "\\data.USGC");
-            if (!File.Exists(Path.Combine(dir + "\\data.USGC")))
+                {
+                    BatonPass.Warn("The Current Profile's Directiory is missing. Fixing");
+                    Directory.CreateDirectory(ProfDir);
+                    BatonPass.Success("Fixed");
+                }
+            }
+            if (!Directory.Exists(GlobalDir)) {
+                BatonPass.Warn("The Global SaveData Directiory is missing. Fixing");
+                Directory.CreateDirectory(GlobalDir);
+                BatonPass.Success("Fixed");
+            }
+            BatonPass.Debug("Done");
+
+
+            string[] defloc = new string[] { Path.Combine(VerDir, "OG-SKINS") };
+            if (ProfDir != null) {
+                savelocation = ProfDir;
+            }
+            
+
+
+                StringSerializer serializer = new StringSerializer();
+            string filecheck = Path.Combine(savelocation + "\\data.USGC");
+            if (!File.Exists(Path.Combine(savelocation + "\\data.USGC")))
             {
                 serializer.SerializeStringToFile(defloc, filecheck);
 
             }
 
             //ExtractSkin("OG-SKINS.GCskin");
-            if (!Directory.Exists(Path.Combine(dir + "\\OG-SKINS")) &&  File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin"))) {
-                ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
+            if (!Directory.Exists(Path.Combine(VerDir + "\\OG-SKINS")) &&  File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin"))) {
+                BatonPass.Warn("An OG-Skins for this version was not found, Fixing");
+                ExtractSkin(VerDir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
+                BatonPass.Success("Succefully Created an OG-Skins file for " + CurrentVersion);
             }
 
             string[] deserializedData = serializer.DeserializeStringFromFile(filecheck);
@@ -100,7 +183,7 @@ namespace UltraSkins.Utils
             if (deserializedData[0] == "Wrong Version")
             {
                 
-                DirectoryInfo skindir = new DirectoryInfo(Path.Combine(dir + "\\OG-SKINS"));
+/*                DirectoryInfo skindir = new DirectoryInfo(Path.Combine(VerDir + "\\OG-SKINS"));
 
                 foreach (FileInfo fi in skindir.GetFiles())
                 {
@@ -109,14 +192,50 @@ namespace UltraSkins.Utils
                         fi.Delete();
                     }
                     catch (Exception) { } // Ignore all exceptions
-                }
+                }*/
 
-                ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
+               /* ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));*/
                 deserializedData = serializer.DeserializeStringFromFile(filecheck);
             }
 
                     return deserializedData;
         }
+
+        public static Dictionary<String,String> GetCurrentLocations()
+        {
+            string moddir = Path.GetDirectoryName(dlllocation);
+            string parentDir = Directory.GetParent(moddir).FullName;
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+            string GCdir = Path.Combine(appDataPath, AppDataLoc);
+            string VerDir = Path.Combine(GCdir, "Versions", CurrentVersion);
+
+
+            string[] profileInfo = GetThunderstoreProfileName();
+            string profileName = null;
+            string profileType = null;
+            
+            string GlobalDir = Path.Combine(GCdir, "Global");
+            
+           
+            Dictionary<String, String> Locations = new Dictionary<String,String>();
+
+
+            Locations.Add("Global", GlobalDir);
+            Locations.Add("Version", VerDir);
+            BatonPass.Info("Location Found: " + "Global" + " " + GlobalDir);
+            if (profileInfo != null && profileInfo.Length == 2)
+            {
+                profileName = profileInfo[0];
+                profileType = profileInfo[1];
+                BatonPass.Info("Location Found: " +  profileType + " " + parentDir);
+                Locations.Add(profileType, parentDir);
+                
+
+            }
+            return Locations;
+        } 
+
         public class StringSerializer
         {
             public void SerializeStringToFile(string[] data, string filePath)
@@ -160,7 +279,7 @@ namespace UltraSkins.Utils
                     if (deserializedData.ModVersion != CurrentVersion)
                     {
                         SerializeStringToFile(deserializedData?.SkinLocation, filePath);
-                        BatonPass.Info("Wrong version, correcting");
+                        BatonPass.Warn("Wrong version, correcting");
                         return new string[] { "Wrong Version" };
 
                     }
@@ -296,7 +415,49 @@ namespace UltraSkins.Utils
                 return null;
             }
         }
-        
+
+        static string[] GetThunderstoreProfileName()
+        {
+            string dllLocation = Assembly.GetExecutingAssembly().Location;
+            string[] parts = dllLocation.Split(Path.DirectorySeparatorChar);
+
+            bool isInsideThunderstore = false;
+            bool isInsideR2Modman = false;
+            string Dirtype = null;
+            foreach (string part in parts)
+            {
+                if (part.Equals("Thunderstore Mod Manager", StringComparison.OrdinalIgnoreCase))
+                {
+                    isInsideThunderstore = true;
+                    Dirtype = "Thunderstore";
+                    break;
+                }
+                if (part.Equals("r2modmanPlus-local", StringComparison.OrdinalIgnoreCase))
+                {
+                    isInsideR2Modman = true;
+                    Dirtype = "r2modman";
+                    break;
+                }
+            }
+
+            if (!isInsideThunderstore && !isInsideR2Modman)
+                return null;
+
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                if (parts[i].Equals("profiles", StringComparison.OrdinalIgnoreCase))
+                {
+                    string[] InfoObject = new string[2]; 
+                    InfoObject[0] = parts[i+1];
+                    InfoObject[1] = Dirtype;
+                    return InfoObject;
+                }
+            }
+
+            return null;
+        }
+
+
     }
 }
 

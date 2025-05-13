@@ -10,6 +10,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using TMPro;
 using UltraSkins;
 using BatonPassLogger;
+using UltraSkins.Utils;
 
 
 namespace UltraSkins.UI
@@ -49,48 +50,68 @@ namespace UltraSkins.UI
             mainmenucanvas.SetActive(true);
         }
 
-        public void GenerateButtons(string skinfolderdir, GameObject contentfolder, ObjectActivateInSequence activateanimator)
+        public void GenerateButtons(GameObject contentfolder, ObjectActivateInSequence activateanimator)
         {
-            string[] subfolders = Directory.GetDirectories(skinfolderdir);
             
+            Dictionary<string, string> Locations = SkinEventHandler.GetCurrentLocations();
+
             AvailbleSkins.Clear();
             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsButton.prefab").Completed += buttonHandle =>
             {
                 if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
                 {
-
-                    int buttonsToLoad = subfolders.Length;
-                    int buttonsLoaded = 0;
-                   
-                    GameObject prefab = buttonHandle.Result;
-                    foreach (string subfolder in subfolders)
+                    foreach (string Location in Locations.Keys)
                     {
-                        string folder = Path.GetFileName(subfolder);
-                        GameObject instance = Instantiate(prefab, contentfolder.transform);
-                        instance.SetActive(true);
 
-                        Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
-                        ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                        
-                        if (handInstance.filepathArray.Contains(subfolder))
+                        string skinfolderdir = Locations[Location];
+                        string[] subfolders = Directory.GetDirectories(skinfolderdir);
+                        int buttonsToLoad = subfolders.Length;
+                        int buttonsLoaded = 0;
+
+                        GameObject prefab = buttonHandle.Result;
+
+                        foreach (string subfolder in subfolders)
                         {
-                            int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
-                            BatonPass.Debug(instance.name +"/"+ subfolder + "/" + index);
-                            instance.GetComponent<ButtonEnableManager>().IsEnabled = true;
-                            instance.transform.SetSiblingIndex(index);
-                        }
-                        instance.GetComponent<ButtonEnableManager>().filePath = folder;
-                        AvailbleSkins.Add(folder, ultraskinsbutton);
-                         // Add button to list
 
-                        BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
+                            string folder = Path.GetFileName(subfolder);
+                            string metadataPath = Path.Combine(subfolder, "metadata.USGC");
+                            if (!File.Exists(metadataPath) && Location != "Global" && Location != "Version")
+                            {
+                                // Skip folders that aren't Ultraskins-compatible
+                                BatonPass.Debug("Skipping: " + folder);
+                                continue;
+                            }
 
-                        buttonsLoaded++;
-                        if (buttonsLoaded == buttonsToLoad)
-                        {
-                            orderifier(activateanimator, contentfolder);
+
+                            GameObject instance = Instantiate(prefab, contentfolder.transform);
+                            instance.SetActive(true);
+
+                            Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
+                            ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
+                            
+                            if (Location == "r2modman" || Location == "Thunderstore")
+                            {
+
+                            }
+                            if (handInstance.filepathArray.Contains(subfolder))
+                            {
+                                int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
+                                BatonPass.Debug(instance.name + "/" + subfolder + "/" + index);
+                                instance.GetComponent<ButtonEnableManager>().IsEnabled = true;
+                                instance.transform.SetSiblingIndex(index);
+                            }
+                            instance.GetComponent<ButtonEnableManager>().filePath = subfolder;
+                            AvailbleSkins.Add(folder, ultraskinsbutton);
+                            // Add button to list
+
+                            BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
+
+                            buttonsLoaded++;
+
                         }
                     }
+                    orderifier(activateanimator, contentfolder);
+
 
                 }
                 else
@@ -119,48 +140,70 @@ namespace UltraSkins.UI
             BatonPass.Debug("Successfully set up ObjectActivateInSequence.");
         }
 
-        public void GenerateButtons(string skinfolderdir, GameObject contentfolder)
+        public void GenerateButtons(GameObject contentfolder)
         {
-            string[] subfolders = Directory.GetDirectories(skinfolderdir);
+            Dictionary<string,string> Locations = SkinEventHandler.GetCurrentLocations();
+            
             
             AvailbleSkins.Clear();
+
+            
             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsButton.prefab").Completed += buttonHandle =>
             {
                 if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
                 {
 
-                    int buttonsToLoad = subfolders.Length;
-                    int buttonsLoaded = 0;
+                    
                     foreach (var button in loadedButtons)
                     {
                         Destroy(button); // Destroy old button GameObjects
                     }
+
                     loadedButtons.Clear();
-                    GameObject prefab = buttonHandle.Result;
-                    foreach (string subfolder in subfolders)
+
+                    foreach (string Location in Locations.Keys)
                     {
-                        string folder = Path.GetFileName(subfolder);
-                        GameObject instance = Instantiate(prefab, contentfolder.transform);
-                        instance.SetActive(true);
-
-                        Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
-                        ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                        if (handInstance.filepathArray.Contains(subfolder))
+                        string skinfolderdir = Locations[Location];
+                        string[] subfolders = Directory.GetDirectories(skinfolderdir);
+                        int buttonsToLoad = subfolders.Length;
+                        int buttonsLoaded = 0;
+                        GameObject prefab = buttonHandle.Result;
+                        foreach (string subfolder in subfolders)
                         {
-                            int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
-                            instance.GetComponent<ButtonEnableManager>().IsEnabled = true;
-                            instance.transform.SetSiblingIndex(index);
+                            string folder = Path.GetFileName(subfolder);
+                            string metadataPath = Path.Combine(subfolder, "metadata.USGC");
+                            if (!File.Exists(metadataPath) && Location != "Global" && Location != "Version")
+                            {
+                                // Skip folders that aren't Ultraskins-compatible
+                                BatonPass.Debug("Skipping: " + folder);
+                                continue;
+                            }
+                            GameObject instance = Instantiate(prefab, contentfolder.transform);
+                            instance.SetActive(true);
+
+                            Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
+                            if (Location == "r2modman" || Location == "Thunderstore")
+                            {
+                                
+                            }
+                            ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
+                            if (handInstance.filepathArray.Contains(subfolder))
+                            {
+                                int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
+                                instance.GetComponent<ButtonEnableManager>().IsEnabled = true;
+                                instance.transform.SetSiblingIndex(index);
+                            }
+                            instance.GetComponent<ButtonEnableManager>().filePath = subfolder;
+                            string[] folders = new string[] { folder };
+
+
+                            loadedButtons.Add(instance); // Add button to list
+                            AvailbleSkins.Add(folder, ultraskinsbutton);
+                            BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
+
+                            buttonsLoaded++;
+
                         }
-                        instance.GetComponent<ButtonEnableManager>().filePath = folder;
-                        string[] folders = new string[] { folder };
-
-
-                        loadedButtons.Add(instance); // Add button to list
-                        AvailbleSkins.Add(folder, ultraskinsbutton);
-                        BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
-
-                        buttonsLoaded++;
-
                     }
 
                 }

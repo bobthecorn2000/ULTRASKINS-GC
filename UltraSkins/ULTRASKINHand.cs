@@ -18,6 +18,7 @@ using UltraSkins.UI;
 
 using StringSerializer = UltraSkins.Utils.SkinEventHandler.StringSerializer;
 using BatonPassLogger;
+using static UnityEngine.UIElements.UIRAtlasAllocator;
 
 
 //using UnityEngine.UIElements;
@@ -200,7 +201,7 @@ namespace UltraSkins
 
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-            string dir = Path.Combine(appDataPath, AppDataLoc);
+            string dir = SkinEventHandler.getDataFile();
 
             List<string> filepath = new List<string>();
             foreach (string clickedButton in clickedButtons)
@@ -215,7 +216,7 @@ namespace UltraSkins
             }
 
             BatonPass.Debug("folderis: " + filepath);
-            serializer.SerializeStringToFile(filepathArray, Path.Combine(dir + "\\data.USGC"));
+            serializer.SerializeStringToFile(filepathArray, Path.Combine(dir));
             BatonPass.Success("Saved to data.USGC");
             BatonPass.Debug("INIT BATON PASS: RELOADTEXTURES(TRUE," + filepath + ")");
             
@@ -234,13 +235,11 @@ namespace UltraSkins
             StringSerializer serializer = new StringSerializer();
             BatonPass.Debug("Created The Serializer");
             BatonPass.Debug("looking for the dll, appdata paths and merging the directory strings");
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-            string dir = Path.Combine(appDataPath, AppDataLoc);
+            string save = SkinEventHandler.getDataFile();
 
 
 
-            filepathArray = serializer.DeserializeStringFromFile(Path.Combine(dir + "\\data.USGC"));
+            filepathArray = serializer.DeserializeStringFromFile(save);
             BatonPass.Info("Read data.USGC from " + filepathArray);
             BatonPass.Debug("INIT BATON PASS: RELOADTEXTURES(TRUE," + filepathArray + ")");
             ReloadTextures(filepathArray,true);
@@ -252,6 +251,66 @@ namespace UltraSkins
         [HarmonyPatch]
         public class HarmonyGunPatcher
         {
+
+
+            public static List<TextureOverWatch> AddTOWs(GameObject gameobject, bool toself = true, bool tochildren = false, bool toparent = false, bool refresh = false)
+            {
+                BatonPass.Debug("added " + gameobject.name + "to textureoverwatch");
+                List<TextureOverWatch> tows = new List<TextureOverWatch>();
+                if (toself)
+                {
+                    if (!gameobject.GetComponent<TextureOverWatch>())
+                    {
+                        TextureOverWatch tow = gameobject.AddComponent<TextureOverWatch>();
+                        tows.Add(tow);
+                    }
+                    else
+                    {
+                        gameobject.GetComponent<TextureOverWatch>().enabled = refresh;
+                    }
+                }
+                if (toparent)
+                {
+                    Renderer[] parentRenderers = gameobject.GetComponentsInParent<Renderer>();
+                    foreach (Renderer renderer in parentRenderers)
+                    {
+                        if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
+                        {
+                            if (!renderer.GetComponent<TextureOverWatch>())
+                            {
+                                TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
+                                tows.Add(tow);
+                            }
+                            else
+                            {
+                                renderer.GetComponent<TextureOverWatch>().enabled = refresh;
+                            }
+                        }
+                    }
+                }
+                if (tochildren)
+                {
+                    Renderer[] childRenderers = gameobject.GetComponentsInChildren<Renderer>();
+                    foreach (Renderer renderer in childRenderers)
+                    {
+                        if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
+                        {
+                            if (!renderer.GetComponent<TextureOverWatch>())
+                            {
+                                TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
+                                tows.Add(tow);
+                            }
+                            else
+                            {
+                                renderer.GetComponent<TextureOverWatch>().enabled = refresh;
+                                
+                            }
+                        }
+                    }
+                }
+                return tows;
+            }
+
             [HarmonyPatch(typeof(GunControl), "SwitchWeapon", new Type[] { typeof(int), typeof(int?), typeof(bool), typeof(bool), typeof(bool) })]
             [HarmonyPostfix]
             public static void SwitchWeaponPost(GunControl __instance, int targetSlotIndex, int? targetVariationIndex = null, bool useRetainedVariation = false, bool cycleSlot = false, bool cycleVariation = false)
@@ -303,9 +362,16 @@ namespace UltraSkins
             [HarmonyPostfix]
             public static void SwitchFistPost(FistControl __instance, int orderNum)
             {
+                try
+                {
+                    TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
+                    ReloadTextureOverWatch(TOWS);
+                }
+                catch (ArgumentOutOfRangeException AOOR) {
+                    BatonPass.Warn("HEAR YEE HEAR YEE CurrentArmObject Argument Out of Range " + AOOR.ToString());
+                    BatonPass.Warn("currentArmObject is empty, this is normal if you are in 5-S, P-1 or P-2  CODE -\"USHAND-GUNPATCHER-FC_ARMCHANGE_SFP-ARG_OUT_OF_RANGE\"");
+                }
 
-                TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                ReloadTextureOverWatch(TOWS);
             }
 
             [HarmonyPatch(typeof(FistControl), "ResetFists")]
