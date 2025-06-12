@@ -76,4 +76,9 @@ namespace UltraSkins
 			transform.GetComponent<TextureOverWatch>().enabled = false;
 		}
     }
+
+public class TowStorage : MonoBehaviour
+    {
+        [SerializeField]public List<TextureOverWatch> TOWS;
+    }
 }

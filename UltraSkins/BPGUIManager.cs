@@ -11,7 +11,7 @@ using UnityEngine.UI;
 namespace BatonPassLogger.GUI
 {
     [ConfigureSingleton(SingletonFlags.PersistAutoInstance)]
-    internal class BPGUIManager : MonoSingleton<BPGUIManager>
+    public class BPGUIManager : MonoSingleton<BPGUIManager>
     {
         public static BPGUIManager BPGUIinstance { get; set; }
         public static GameObject batonpassGUIInst { get; set; }

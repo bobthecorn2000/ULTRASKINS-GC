@@ -18,7 +18,7 @@ using UltraSkins.UI;
 
 using StringSerializer = UltraSkins.Utils.SkinEventHandler.StringSerializer;
 using BatonPassLogger;
-using static UnityEngine.UIElements.UIRAtlasAllocator;
+
 
 
 //using UnityEngine.UIElements;
@@ -43,36 +43,27 @@ namespace UltraSkins
         public const string PLUGIN_VERSION = "6.0.2";
         private string modFolderPath;
         public bool loadTextureLock = false;
-        private BPGUIManager BPGUI;
-        private static string _modPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-        private static string _skinPath = Path.Combine(_modPath, "Custom");
+        public BPGUIManager BPGUI;
+        string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+        string skinfolderdir;
+
         public string[] filepathArray;
-        public List<string> Paths
-        {
-            get
-            {
-                string[] files = Directory.GetFiles(_skinPath);
 
-                for (int i = 0; i < files.Length; i++)
-                {
-                    files[i] = files[i].Split(Path.DirectorySeparatorChar).Last();
-                }
-
-                return files.ToList();
-            }
-        }
 
         private List<Sprite> _default;
         private List<Sprite> _edited;
         private bool firstmenu = true;
 
-        public static string pluginPath;
+        public static string pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public string folderupdater;
         public static Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
         public Dictionary<string,string> MaterialNames = new Dictionary<string,string>();
         public string[] directories;
         public string serializedSet = "";
         public bool swapped = false;
+        public UltraSkins.UI.SettingsManager settingsmanager;
+        public TowStorage PtowStorage;
         Harmony UKSHarmony;
         public static ULTRASKINHand HandInstance { get; private set; }
 
@@ -103,12 +94,10 @@ namespace UltraSkins
             BatonPass.Info("Attempting to start");
 
 
+            skinfolderdir = Path.Combine(appDataPath, AppDataLoc);
 
-            pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             BatonPass.Debug("Plugin path set to " + pluginPath);
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-            string skinfolderdir = Path.Combine(appDataPath, AppDataLoc);
+            
                                                              
             BatonPass.Debug("Setting appdatapath, appdataloc and SkinFolderDir to " + "\nAPPDATAPATH:" + appDataPath + "\nAPPDATALOC:" + AppDataLoc + "\nSKINFOLDERDIR:" + skinfolderdir);
             BatonPass.Debug("Starting addressables");
@@ -153,6 +142,7 @@ namespace UltraSkins
                 managerObject.AddComponent<BPGUIManager>();
                 BPGUI = BPGUIManager.BPGUIinstance;
             }
+            MenuCreator.CreateSMan();
         }
         public void OnModLoaded(string fpath)
         {
@@ -197,17 +187,14 @@ namespace UltraSkins
             StringSerializer serializer = new StringSerializer();
             BatonPass.Debug("Created The Serializer");
             BatonPass.Debug("looking for the dll, appdata paths and merging the directory strings");
-            string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
 
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
             string dir = SkinEventHandler.getDataFile();
 
             List<string> filepath = new List<string>();
             foreach (string clickedButton in clickedButtons)
             {
-                filepath.Add(Path.Combine(dir + "\\" + clickedButton));
-                BatonPass.Debug("added " + dir + "\\" + clickedButton);
+                filepath.Add(Path.Combine(clickedButton));
+                BatonPass.Debug("added " + clickedButton);
             }
             filepathArray = filepath.ToArray();
             foreach (string thing in filepathArray)
@@ -252,7 +239,28 @@ namespace UltraSkins
         public class HarmonyGunPatcher
         {
 
+            public static List<TextureOverWatch> AddPTOWs(GameObject gameobject,bool refresh)
+            {
+                List<TextureOverWatch> ptows = new List<TextureOverWatch>();
+                Renderer[] childRenderers = gameobject.GetComponentsInChildren<Renderer>(true);
+                foreach (Renderer renderer in childRenderers)
+                {
+                    if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
+                    {
+                        if (!renderer.GetComponent<TextureOverWatch>())
+                        {
+                            TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
+                            ptows.Add(tow);
+                        }
+                        else
+                        {
+                            renderer.GetComponent<TextureOverWatch>().enabled = refresh;
 
+                        }
+                    }
+                }
+                return ptows;
+            }
             public static List<TextureOverWatch> AddTOWs(GameObject gameobject, bool toself = true, bool tochildren = false, bool toparent = false, bool refresh = false)
             {
                 BatonPass.Debug("added " + gameobject.name + "to textureoverwatch");
@@ -863,7 +871,11 @@ namespace UltraSkins
                     ColorBlindSettings.Instance.variationColors[1].g,
                     ColorBlindSettings.Instance.variationColors[1].b, 1f);
             }
-            return VariantColor;
+            else if (TOW.GetComponentInParent<BandScroller>())
+            {
+
+            }
+                return VariantColor;
         }
 
 
@@ -952,6 +964,11 @@ namespace UltraSkins
                         renderer.gameObject.AddComponent<TextureOverWatch>().enabled = true;
                     }
                 }
+            }
+            foreach(TextureOverWatch tow in HandInstance.PtowStorage.TOWS)
+            {
+                tow.enabled = true;
+                tow.forceswap = true;
             }
 
         }
@@ -1102,6 +1119,7 @@ namespace UltraSkins
             {
                 BPGUI.DisableTerminal();
                 BPGUI.HideProgressBar();
+                
                 BPGUI.BatonPassAnnoucement(Color.green, "success");
             }
             if (firsttime == false)

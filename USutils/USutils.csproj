@@ -7,6 +7,8 @@
     <Nullable>enable</Nullable>
 
     <StartupObject>UltraSkinsPacker.Skinpacker</StartupObject>
+
+    <Configurations>Debug;Release;Canary</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

@@ -22,6 +22,7 @@ namespace UltraSkins.UI
         internal static MenuManager  MMinstance { get; private set; }
         List<GameObject> loadedButtons = new List<GameObject>();
         Dictionary<string, Button> AvailbleSkins = new Dictionary<string, Button>();
+        
 
         void Awake() {
             MMinstance = this;
@@ -31,7 +32,8 @@ namespace UltraSkins.UI
         {
             MMinstance.orderifier(oais, content);
             fallnoiseoff.SetActive(true);
-
+            handInstance.settingsmanager.ShowPreviewWireFrame(false);
+            handInstance.settingsmanager.ShowSettingsAssets(false);
             animator.Play("menuclose");
 
             // Start the coroutine

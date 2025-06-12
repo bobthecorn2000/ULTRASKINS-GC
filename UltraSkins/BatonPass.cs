@@ -20,7 +20,7 @@ namespace BatonPassLogger
     // Enum for log levels
     public static class BatonPass
     {
-#if DEBUG
+#if DEBUG || CANARY
         public const bool ShouldDoBatonPass = true;
 #else
         public const bool ShouldDoBatonPass = false;
@@ -32,8 +32,8 @@ namespace BatonPassLogger
         
         public enum LogLevel
         {
-            Info,
             Debug,
+            Info,
             Warning,
             Error,
             Fatal,

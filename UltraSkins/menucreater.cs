@@ -12,7 +12,9 @@ using UnityEngine.UI;
 using BatonPassLogger;
 using Unity.Audio;
 using System.Collections.Generic;
-
+using UltraSkins.Utils;
+using BatonPassLogger.GUI;
+using System.Threading.Tasks;
 
 
 
@@ -27,6 +29,12 @@ namespace UltraSkins.UI
         static string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         static string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
         static string skinfolderdir = Path.Combine(appDataPath, AppDataLoc);
+        static ULTRASKINHand handInstance = ULTRASKINHand.HandInstance;
+        static SettingsManager sMan
+        {
+            get => ULTRASKINHand.HandInstance.settingsmanager;
+            set => ULTRASKINHand.HandInstance.settingsmanager = value;
+        }
         public static string folderupdater;
         static GameObject batonpassGUIInst = null;
         
@@ -36,11 +44,12 @@ namespace UltraSkins.UI
 
             Scene scene = SceneManager.GetActiveScene();
             BatonPass.Info("The Scene is: " + scene.name);
-            List<TextureOverWatch> PTOW = null;
+            
             GameObject canvas = null;
             GameObject mainmenu;
             GameObject fallNoiseOn = null;
             GameObject fallNoiseOff = null;
+            
             try
             {
                 foreach (var rootsound in scene.GetRootGameObjects().Where(obj => obj.name == "FallSound"))
@@ -49,70 +58,78 @@ namespace UltraSkins.UI
                     fallNoiseOn = rootsound.transform.Find("ToOne").gameObject;
                     fallNoiseOff = rootsound.transform.Find("ToZero").gameObject;
                 }
+
                 foreach (var rootCanvas in scene.GetRootGameObjects().Where(obj => obj.name == "Canvas"))
 
                 {
+
+
+
                     BatonPass.Info("entered a foreach");
                     mainmenu = rootCanvas.transform.Find("Main Menu (1)").gameObject;
 
                     BatonPass.Info("finished search");
                     BatonPass.Info("HEARYEE HEAR YEE TRANSFORM IS " + mainmenu.ToString());
                     GameObject V1;
+                    bool usev1color = sMan.GetSettingValue<bool>("V1Color");
 
-                    BatonPass.Info(ColorBlindSettings.Instance.variationColors[2].r + " " + ColorBlindSettings.Instance.variationColors[2].g + " " + ColorBlindSettings.Instance.variationColors[2].b);
-
-
-
-
-                    GameObject Knuckleblaster;
-                    GameObject Whiplash;
-                    GameObject Wings;
-
-                    //mainmenu.AddComponent<TextureOverWatch>();
-                    V1 = mainmenu.transform.Find("V1").gameObject;
-                    ColorBlindGet v1cb = V1.AddComponent<ColorBlindGet>();
-                    v1cb.variationColor = true;
-                    v1cb.variationNumber = 0;
-                    v1cb.UpdateColor();
-
-                    Wings = V1.transform.Find("Wings").gameObject;
-                    ColorBlindGet WingCB = Wings.AddComponent<ColorBlindGet>();
-                    WingCB.variationColor = true;
-                    WingCB.variationNumber = 0;
-                    WingCB.UpdateColor();
-                    //Color VariantColorB = new Color(ColorBlindSettings.Instance.variationColors[0].r, ColorBlindSettings.Instance.variationColors[0].g, ColorBlindSettings.Instance.variationColors[0].b, 1f);
-                    //CanvasRenderer V1Renderer = V1.GetComponentInChildren<CanvasRenderer>();
-                    //V1Renderer.SetColor(VariantColorB);
+                    if (usev1color)
+                    {
+                        BatonPass.Info(ColorBlindSettings.Instance.variationColors[2].r + " " + ColorBlindSettings.Instance.variationColors[2].g + " " + ColorBlindSettings.Instance.variationColors[2].b);
 
 
-                    Knuckleblaster = V1.transform.Find("Knuckleblaster").gameObject;
-                    ColorBlindGet KBcb = Knuckleblaster.AddComponent<ColorBlindGet>();
-                    KBcb.variationColor = true;
-                    KBcb.variationNumber = 2;
-                    KBcb.UpdateColor();
-
-                    //Color VariantColorR = new Color(ColorBlindSettings.Instance.variationColors[2].r, ColorBlindSettings.Instance.variationColors[2].g, ColorBlindSettings.Instance.variationColors[2].b, 1f);
-                    //CanvasRenderer KBRenderer = Knuckleblaster.GetComponentInChildren<CanvasRenderer>();
-
-                    //KBRenderer.SetColor(VariantColorR);
 
 
-                    Whiplash = V1.transform.Find("Whiplash").gameObject;
-                    ColorBlindGet WLcb = Whiplash.AddComponent<ColorBlindGet>();
-                    WLcb.variationColor = true;
-                    WLcb.variationNumber = 1;
-                    WLcb.UpdateColor();
+                        GameObject Knuckleblaster;
+                        GameObject Whiplash;
+                        GameObject Wings;
 
-                    //Color VariantColorG = new Color(ColorBlindSettings.Instance.variationColors[1].r, ColorBlindSettings.Instance.variationColors[1].g, ColorBlindSettings.Instance.variationColors[1].b, 1f);
-                    //CanvasRenderer WLRenderer = Whiplash.GetComponentInChildren<CanvasRenderer>();
-                    Button oldstart = mainmenu.GetComponentInChildren<Button>();
+                        //mainmenu.AddComponent<TextureOverWatch>();
+                        V1 = mainmenu.transform.Find("V1").gameObject;
+                        ColorBlindGet v1cb = V1.AddComponent<ColorBlindGet>();
+                        v1cb.variationColor = true;
+                        v1cb.variationNumber = 0;
+                        v1cb.UpdateColor();
 
-                    //GameObject UltraskinsMenubutton = new GameObject();
-                    //Button newstart = UltraskinsMenubutton.AddComponent<Button>();
-                    //Image newImage = UltraskinsMenubutton.AddComponent<Image>();
-                    //UltraskinsMenubutton.transform.parent = mainmenu.transform;
+                        Wings = V1.transform.Find("Wings").gameObject;
+                        ColorBlindGet WingCB = Wings.AddComponent<ColorBlindGet>();
+                        WingCB.variationColor = true;
+                        WingCB.variationNumber = 0;
+                        WingCB.UpdateColor();
+                        //Color VariantColorB = new Color(ColorBlindSettings.Instance.variationColors[0].r, ColorBlindSettings.Instance.variationColors[0].g, ColorBlindSettings.Instance.variationColors[0].b, 1f);
+                        //CanvasRenderer V1Renderer = V1.GetComponentInChildren<CanvasRenderer>();
+                        //V1Renderer.SetColor(VariantColorB);
 
-                    //WLRenderer.SetColor(VariantColorG);
+
+                        Knuckleblaster = V1.transform.Find("Knuckleblaster").gameObject;
+                        ColorBlindGet KBcb = Knuckleblaster.AddComponent<ColorBlindGet>();
+                        KBcb.variationColor = true;
+                        KBcb.variationNumber = 2;
+                        KBcb.UpdateColor();
+
+                        //Color VariantColorR = new Color(ColorBlindSettings.Instance.variationColors[2].r, ColorBlindSettings.Instance.variationColors[2].g, ColorBlindSettings.Instance.variationColors[2].b, 1f);
+                        //CanvasRenderer KBRenderer = Knuckleblaster.GetComponentInChildren<CanvasRenderer>();
+
+                        //KBRenderer.SetColor(VariantColorR);
+
+
+                        Whiplash = V1.transform.Find("Whiplash").gameObject;
+                        ColorBlindGet WLcb = Whiplash.AddComponent<ColorBlindGet>();
+                        WLcb.variationColor = true;
+                        WLcb.variationNumber = 1;
+                        WLcb.UpdateColor();
+
+                        //Color VariantColorG = new Color(ColorBlindSettings.Instance.variationColors[1].r, ColorBlindSettings.Instance.variationColors[1].g, ColorBlindSettings.Instance.variationColors[1].b, 1f);
+                        //CanvasRenderer WLRenderer = Whiplash.GetComponentInChildren<CanvasRenderer>();
+                        Button oldstart = mainmenu.GetComponentInChildren<Button>();
+
+                        //GameObject UltraskinsMenubutton = new GameObject();
+                        //Button newstart = UltraskinsMenubutton.AddComponent<Button>();
+                        //Image newImage = UltraskinsMenubutton.AddComponent<Image>();
+                        //UltraskinsMenubutton.transform.parent = mainmenu.transform;
+
+                        //WLRenderer.SetColor(VariantColorG);
+                    }
                     canvas = rootCanvas;
                     GameObject prefabmenu;
                     GameObject UltraskinsConfigmenu;
@@ -178,25 +195,7 @@ namespace UltraSkins.UI
                         }
                     };
 
-                    /*Addressables.LoadAssetAsync<GameObject>("Assets/Settings.prefab").Completed += Settingshandle =>
-                    {
-                        if (Settingshandle.Status == AsyncOperationStatus.Succeeded)
-                        {
-                            BatonPass.Debug("Creating the Settings Menu");
-                            GameObject prefab = Settingshandle.Result;
-                            GameObject instance = Instantiate(prefab);
-                            GameObject PreviewFather = instance.transform.Find("previewfather").gameObject;
-                            PTOW.Clear();
-                            PTOW = ULTRASKINHand.HarmonyGunPatcher.AddTOWs(PreviewFather, false, true);
-                            BatonPass.Success("Added TOW");
-                        }
-                        else
-                        {
-                            BatonPass.Error("Failed to load UltraskinsSettignsmenu: " + Settingshandle.OperationException.Message);
-                            BatonPass.Error("Ultraskins will still work, but the menu will be disabled. CODE -\"MCREATE-MAKETHEMENU-SETTINGMENU-ASSET_BUNDLE_FAILED\"");
-                        }
 
-                    };*/
 
                 }
             }
@@ -204,10 +203,82 @@ namespace UltraSkins.UI
             {
                 BatonPass.Error("HEAR YEE HEAR YEE MainConfigMenu not loaded " + e.ToString());
                 BatonPass.Error("Ultraskins may still work, but the MainConfigMenu will not be accessible. CODE -\"MCREATE-MAKETHEMENU-EX\"");
+                
             }
             BatonPass.Debug("INIT BATON PASS: We are returning");
             return;
         }
+
+
+        public static void CreateSMan()
+        {
+            List<TextureOverWatch> PTOW = new List<TextureOverWatch>();
+            var Settingshandle = Addressables.LoadAssetAsync<GameObject>("Assets/Settings.prefab");
+            GameObject prefab = Settingshandle.WaitForCompletion();
+
+                if (Settingshandle.Status == AsyncOperationStatus.Succeeded)
+                {
+                    BatonPass.Debug("Creating the Settings Menu");
+                    
+                    GameObject instance = Instantiate(prefab);
+                    instance.SetActive(true);
+                    sMan = instance.GetComponent<SettingsManager>();
+                    string usersettings = SkinEventHandler.getUserSettingsFile();
+                    BatonPass.Debug("loading user settings");
+                    try
+                    {
+                        sMan.loadUserSettings(usersettings);
+                    }
+                    catch (Exception ex)
+                    {
+                        BatonPass.Warn("Users custom settings dont exist using defaults CODE -\"MCREATE-MAKETHEMENU-USERSETTINGSFILE-CORRUPTED_OR_MISSING\"");
+                    }
+                    BatonPass.Debug("loading settings options");
+                    try
+                    {
+                        sMan.LoadSettingsFromJson(ULTRASKINHand.pluginPath + Path.DirectorySeparatorChar + "DefaultSettings.USGC");
+                    }
+                    catch (Exception ex)
+                    {
+                        BatonPass.Fatal("HEAR YE, HEAR YE! Critical failure: Default Settings and their constructor are missing, UltraSkins will be unstable at best. CODE -\"MCREATE-MAKETHEMENU-SETTINGSFILE-CORRUPTED_OR_MISSING\"");
+                        handInstance.BPGUI.ShowGUI("Error");
+                        handInstance.BPGUI.BatonPassAnnoucement(Color.red, "Fatal Error, Default Settings and their constructor are missing, UltraSkins will be unstable at best. CODE -\"MCREATE-MAKETHEMENU-SETTINGSFILE-CORRUPTED_OR_MISSING\"");
+                    }
+                    BatonPass.Debug("loading settings UI");
+                    sMan.BuildSettingsUI();
+                    try
+                    {
+                        BatonPass.Debug("finding previewer");
+                        GameObject PreviewFather = instance.transform.Find("previewfather").gameObject;
+                        BatonPass.Debug("clearing PTOW");
+                        PTOW.Clear();
+                        BatonPass.Debug("adding new tows");
+                        PTOW = ULTRASKINHand.HarmonyGunPatcher.AddPTOWs(PreviewFather, true);
+                        BatonPass.Success("Added TOW");
+                        handInstance.PtowStorage = PreviewFather.gameObject.AddComponent<TowStorage>();
+                        handInstance.PtowStorage.TOWS = PTOW;
+                    }
+                    catch (Exception ex)
+                    {
+                        BatonPass.Error("Cannot make PTOW. CODE -\"MCREATE-MAKETHEMENU-SKIN_PREVIEWER-UNABLE_TO_LOAD\"");
+                        BatonPass.Error(ex.Message);
+                    }
+
+                }
+                else
+                {
+                    BatonPass.Error("Failed to load UltraskinsSettingsmenu: " + Settingshandle.OperationException.Message);
+                    BatonPass.Error("Ultraskins will still work, but the menu will be disabled. CODE -\"MCREATE-MAKETHEMENU-SETTINGMENU-ASSET_BUNDLE_FAILED\"");
+                }
+
+           
+        }
+
+
+
+
+
+
 
         public static void Openskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseon)
         {
@@ -215,6 +286,9 @@ namespace UltraSkins.UI
             mainmenucanvas.SetActive(false);
             fallnoiseon.SetActive(true);
             Configmenu.SetActive(true);
+            
+            handInstance.settingsmanager.ShowSettingsAssets(true);
+            handInstance.settingsmanager.ShowPreviewWireFrame(true);
 
         }
         public static void Openpausedskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject backdrop, OptionsManager controller)

@@ -8,6 +8,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <Configurations>Debug;Release;Canary</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

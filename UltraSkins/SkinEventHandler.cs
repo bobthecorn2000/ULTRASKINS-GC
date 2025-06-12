@@ -81,6 +81,30 @@ namespace UltraSkins.Utils
             }
                 return ProfDir;
         }
+        public static string getUserSettingsFile()
+        {
+
+            string moddir = Path.GetDirectoryName(dlllocation);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
+            string GCdir = Path.Combine(appDataPath, AppDataLoc);
+            string[] profileInfo = GetThunderstoreProfileName();
+            string ProfDir = null;
+
+            if (profileInfo != null && profileInfo.Length == 2)
+            {
+                string profileName = profileInfo[0];
+                string profileType = profileInfo[1];
+                ProfDir = Path.Combine(GCdir, "SaveData", profileType, profileName, "Settings.USGC");
+
+            }
+            else
+            {
+                ProfDir = Path.Combine(GCdir, "SaveData", "Global", "Settings.USGC");
+            }
+            return ProfDir;
+        }
+
         public string[] GetModFolderPath()
         {
             BatonPass.Debug("BATON PASS: GETMODFOLDERPATH()");
@@ -163,6 +187,11 @@ namespace UltraSkins.Utils
             if (!File.Exists(Path.Combine(savelocation + "\\data.USGC")))
             {
                 serializer.SerializeStringToFile(defloc, filecheck);
+
+            }
+            if (!File.Exists(Path.Combine(savelocation + "\\Settings.USGC")))
+            {
+                File.Create(savelocation + "\\Settings.USGC");
 
             }
 
