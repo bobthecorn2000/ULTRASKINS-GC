@@ -58,6 +58,7 @@ namespace UltraSkins
         public static string pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public string folderupdater;
         public static Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
+        public  OGSkinsManager ogSkinsManager;
         public Dictionary<string,string> MaterialNames = new Dictionary<string,string>();
         public string[] directories;
         public string serializedSet = "";
@@ -613,7 +614,7 @@ namespace UltraSkins
                                 break;
                             case "T_RocketLauncher_Desaturated":
                                 textureToResolve = "T_RocketLauncher_Emissive";
-                                if (autoSwapCache.ContainsKey(textureToResolve))
+                                if (HoldEm.Check(textureToResolve))
                                 {
                                     mat.EnableKeyword("EMISSIVE");
                                     mat.SetInt("_UseAlbedoAsEmissive", 0);
@@ -624,7 +625,7 @@ namespace UltraSkins
                                 break;
                             default:
                                 textureToResolve = texturename + "_Emissive";
-                                if (autoSwapCache.ContainsKey(textureToResolve))
+                                if (HoldEm.Check(textureToResolve))
                                 {
                                     mat.EnableKeyword("EMISSIVE");
                                     mat.SetInt("_UseAlbedoAsEmissive", 0);
@@ -660,8 +661,8 @@ namespace UltraSkins
                         textureToResolve = "";
                         break;
                 }
-                if (textureToResolve != "" && autoSwapCache.ContainsKey(textureToResolve))
-                    return autoSwapCache[textureToResolve];
+                if (textureToResolve != "" && HoldEm.Check(textureToResolve))
+                    return HoldEm.Call(textureToResolve);
             }
             return mat.GetTexture(propertyfallback);
         }
@@ -787,25 +788,25 @@ namespace UltraSkins
             Texture glow1;
             Texture glow2;
             Texture glow3;
-            if (autoSwapCache.ContainsKey("T_DialGlow1"))
+            if (HoldEm.Check("T_DialGlow1"))
             {
-                glow1 = autoSwapCache["T_DialGlow1"];
+                glow1 = HoldEm.Call("T_DialGlow1");
             }
             else
             {
                 glow1 = meterEmissives[0];
             }
-            if (autoSwapCache.ContainsKey("T_DialGlow2"))
+            if (HoldEm.Check("T_DialGlow2"))
             {
-                glow2 = autoSwapCache["T_DialGlow2"];
+                glow2 = HoldEm.Call("T_DialGlow2");
             }
             else
             {
                 glow2 = meterEmissives[1];
             }
-            if (autoSwapCache.ContainsKey("T_DialGlow3"))
+            if (HoldEm.Check("T_DialGlow3"))
             {
-                glow3 = autoSwapCache["T_DialGlow3"];
+                glow3 = HoldEm.Call("T_DialGlow3");
             }
             else
             {
@@ -818,9 +819,9 @@ namespace UltraSkins
                         glow3,
                 };
             meterEmissivesField.SetValue(shotgunHammer, meterEmissives);
-            if (autoSwapCache.ContainsKey("T_DialMask"))
+            if (HoldEm.Check("T_DialMask"))
             {
-                Texture dialmask = autoSwapCache["T_DialMask"];
+                Texture dialmask = HoldEm.Call("T_DialMask");
 
                 Sprite masksprite = Sprite.Create((Texture2D)dialmask, new Rect(0, 0, dialmask.width, dialmask.height), new Vector2(0.5f, 0.5f));
                 meterMask.sprite = masksprite;
@@ -983,6 +984,17 @@ namespace UltraSkins
 
 
             }
+
+            foreach (KeyValuePair<string,Texture> kvp in autoSwapCache)
+            {
+                string name = kvp.Key;
+                Texture workingfile = autoSwapCache[name];
+                UnityEngine.Object.Destroy(workingfile);
+                
+            }
+            autoSwapCache.Clear();
+            
+
             BPGUI.EnableTerminal(10);
             BPGUI.ShowProgressBar();
             System.Array.Reverse(fpaths);
@@ -1128,6 +1140,56 @@ namespace UltraSkins
             }
         }
 
+
+        public class HoldEm
+        {
+            public static Texture Call(string key)
+            {
+                if (autoSwapCache.TryGetValue(key, out Texture texture))
+                {
+                    BatonPass.Debug("ASC Call:" + key);
+                    return texture;
+                }
+                else if (HandInstance.ogSkinsManager.OGSKINS.TryGetValue(key, out Texture originalTexture))
+                {
+                    BatonPass.Debug("OGS Call:" + key);
+                    return originalTexture;
+                }
+                else
+                {
+                    BatonPass.Debug("Call NoKeyFound" + key);
+                    // Not found anywhere
+                    return null;
+                }
+            }
+            public static bool Check(string key)
+            {
+                if (autoSwapCache.ContainsKey(key))
+                {
+                    BatonPass.Debug("ASC Check:" + key);
+                    return true;
+                }
+                else if (HandInstance.ogSkinsManager.OGSKINS.ContainsKey(key))
+                {
+                    BatonPass.Debug("OGS Check:" + key);
+                    return true;
+                }
+                else
+                {
+                    // Not found anywhere
+                    BatonPass.Debug("Check NoKeyFound" + key);
+                    return false;
+                }
+            }
+            public static void Fold()
+            {
+                 
+            }
+            public static void Bet()
+            {
+
+            }
+        }
         //Baton Pass handles debug logging for several different types of debuggers
 
 

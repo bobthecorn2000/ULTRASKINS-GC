@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using static UltraSkins.ULTRASKINHand;
 
 namespace UltraSkins
 {
@@ -30,13 +31,13 @@ namespace UltraSkins
 					Material[] chargemats = GetComponent<ChangeMaterials>().materials;
                     Material newrocketmat = new Material(chargemats[0]);
 					chargemats[0] = newrocketmat;
-                    if (ULTRASKINHand.autoSwapCache.ContainsKey("skull2rocketcharge"))
+                    if (ULTRASKINHand.HoldEm.Check("skull2rocketcharge"))
 						{
-						chargemats[0].mainTexture = ULTRASKINHand.autoSwapCache["skull2rocketcharge"];
+						chargemats[0].mainTexture = ULTRASKINHand.HoldEm.Call("skull2rocketcharge");
 						}
-                    if (ULTRASKINHand.autoSwapCache.ContainsKey("skull2rocketbonuscharge"))
+                    if (ULTRASKINHand.HoldEm.Check("skull2rocketbonuscharge"))
                     {
-                        chargemats[1].mainTexture = ULTRASKINHand.autoSwapCache["skull2rocketbonuscharge"];
+                        chargemats[1].mainTexture = ULTRASKINHand.HoldEm.Call("skull2rocketbonuscharge");
                     }
 
                 }

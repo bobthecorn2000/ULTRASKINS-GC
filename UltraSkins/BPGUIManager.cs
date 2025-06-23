@@ -46,7 +46,7 @@ namespace BatonPassLogger.GUI
         public static BPGUIManager BPGUI => BPGUIinstance;
         private void LoadBatonPassPrefab()
         {
-            Addressables.LoadAssetAsync<GameObject>("Assets/BatonpassGUI.prefab").Completed += handle =>
+            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/BatonpassGUI.prefab").Completed += handle =>
             {
                 if (handle.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
                 {

@@ -138,7 +138,7 @@ namespace UltraSkins.UI
                     //Addressables.LoadAssetAsync<GameObject>("ultraskinsButton").WaitForCompletion();
                     GameObject leftside = mainmenu.transform.Find("LeftSide").gameObject;
 
-                    Addressables.LoadAssetAsync<GameObject>("Assets/UltraskinsEditmenu.prefab").Completed += handle =>
+                    Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/UltraskinsEditmenu.prefab").Completed += handle =>
                     {
                         if (handle.Status == AsyncOperationStatus.Succeeded)
                         {
@@ -157,6 +157,17 @@ namespace UltraSkins.UI
                             MenuManager Mman = Editorpanel.AddComponent<MenuManager>();
                             Editorpanel.SetActive(false);
                             BatonPass.Info("looking for content");
+/*                            foreach (OGTexturePair objects in UltraskinsConfigmenu.GetComponent<OGSkinsManager>().RawSkins)
+                            {
+                                BatonPass.Debug("test: " + objects.key);
+                            }
+                            Dictionary<string,Texture> ogman = UltraskinsConfigmenu.GetComponent<OGSkinsManager>().OGSKINS;
+                            foreach (KeyValuePair<string, Texture> pair in ogman)
+                            {
+                               BatonPass.Debug("testicle" + pair.Key.ToString());
+                            }*/
+                           handInstance.ogSkinsManager = UltraskinsConfigmenu.GetComponent<OGSkinsManager>();
+                            Mman.SD = UltraskinsConfigmenu.GetComponent<EditMenuManager>().skindetails;
                             GameObject ReturnButton = Editorpanel.transform.Find("PanelLeft/ReturnButton").gameObject;
                             GameObject ApplyButton = Editorpanel.transform.Find("PanelLeft/Apply").gameObject;
                             GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/PanelLeft/Scroll View/Viewport/Content").gameObject;
@@ -164,7 +175,7 @@ namespace UltraSkins.UI
                             Mman.GenerateButtons(contentfolder, activateanimator);
 
                             // Now load the ultraskins button
-                            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
+                            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
                             {
                                 if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
                                 {
@@ -213,7 +224,7 @@ namespace UltraSkins.UI
         public static void CreateSMan()
         {
             List<TextureOverWatch> PTOW = new List<TextureOverWatch>();
-            var Settingshandle = Addressables.LoadAssetAsync<GameObject>("Assets/Settings.prefab");
+            var Settingshandle = Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/Settings.prefab");
             GameObject prefab = Settingshandle.WaitForCompletion();
 
                 if (Settingshandle.Status == AsyncOperationStatus.Succeeded)
@@ -303,6 +314,8 @@ namespace UltraSkins.UI
             Cursor.visible = true;
             backdrop.SetActive(true);
             Configmenu.SetActive(true);
+            handInstance.settingsmanager.ShowSettingsAssets(true);
+            handInstance.settingsmanager.ShowPreviewWireFrame(true);
 
             //GameStateManager.Instance.RegisterState(configState);
         }
@@ -348,7 +361,7 @@ namespace UltraSkins.UI
                     //Addressables.LoadAssetAsync<GameObject>("ultraskinsButton").WaitForCompletion();
 
 
-                    Addressables.LoadAssetAsync<GameObject>("Assets/UltraskinsPausedEditmenu.prefab").Completed += handle =>
+                    Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/UltraskinsPausedEditmenu.prefab").Completed += handle =>
                     {
                         if (handle.Status == AsyncOperationStatus.Succeeded)
                         {
@@ -391,7 +404,7 @@ namespace UltraSkins.UI
                             BatonPass.Debug("Successfully loaded the gamecontroller");
                             OptionsManager controller = gamecontroller.GetComponentInChildren<OptionsManager>();
                             // Now load the ultraskins button
-                            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
+                            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
                             {
                                 if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
                                 {

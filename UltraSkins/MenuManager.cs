@@ -11,6 +11,7 @@ using TMPro;
 using UltraSkins;
 using BatonPassLogger;
 using UltraSkins.Utils;
+using Newtonsoft.Json;
 
 
 namespace UltraSkins.UI
@@ -22,7 +23,7 @@ namespace UltraSkins.UI
         internal static MenuManager  MMinstance { get; private set; }
         List<GameObject> loadedButtons = new List<GameObject>();
         Dictionary<string, Button> AvailbleSkins = new Dictionary<string, Button>();
-        
+        public SkinDetails SD = null;
 
         void Awake() {
             MMinstance = this;
@@ -56,9 +57,9 @@ namespace UltraSkins.UI
         {
             
             Dictionary<string, string> Locations = SkinEventHandler.GetCurrentLocations();
-
+            metadataReader MDR = new metadataReader();
             AvailbleSkins.Clear();
-            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsButton.prefab").Completed += buttonHandle =>
+            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/ultraskinsButton.prefab").Completed += buttonHandle =>
             {
                 if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
                 {
@@ -76,33 +77,57 @@ namespace UltraSkins.UI
                         {
 
                             string folder = Path.GetFileName(subfolder);
-                            string metadataPath = Path.Combine(subfolder, "metadata.USGC");
+                            string metadataPath = Path.Combine(subfolder, "metadata.GCMD");
+                            
+                            
                             if (!File.Exists(metadataPath) && Location != "Global" && Location != "Version")
                             {
                                 // Skip folders that aren't Ultraskins-compatible
                                 BatonPass.Debug("Skipping: " + folder);
                                 continue;
                             }
+                            
 
 
                             GameObject instance = Instantiate(prefab, contentfolder.transform);
                             instance.SetActive(true);
 
                             Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
-                            ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
                             
+                            ButtonEnableManager BEM = instance.GetComponent<ButtonEnableManager>();
+
+                            BEM.skinDetails = SD;
+
                             if (Location == "r2modman" || Location == "Thunderstore")
                             {
-
+                                BEM.isThunderstore = true;
                             }
                             if (handInstance.filepathArray.Contains(subfolder))
                             {
                                 int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
                                 BatonPass.Debug(instance.name + "/" + subfolder + "/" + index);
-                                instance.GetComponent<ButtonEnableManager>().IsEnabled = true;
+                                BEM.IsEnabled = true;
                                 instance.transform.SetSiblingIndex(index);
                             }
-                            instance.GetComponent<ButtonEnableManager>().filePath = subfolder;
+                            if (File.Exists(metadataPath))
+                            {
+                                GCMD MD = MDR.Read(metadataPath);
+                                BEM.SkinDescription = MD.Description;
+                                BEM.SkinName = MD.SkinName;
+                                ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = MD.SkinName;
+                                if (MD.SupportedPlugins.Count >= 1)
+                                {
+                                    BEM.isplugin = true;
+                                }
+                                BEM.VerNum = MD.Version;
+                            }
+                            else
+                            {
+                                ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
+                                BEM.SkinName = folder;
+                                BEM.warning = true;
+                            }
+                            BEM.filePath = subfolder;
                             AvailbleSkins.Add(folder, ultraskinsbutton);
                             // Add button to list
 
@@ -150,7 +175,7 @@ namespace UltraSkins.UI
             AvailbleSkins.Clear();
 
             
-            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskinsButton.prefab").Completed += buttonHandle =>
+            Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/ultraskinsButton.prefab").Completed += buttonHandle =>
             {
                 if (buttonHandle.Status == AsyncOperationStatus.Succeeded)
                 {
@@ -180,6 +205,7 @@ namespace UltraSkins.UI
                                 BatonPass.Debug("Skipping: " + folder);
                                 continue;
                             }
+
                             GameObject instance = Instantiate(prefab, contentfolder.transform);
                             instance.SetActive(true);
 
@@ -258,6 +284,31 @@ namespace UltraSkins.UI
             {
                 button.interactable = true;
             }
+        }
+    }
+
+    class GCMD
+    {
+        public string SkinName { get; set; }
+        public string Description { get; set; }
+        public string? Version { get; set; }
+        public bool? isroot { get; set; }
+        public Dictionary<string, string>? SupportedPlugins { get; set; }
+    }
+    class metadataReader
+    {
+        public GCMD Read(string file)
+        {
+          
+          string GCMDreader = File.ReadAllText(file);
+            try
+            {
+                GCMD gcmd = JsonConvert.DeserializeObject<GCMD>(GCMDreader);
+                return gcmd;
+            }
+            catch (Exception ex) { }
+            BatonPass.Error("AGHHHHHHHHHHHHHHHHH");
+            return null;
         }
     }
 }
