@@ -8,7 +8,7 @@
 
     <StartupObject>UltraSkinsPacker.Skinpacker</StartupObject>
 
-    <Configurations>Debug;Release;Canary</Configurations>
+    <Configurations>Debug;Release;Canary;Alpha</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

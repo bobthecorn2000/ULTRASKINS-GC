@@ -9,6 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "USutils", "USutils\USutils.
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Alpha|Any CPU = Alpha|Any CPU
+		Alpha|ARM = Alpha|ARM
+		Alpha|ARM64 = Alpha|ARM64
+		Alpha|x64 = Alpha|x64
+		Alpha|x86 = Alpha|x86
 		Canary|Any CPU = Canary|Any CPU
 		Canary|ARM = Canary|ARM
 		Canary|ARM64 = Canary|ARM64
@@ -26,6 +31,16 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|Any CPU.ActiveCfg = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|Any CPU.Build.0 = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|ARM.ActiveCfg = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|ARM.Build.0 = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|ARM64.ActiveCfg = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|ARM64.Build.0 = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|x64.ActiveCfg = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|x64.Build.0 = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|x86.ActiveCfg = Alpha|Any CPU
+		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Alpha|x86.Build.0 = Alpha|Any CPU
 		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Canary|Any CPU.ActiveCfg = Canary|Any CPU
 		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Canary|Any CPU.Build.0 = Canary|Any CPU
 		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Canary|ARM.ActiveCfg = Canary|Any CPU
@@ -56,6 +71,16 @@ Global
 		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Release|x64.Build.0 = Release|Any CPU
 		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Release|x86.ActiveCfg = Release|Any CPU
 		{35A5DFF8-FD81-485F-8629-29E89CB13201}.Release|x86.Build.0 = Release|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|Any CPU.ActiveCfg = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|Any CPU.Build.0 = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|ARM.ActiveCfg = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|ARM.Build.0 = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|ARM64.ActiveCfg = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|ARM64.Build.0 = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|x64.ActiveCfg = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|x64.Build.0 = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|x86.ActiveCfg = Canary|Any CPU
+		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Alpha|x86.Build.0 = Canary|Any CPU
 		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Canary|Any CPU.ActiveCfg = Release|Any CPU
 		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Canary|Any CPU.Build.0 = Release|Any CPU
 		{EC088E5C-661B-4EB5-8DAF-3078A30A8FDE}.Canary|ARM.ActiveCfg = Release|Any CPU

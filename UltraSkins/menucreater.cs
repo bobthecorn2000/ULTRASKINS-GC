@@ -26,9 +26,7 @@ namespace UltraSkins.UI
     internal class MenuCreator : MonoBehaviour
     {
 
-        static string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        static string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-        static string skinfolderdir = Path.Combine(appDataPath, AppDataLoc);
+
         static ULTRASKINHand handInstance = ULTRASKINHand.HandInstance;
         static SettingsManager sMan
         {
@@ -166,11 +164,11 @@ namespace UltraSkins.UI
                             {
                                BatonPass.Debug("testicle" + pair.Key.ToString());
                             }*/
-                           handInstance.ogSkinsManager = UltraskinsConfigmenu.GetComponent<OGSkinsManager>();
+                           
                             Mman.SD = UltraskinsConfigmenu.GetComponent<EditMenuManager>().skindetails;
                             GameObject ReturnButton = Editorpanel.transform.Find("PanelLeft/ReturnButton").gameObject;
                             GameObject ApplyButton = Editorpanel.transform.Find("PanelLeft/Apply").gameObject;
-                            GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/PanelLeft/Scroll View/Viewport/Content").gameObject;
+                            GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/PanelLeft/Scroll View/Viewport/Content/UltraButton").gameObject;
                             ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
                             Mman.GenerateButtons(contentfolder, activateanimator);
 
@@ -234,6 +232,7 @@ namespace UltraSkins.UI
                     GameObject instance = Instantiate(prefab);
                     instance.SetActive(true);
                     sMan = instance.GetComponent<SettingsManager>();
+                    handInstance.ogSkinsManager = instance.GetComponent<OGSkinsManager>();
                     string usersettings = SkinEventHandler.getUserSettingsFile();
                     BatonPass.Debug("loading user settings");
                     try
@@ -247,7 +246,7 @@ namespace UltraSkins.UI
                     BatonPass.Debug("loading settings options");
                     try
                     {
-                        sMan.LoadSettingsFromJson(ULTRASKINHand.pluginPath + Path.DirectorySeparatorChar + "DefaultSettings.USGC");
+                        sMan.LoadSettingsFromJson(USC.MODPATH + Path.DirectorySeparatorChar + USC.DEFAULTSETTINGS);
                     }
                     catch (Exception ex)
                     {
@@ -378,7 +377,7 @@ namespace UltraSkins.UI
                             
                             GameObject backdrop = UltraskinsConfigmenu.transform.Find("Canvas/Backdrop").gameObject;
                             MenuManager Mman = backdrop.AddComponent<MenuManager>();
-                            GameObject contentfolder = backdrop.transform.Find("Scroll View/Viewport/Content").gameObject;
+                            GameObject contentfolder = backdrop.transform.Find("Scroll View/Viewport/Content/UltraButton").gameObject;
                             ULTRASKINHand handInstance = ULTRASKINHand.HandInstance;
                             Mman.GenerateButtons(contentfolder);
 

@@ -3,8 +3,6 @@ using System;
 using BepInEx;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Drawing;
-using static UnityEngine.RemoteConfigSettingsHelper;
 using plog;
 
 namespace BatonPassLogger

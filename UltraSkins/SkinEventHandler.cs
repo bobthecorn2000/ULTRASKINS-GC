@@ -20,8 +20,8 @@ namespace UltraSkins.Utils
 	public class SkinEventHandler : MonoBehaviour
 	{
         //static PluginConfigurator config;
-        public const string CurrentVersion = "6.0.2";
-        static string dlllocation = Assembly.GetExecutingAssembly().Location.ToString();
+        
+        
         
         public GameObject Activator;
 		public string path;
@@ -61,10 +61,7 @@ namespace UltraSkins.Utils
         public static string getDataFile()
         {
             
-            string moddir = Path.GetDirectoryName(dlllocation);
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-            string GCdir = Path.Combine(appDataPath, AppDataLoc);
+            
             string[] profileInfo = GetThunderstoreProfileName();
             string ProfDir = null;
             
@@ -72,22 +69,19 @@ namespace UltraSkins.Utils
             {
                 string profileName = profileInfo[0];
                 string profileType = profileInfo[1];
-                ProfDir = Path.Combine(GCdir, "SaveData", profileType, profileName, "data.USGC");
+                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, profileType, profileName, USC.DATAFILE);
                 
             }
             else
             {
-                ProfDir = Path.Combine(GCdir, "SaveData", "Global", "data.USGC");
+                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, USC.BUILDTYPE, USC.DATAFILE);
             }
                 return ProfDir;
         }
         public static string getUserSettingsFile()
         {
 
-            string moddir = Path.GetDirectoryName(dlllocation);
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-            string GCdir = Path.Combine(appDataPath, AppDataLoc);
+
             string[] profileInfo = GetThunderstoreProfileName();
             string ProfDir = null;
 
@@ -95,12 +89,12 @@ namespace UltraSkins.Utils
             {
                 string profileName = profileInfo[0];
                 string profileType = profileInfo[1];
-                ProfDir = Path.Combine(GCdir, "SaveData", profileType, profileName, "Settings.USGC");
+                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, profileType, profileName, USC.SETTINGSFILE);
 
             }
             else
             {
-                ProfDir = Path.Combine(GCdir, "SaveData", "Global", "Settings.USGC");
+                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, USC.BUILDTYPE, USC.SETTINGSFILE);
             }
             return ProfDir;
         }
@@ -114,11 +108,8 @@ namespace UltraSkins.Utils
             
 
             
-            string moddir = Path.GetDirectoryName(dlllocation);
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-            string GCdir = Path.Combine(appDataPath, AppDataLoc);
-            string VerDir = Path.Combine(GCdir, "Versions", CurrentVersion);
+
+            string VerDir = Path.Combine(USC.GCDIR, USC.VERNAME, USC.VERSION);
             
             string ProfDir = null;
             string[] profileInfo = GetThunderstoreProfileName();
@@ -126,14 +117,14 @@ namespace UltraSkins.Utils
             {
                 string profileName = profileInfo[0];
                 string profileType = profileInfo[1];
-                ProfDir = Path.Combine(GCdir, "SaveData", profileType, profileName);
+                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, profileType, profileName);
             }
             else
             {
-              ProfDir = Path.Combine(GCdir, "SaveData", "Global");
+              ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, USC.BUILDTYPE);
             }
-            string GlobalDir = Path.Combine(GCdir, "Global");
-            string[] parts = dlllocation.Split(Path.DirectorySeparatorChar);
+            string GlobalDir = Path.Combine(USC.GCDIR, USC.UNISKIN);
+            string[] parts = USC.MODPATH.Split(Path.DirectorySeparatorChar);
             string savelocation = null;
 
 
@@ -142,10 +133,10 @@ namespace UltraSkins.Utils
 
 
             BatonPass.Debug("Checking Directories");
-            if (!Directory.Exists(GCdir))
+            if (!Directory.Exists(USC.GCDIR))
             {
                 BatonPass.Warn("The AppData Directiory is missing. Fixing");
-                Directory.CreateDirectory(GCdir);
+                Directory.CreateDirectory(USC.GCDIR);
                 BatonPass.Success("Fixed");
                 
                 
@@ -175,7 +166,7 @@ namespace UltraSkins.Utils
             BatonPass.Debug("Done");
 
 
-            string[] defloc = new string[] { Path.Combine(VerDir, "OG-SKINS") };
+            string[] defloc = new string[0];
             if (ProfDir != null) {
                 savelocation = ProfDir;
             }
@@ -183,23 +174,16 @@ namespace UltraSkins.Utils
 
 
                 StringSerializer serializer = new StringSerializer();
-            string filecheck = Path.Combine(savelocation + "\\data.USGC");
-            if (!File.Exists(Path.Combine(savelocation + "\\data.USGC")))
+            string filecheck = Path.Combine(savelocation, USC.DATAFILE);
+            if (!File.Exists(Path.Combine(savelocation, USC.DATAFILE)))
             {
                 serializer.SerializeStringToFile(defloc, filecheck);
 
             }
-            if (!File.Exists(Path.Combine(savelocation + "\\Settings.USGC")))
+            if (!File.Exists(Path.Combine(savelocation, USC.SETTINGSFILE)))
             {
-                File.Create(savelocation + "\\Settings.USGC");
+                File.Create(Path.Combine(savelocation, USC.SETTINGSFILE));
 
-            }
-
-            //ExtractSkin("OG-SKINS.GCskin");
-            if (!Directory.Exists(Path.Combine(VerDir + "\\OG-SKINS")) &&  File.Exists(Path.Combine(moddir + "\\OG-SKINS.GCskin"))) {
-                BatonPass.Warn("An OG-Skins for this version was not found, Fixing");
-                ExtractSkin(VerDir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));
-                BatonPass.Success("Succefully Created an OG-Skins file for " + CurrentVersion);
             }
 
             string[] deserializedData = serializer.DeserializeStringFromFile(filecheck);
@@ -211,19 +195,6 @@ namespace UltraSkins.Utils
             }
             if (deserializedData[0] == "Wrong Version")
             {
-                
-/*                DirectoryInfo skindir = new DirectoryInfo(Path.Combine(VerDir + "\\OG-SKINS"));
-
-                foreach (FileInfo fi in skindir.GetFiles())
-                {
-                    try
-                    {
-                        fi.Delete();
-                    }
-                    catch (Exception) { } // Ignore all exceptions
-                }*/
-
-               /* ExtractSkin(dir, Path.Combine(moddir + "\\OG-SKINS.GCskin"));*/
                 deserializedData = serializer.DeserializeStringFromFile(filecheck);
             }
 
@@ -232,21 +203,17 @@ namespace UltraSkins.Utils
 
         public static Dictionary<String,String> GetCurrentLocations()
         {
-            string moddir = Path.GetDirectoryName(dlllocation);
-            string parentDir = Directory.GetParent(moddir).FullName;
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string AppDataLoc = "bobthecorn2000\\ULTRAKILL\\ultraskinsGC";
-            string GCdir = Path.Combine(appDataPath, AppDataLoc);
-            string VerDir = Path.Combine(GCdir, "Versions", CurrentVersion);
 
+
+            string parentDir = Directory.GetParent(USC.MODPATH).FullName;
 
             string[] profileInfo = GetThunderstoreProfileName();
             string profileName = null;
             string profileType = null;
             
-            string GlobalDir = Path.Combine(GCdir, "Global");
-            
-           
+            string GlobalDir = Path.Combine(USC.GCDIR, USC.UNISKIN);
+            string VerDir = Path.Combine(USC.GCDIR, USC.VERNAME,USC.VERSION);
+
             Dictionary<String, String> Locations = new Dictionary<String,String>();
 
 
@@ -279,7 +246,7 @@ namespace UltraSkins.Utils
                 //}
                 saveinfo saveinfo = new saveinfo();
                 saveinfo.SkinLocation = data;
-                saveinfo.ModVersion = CurrentVersion;
+                saveinfo.ModVersion = USC.VERSION;
                 string jsonData = JsonConvert.SerializeObject(saveinfo);
                 BatonPass.Info("Encoding " + jsonData );
                 File.WriteAllText(filePath, jsonData);
@@ -305,7 +272,7 @@ namespace UltraSkins.Utils
                 try { 
                 saveinfo deserializedData = JsonConvert.DeserializeObject<saveinfo>(jsonData);
                     data = deserializedData?.SkinLocation;
-                    if (deserializedData.ModVersion != CurrentVersion)
+                    if (deserializedData.ModVersion != USC.VERSION)
                     {
                         SerializeStringToFile(deserializedData?.SkinLocation, filePath);
                         BatonPass.Warn("Wrong version, correcting");

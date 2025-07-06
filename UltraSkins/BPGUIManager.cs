@@ -26,6 +26,7 @@ namespace BatonPassLogger.GUI
         TextMeshProUGUI message = null;
         TextMeshProUGUI terminal = null;
         Image bordercolor = null;
+        float totalBarAmount = 0;
         
         Slider PercentComplete = null;
         public int maxLines = 10;
@@ -95,10 +96,11 @@ namespace BatonPassLogger.GUI
             BoxAnimator.Play("BatonPassAppear");
         }
 
-        public void ShowProgressBar()
+        public void ShowProgressBar(float Total)
         {
             ProgressBar.SetActive(true);
             BarAnimator.Play("ProgressBarEnable");
+            totalBarAmount = (float)Total;
         }
         public void HideProgressBar()
         {
@@ -171,8 +173,13 @@ namespace BatonPassLogger.GUI
         }
         public void updatebar(float percent)
         {
-            PercentComplete.value = percent;
+            float progress = (float)percent / totalBarAmount;
+
+            progress = progress * 100;
+            PercentComplete.value = progress;
+            BatonPass.Debug($"Progress: {progress:F2}%");
         }
+
 
     }
 }

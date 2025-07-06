@@ -13,6 +13,10 @@ using BatonPassLogger;
 using UltraSkins.Utils;
 using Newtonsoft.Json;
 
+using static UltraSkins.ULTRASKINHand;
+using System.Text;
+
+
 
 namespace UltraSkins.UI
 {
@@ -25,10 +29,14 @@ namespace UltraSkins.UI
         Dictionary<string, Button> AvailbleSkins = new Dictionary<string, Button>();
         public SkinDetails SD = null;
 
-        void Awake() {
+        void Awake()
+        {
             MMinstance = this;
 
         }
+
+
+
         public void Closeskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseoff, Animator animator,ObjectActivateInSequence oais,GameObject content)
         {
             MMinstance.orderifier(oais, content);
@@ -41,7 +49,7 @@ namespace UltraSkins.UI
             MMinstance.StartCoroutine(MMinstance.DisableAfterCloseAnimation(mainmenucanvas, Configmenu, animator));
 
         }
-
+        
         private IEnumerator DisableAfterCloseAnimation(GameObject mainmenucanvas, GameObject Configmenu, Animator animator)
         {
             // Wait until the animation finishes
@@ -55,7 +63,7 @@ namespace UltraSkins.UI
 
         public void GenerateButtons(GameObject contentfolder, ObjectActivateInSequence activateanimator)
         {
-            
+
             Dictionary<string, string> Locations = SkinEventHandler.GetCurrentLocations();
             metadataReader MDR = new metadataReader();
             AvailbleSkins.Clear();
@@ -78,65 +86,53 @@ namespace UltraSkins.UI
 
                             string folder = Path.GetFileName(subfolder);
                             string metadataPath = Path.Combine(subfolder, "metadata.GCMD");
-                            
-                            
-                            if (!File.Exists(metadataPath) && Location != "Global" && Location != "Version")
+                            string PackPath = Path.Combine(subfolder, "pack.GCMD");
+
+                            if (!(File.Exists(metadataPath) || File.Exists(PackPath)) && Location != "Global" && Location != "Version")
                             {
                                 // Skip folders that aren't Ultraskins-compatible
-                                BatonPass.Debug("Skipping: " + folder);
+                                BatonPass.Debug("Skipping: " + folder + " at " + metadataPath);
                                 continue;
                             }
-                            
 
-
-                            GameObject instance = Instantiate(prefab, contentfolder.transform);
-                            instance.SetActive(true);
-
-                            Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
-                            
-                            ButtonEnableManager BEM = instance.GetComponent<ButtonEnableManager>();
-
-                            BEM.skinDetails = SD;
-
-                            if (Location == "r2modman" || Location == "Thunderstore")
+                            if (File.Exists(PackPath))
                             {
-                                BEM.isThunderstore = true;
-                            }
-                            if (handInstance.filepathArray.Contains(subfolder))
-                            {
-                                int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
-                                BatonPass.Debug(instance.name + "/" + subfolder + "/" + index);
-                                BEM.IsEnabled = true;
-                                instance.transform.SetSiblingIndex(index);
-                            }
-                            if (File.Exists(metadataPath))
-                            {
-                                GCMD MD = MDR.Read(metadataPath);
-                                BEM.SkinDescription = MD.Description;
-                                BEM.SkinName = MD.SkinName;
-                                ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = MD.SkinName;
-                                if (MD.SupportedPlugins.Count >= 1)
+                                GCPACK PD = MDR.ReadPack(PackPath);
+                                try
                                 {
-                                    BEM.isplugin = true;
+                                    foreach (string path in PD.SubDirectories)
+                                    {
+                                        string subsubfolder = Path.Combine(subfolder, path);
+                                    
+                                            if (File.Exists(subsubfolder))
+                                            {
+                                                BuildButton(Location, contentfolder, MDR, prefab, subsubfolder);
+                                            }
+                                            else
+                                            {
+                                                BatonPass.Warn("\"" + subsubfolder + "\" does not exist in the Pack. This is most likely an incorrect folder name in the Pack.GCMD file located in \"" + PackPath + "\". Code -\"MMAN-GENERATEBUTTONS-MAINMENU-PACKPATH_MISSING_LOCATION\"");
+                                            }
+                                    }
+
+
+
                                 }
-                                BEM.VerNum = MD.Version;
+                                catch (Exception ex)
+                                {
+
+                                    BatonPass.Error($"Could not reach subdirectories due to a possible failed deserialization,this error should be accompanied by \"MMAN-MDR-READPACK-PACK_READ_WARNING\". Pack {folder} will be skipped. CODE -\"MMAN-MAINMENU-PACK_READ_FAILURE\"");
+                                    BatonPass.Error(ex.Message);
+                                }
                             }
                             else
                             {
-                                ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                                BEM.SkinName = folder;
-                                BEM.warning = true;
+                               BuildButton(Location, contentfolder, MDR, prefab, subfolder);
                             }
-                            BEM.filePath = subfolder;
-                            AvailbleSkins.Add(folder, ultraskinsbutton);
-                            // Add button to list
 
-                            BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
-
-                            buttonsLoaded++;
-
-                        }
+                                buttonsLoaded++;
+                            }
                     }
+                    orderfixer(contentfolder);
                     orderifier(activateanimator, contentfolder);
 
 
@@ -152,6 +148,65 @@ namespace UltraSkins.UI
             };
         }
 
+        public void BuildButton(string Location, GameObject contentfolder, metadataReader MDR, GameObject prefab, string subfolder)
+        {
+
+            string folder = Path.GetFileName(subfolder);
+            string metadataPath = Path.Combine(subfolder, "metadata.GCMD");
+            string PackPath = Path.Combine(subfolder, "pack.GCMD");
+            GameObject instance = Instantiate(prefab, contentfolder.transform);
+            instance.SetActive(true);
+
+            Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
+
+            ButtonEnableManager BEM = instance.GetComponent<ButtonEnableManager>();
+
+            BEM.skinDetails = SD;
+
+            if (Location == "r2modman" || Location == "Thunderstore")
+            {
+                BEM.isThunderstore = true;
+            }
+
+            if (File.Exists(metadataPath))
+            {
+                GCMD MD = MDR.ReadMD(metadataPath);
+                if (MD != null)
+                {
+                    BEM.SkinDescription = MD.Description;
+                    BEM.SkinName = MD.SkinName;
+                    ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = MD.SkinName;
+                    if (MD.SupportedPlugins.Count >= 1)
+                    {
+                        BEM.isplugin = true;
+                    }
+                    BEM.VerNum = MD.Version;
+                    
+                }
+                else
+                {
+                    ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
+                    BEM.SkinName = folder;
+                    BEM.warning = true;
+                }
+            }
+            else
+            {
+                ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
+                BEM.SkinName = folder;
+                BEM.warning = true;
+            }
+            instance.name = folder;
+            BEM.filePath = subfolder;
+            AvailbleSkins.Add(folder, ultraskinsbutton);
+            // Add button to list
+
+            BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
+
+            
+        }
+
+
         void orderifier(ObjectActivateInSequence activateanimator,GameObject contentfolder)
         {
             loadedButtons.Clear();
@@ -159,7 +214,13 @@ namespace UltraSkins.UI
             {
                 loadedButtons.Add(child.gameObject);
             }
-
+            GameObject parentgo = contentfolder.transform.parent.gameObject;
+            GameObject specials = parentgo.transform.Find("Special").gameObject;
+            loadedButtons.Add(specials);
+            foreach (Transform child in specials.transform)
+            {
+                loadedButtons.Add(child.gameObject);
+            }
             BatonPass.Debug("All buttons loaded, setting up activation sequence.");
 
             activateanimator.objectsToActivate = loadedButtons.ToArray();
@@ -167,11 +228,57 @@ namespace UltraSkins.UI
             BatonPass.Debug("Successfully set up ObjectActivateInSequence.");
         }
 
+        void orderfixer(GameObject contentfolder)
+        {
+            BatonPass.Debug("attempting to order files");
+            string[] filepathrev = handInstance.filepathArray.Reverse().ToArray();
+            BatonPass.Debug("We know the following files");
+            int debugtracker = 0;
+            foreach (string item in filepathrev)
+            {
+                
+                byte[] bytes = Encoding.UTF8.GetBytes(item);
+                string hexString = BitConverter.ToString(bytes).Replace("-", " ");
+                BatonPass.Debug($"pos:{debugtracker} path:{item} \n Logging Bytes: {hexString}");
+                debugtracker++;
+            }
+            List<(Transform trans, int spot,ButtonEnableManager bem)> finalorder = new List<(Transform trans, int spot, ButtonEnableManager bem)>();
+            foreach (Transform child in contentfolder.transform)
+            {
+                ButtonEnableManager BEM = child.GetComponent<ButtonEnableManager>();
+                string specialpath = BEM.filePath;
+                if (filepathrev.Contains(specialpath))
+                {
+                    int index = System.Array.IndexOf(filepathrev, specialpath);
+                    BatonPass.Debug(child.name + " has path: " + specialpath + " and index of: " + index);
+                    finalorder.Add((child, index,BEM));
+                    
+                   
+                }
+                else
+                {
+                    byte[] bytes = Encoding.UTF8.GetBytes(specialpath);
+                    string hexString = BitConverter.ToString(bytes).Replace("-", " ");
+                    BatonPass.Debug($"no match for {specialpath} \n Logging Bytes {hexString}");
+                }
+            }
+            foreach ((Transform trans, int spot,ButtonEnableManager bem) in finalorder.OrderBy(x => x.spot))
+            {
+                trans.SetSiblingIndex(spot);
+                bem.IsEnabled = true;
+                
+            }
+            
+
+        }
+
+
+        // Generate Buttons for pause menu usage
         public void GenerateButtons(GameObject contentfolder)
         {
             Dictionary<string,string> Locations = SkinEventHandler.GetCurrentLocations();
-            
-            
+            metadataReader MDR = new metadataReader();
+
             AvailbleSkins.Clear();
 
             
@@ -197,40 +304,50 @@ namespace UltraSkins.UI
                         GameObject prefab = buttonHandle.Result;
                         foreach (string subfolder in subfolders)
                         {
+
                             string folder = Path.GetFileName(subfolder);
-                            string metadataPath = Path.Combine(subfolder, "metadata.USGC");
-                            if (!File.Exists(metadataPath) && Location != "Global" && Location != "Version")
+                            string metadataPath = Path.Combine(subfolder, "metadata.GCMD");
+                            string PackPath = Path.Combine(subfolder, "pack.GCMD");
+
+                            if (!(File.Exists(metadataPath) || File.Exists(PackPath)) && Location != "Global" && Location != "Version")
                             {
                                 // Skip folders that aren't Ultraskins-compatible
-                                BatonPass.Debug("Skipping: " + folder);
+                                BatonPass.Debug("Skipping: " + folder + " at " + metadataPath);
                                 continue;
                             }
 
-                            GameObject instance = Instantiate(prefab, contentfolder.transform);
-                            instance.SetActive(true);
-
-                            Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
-                            if (Location == "r2modman" || Location == "Thunderstore")
+                            if (File.Exists(PackPath))
                             {
-                                
+                                GCPACK PD = MDR.ReadPack(PackPath);
+                                try
+                                {
+                                    foreach (string path in PD.SubDirectories)
+                                    {
+                                        string subsubfolder = Path.Combine(subfolder, path);
+                                        if (File.Exists(subsubfolder))
+                                        {
+                                            BuildButton(Location, contentfolder, MDR, prefab, subsubfolder);
+                                        }
+                                        else
+                                        {
+                                            BatonPass.Warn("\"" + subsubfolder + "\" does not exist in the Pack. This is most likely an incorrect folder name in the .GCPACK file located in \"" + PackPath + "\". Code -\"MMAN-GENERATEBUTTONS-PAUSEMENU-PACKPATH_MISSING_LOCATION\"");
+                                        }
+
+                                    }
+                                } catch (Exception ex)
+                                {
+
+                                    BatonPass.Error($"Could not reach subdirectories due to a possible failed deserialization,this error should be accompanied by \"MMAN-MDR-READPACK-PACK_READ_WARNING\". Pack {folder} will be skipped. CODE -\"MMAN-PAUSEMENU-PACK_READ_FAILURE\"");
+                                    BatonPass.Error(ex.Message);
+                                }
+
                             }
-                            ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
-                            if (handInstance.filepathArray.Contains(subfolder))
+                            else
                             {
-                                int index = System.Array.IndexOf(handInstance.filepathArray, subfolder);
-                                instance.GetComponent<ButtonEnableManager>().IsEnabled = true;
-                                instance.transform.SetSiblingIndex(index);
+                                BuildButton(Location, contentfolder, MDR, prefab, subfolder);
                             }
-                            instance.GetComponent<ButtonEnableManager>().filePath = subfolder;
-                            string[] folders = new string[] { folder };
-
-
-                            loadedButtons.Add(instance); // Add button to list
-                            AvailbleSkins.Add(folder, ultraskinsbutton);
-                            BatonPass.Debug("Successfully loaded and instantiated ultraskinsButton.");
 
                             buttonsLoaded++;
-
                         }
                     }
 
@@ -291,13 +408,18 @@ namespace UltraSkins.UI
     {
         public string SkinName { get; set; }
         public string Description { get; set; }
+        public string? IconOveride { get; set; }
         public string? Version { get; set; }
-        public bool? isroot { get; set; }
         public Dictionary<string, string>? SupportedPlugins { get; set; }
+    }
+    class GCPACK
+    {
+        public string PackName { get; set; }
+        public string[] SubDirectories { get; set; }
     }
     class metadataReader
     {
-        public GCMD Read(string file)
+        public GCMD ReadMD(string file)
         {
           
           string GCMDreader = File.ReadAllText(file);
@@ -306,9 +428,28 @@ namespace UltraSkins.UI
                 GCMD gcmd = JsonConvert.DeserializeObject<GCMD>(GCMDreader);
                 return gcmd;
             }
-            catch (Exception ex) { }
-            BatonPass.Error("AGHHHHHHHHHHHHHHHHH");
-            return null;
+            catch (JsonReaderException ex) {
+                BatonPass.Warn($"The metadata.GCMD File located at \"{file}\" could not be read, We think the error happened around line: {ex.LineNumber} character: {ex.LinePosition} \". Code -\"MMAN-MDR-READMD-METADATA_READ_WARNING\"");
+                return null;
+            }
+
+        }
+        public GCPACK ReadPack(string file)
+        {
+
+            string GCMDreader = File.ReadAllText(file);
+            try
+            {
+                GCPACK gcPack = JsonConvert.DeserializeObject<GCPACK>(GCMDreader);
+                return gcPack;
+            }
+            catch (JsonReaderException ex) {
+                BatonPass.Warn($"The Pack.GCMD File located at \"{file}\" could not be read, We think the error happened around line: {ex.LineNumber} character: {ex.LinePosition} \". Code -\"MMAN-MDR-READPACK-PACK_READ_WARNING\"");
+                return null;
+
+
+            }
+;
         }
     }
 }
