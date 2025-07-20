@@ -314,8 +314,8 @@ namespace UltraSkins
             public static void SwitchWeaponPost(GunControl __instance, int targetSlotIndex, int? targetVariationIndex = null, bool useRetainedVariation = false, bool cycleSlot = false, bool cycleVariation = false)
             {
 
-                TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
-                ReloadTextureOverWatch(TOWS);
+                //TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
+                //ReloadTextureOverWatch(TOWS);
             }
 
             [HarmonyPatch(typeof(GunControl), "YesWeapon")]
@@ -475,7 +475,7 @@ namespace UltraSkins
             [HarmonyPostfix]
             public static void coinPost(Coin __instance)
             {
-                AddTOWs(__instance.gameObject, true);
+                AddTOWs(__instance.gameObject, false,true);
             }
 
             public static void ReloadTextureOverWatch(TextureOverWatch[] TOWS)
@@ -573,6 +573,10 @@ namespace UltraSkins
             else if (mode.name == "Bootstrap")
             {
                 BatonPass.Info("Cant make menu, currently straping my boots");
+            }
+            else if (mode.name == "241a6a8caec7a13438a5ee786040de32")
+            {
+                BatonPass.Info("Cant make menu, currently watching a movie");
             }
             else { MenuCreator.makethePausemenu(); }
 
@@ -761,61 +765,79 @@ namespace UltraSkins
         }
 
 
-        public static void SwapTheDial(TextureOverWatch TOW)
-        {
-            FieldInfo meterEmissivesField = typeof(ShotgunHammer).GetField("meterEmissives", BindingFlags.NonPublic | BindingFlags.Instance);
-            FieldInfo meterEmissivesMaskField = typeof(ShotgunHammer).GetField("secondaryMeter", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            if (meterEmissivesField == null)
+
+        internal class ReadOut
+        {
+
+            private static readonly AccessTools.FieldRef<ShotgunHammer, Texture[]> meterEmissivesRef = AccessTools.FieldRefAccess<ShotgunHammer, Texture[]>("meterEmissives");
+
+            private static readonly AccessTools.FieldRef<ShotgunHammer, Image> secondaryMeterRef = AccessTools.FieldRefAccess<ShotgunHammer, Image>("secondaryMeter");
+
+            internal delegate void UpdateMeterDelegate(ShotgunHammer instance, bool forceUpdateTexture = false);
+
+            static MethodInfo updateMeterMethod = AccessTools.Method(typeof(ShotgunHammer), "UpdateMeter");
+
+            internal static UpdateMeterDelegate updateMeter = AccessTools.MethodDelegate<UpdateMeterDelegate>(updateMeterMethod);
+
+
+            internal static void SwapTheDial(TextureOverWatch TOW)
             {
-                Debug.LogError("Failed to find 'meterEmissives' field.");
-                return;
-            }
-            ShotgunHammer shotgunHammer = TOW.GetComponentInParent<ShotgunHammer>();
-            var meterEmissives = (Texture[])meterEmissivesField.GetValue(shotgunHammer);
-            var meterMask = (Image)meterEmissivesMaskField.GetValue(shotgunHammer);
-            Texture glow1;
-            Texture glow2;
-            Texture glow3;
-            if (HoldEm.Check("T_DialGlow1"))
-            {
-                glow1 = HoldEm.Call("T_DialGlow1");
-            }
-            else
-            {
-                glow1 = meterEmissives[0];
-            }
-            if (HoldEm.Check("T_DialGlow2"))
-            {
-                glow2 = HoldEm.Call("T_DialGlow2");
-            }
-            else
-            {
-                glow2 = meterEmissives[1];
-            }
-            if (HoldEm.Check("T_DialGlow3"))
-            {
-                glow3 = HoldEm.Call("T_DialGlow3");
-            }
-            else
-            {
-                glow3 = meterEmissives[2];
-            }
-            meterEmissives = new Texture[3]
+
+
+                if (meterEmissivesRef == null)
                 {
+                    BatonPass.Error("Failed to find 'meterEmissives' field.");
+                    return;
+                }
+                ShotgunHammer shotgunHammer = TOW.GetComponentInParent<ShotgunHammer>();
+                var meterEmissives = meterEmissivesRef(shotgunHammer);
+                var meterMask = secondaryMeterRef(shotgunHammer);
+                Texture glow1;
+                Texture glow2;
+                Texture glow3;
+                if (HoldEm.Check("T_DialGlow1"))
+                {
+                    glow1 = HoldEm.Call("T_DialGlow1");
+                }
+                else
+                {
+                    glow1 = meterEmissives[0];
+                }
+                if (HoldEm.Check("T_DialGlow2"))
+                {
+                    glow2 = HoldEm.Call("T_DialGlow2");
+                }
+                else
+                {
+                    glow2 = meterEmissives[1];
+                }
+                if (HoldEm.Check("T_DialGlow3"))
+                {
+                    glow3 = HoldEm.Call("T_DialGlow3");
+                }
+                else
+                {
+                    glow3 = meterEmissives[2];
+                }
+                meterEmissivesRef(shotgunHammer) = new Texture[3]
+                    {
                         glow1,
                         glow2,
                         glow3,
-                };
-            meterEmissivesField.SetValue(shotgunHammer, meterEmissives);
-            if (HoldEm.Check("T_DialMask"))
-            {
-                Texture dialmask = HoldEm.Call("T_DialMask");
+                    };
 
-                Sprite masksprite = Sprite.Create((Texture2D)dialmask, new Rect(0, 0, dialmask.width, dialmask.height), new Vector2(0.5f, 0.5f));
-                meterMask.sprite = masksprite;
+                if (HoldEm.Check("T_DialMask"))
+                {
+                    Texture dialmask = HoldEm.Call("T_DialMask");
+
+                    Sprite masksprite = Sprite.Create((Texture2D)dialmask, new Rect(0, 0, dialmask.width, dialmask.height), new Vector2(0.5f, 0.5f));
+                    meterMask.sprite = masksprite;
+                }
             }
-}
+        }
+
+       
         
 
 
@@ -928,7 +950,7 @@ namespace UltraSkins
 
         }
         bool AssetInUse(UnityEngine.Object asset)
-        {
+        { 
             return Resources.FindObjectsOfTypeAll<Component>().Any(c =>
                 c is Renderer r && r.sharedMaterials.Any(m =>
                     m && m.HasProperty("_MainTex") && m.mainTexture == asset) ||

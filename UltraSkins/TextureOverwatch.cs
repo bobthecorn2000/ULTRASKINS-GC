@@ -16,12 +16,24 @@ namespace UltraSkins
         public string iChange;
 		void OnEnable()
 		{
-            if (GetComponentInParent<Nail>() || GetComponent<Coin>())
+            ShotgunHammer hammerInstance = GetComponentInParent<ShotgunHammer>();
+            Coin coin = GetComponentInParent<Coin>();
+
+            if (GetComponentInParent<Nail>())
 			{
 				swapType = "projectile";
 			}
-            if (GetComponentInParent<ShotgunHammer>()) {
-                ULTRASKINHand.SwapTheDial(transform.GetComponent<TextureOverWatch>());
+            if (coin != null)
+            {
+                swapType = "projectile";
+                if (HoldEm.Check("coin01_3")){
+                    coin.uselessMaterial.mainTexture = ULTRASKINHand.HoldEm.Call("coin01_3");
+                }
+                
+            }
+            if (hammerInstance != null) {
+                ULTRASKINHand.ReadOut.SwapTheDial(this);
+                ReadOut.updateMeter(hammerInstance, true);
             }
             if (GetComponentInParent<Grenade>())
             {
@@ -60,7 +72,10 @@ namespace UltraSkins
                 }
             }
             if (renderer.materials != cachedMaterials)
-			UpdateMaterials();
+            {
+                UpdateMaterials();
+            }
+			
 		}
 
 		public void UpdateMaterials()
@@ -76,6 +91,8 @@ namespace UltraSkins
             }
 			transform.GetComponent<TextureOverWatch>().enabled = false;
 		}
+
+
     }
 
 public class TowStorage : MonoBehaviour

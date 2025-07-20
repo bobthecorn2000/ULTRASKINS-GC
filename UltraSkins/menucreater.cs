@@ -152,20 +152,22 @@ namespace UltraSkins.UI
                             Editorpanel = UltraskinsConfigmenu.transform.Find("Canvas/editor").gameObject;
 
                             Animator menuanimator = Editorpanel.gameObject.GetComponent<Animator>();
-                            MenuManager Mman = Editorpanel.AddComponent<MenuManager>();
+                            MenuManager Mman = UltraskinsConfigmenu.AddComponent<MenuManager>();
                             Editorpanel.SetActive(false);
                             BatonPass.Info("looking for content");
-/*                            foreach (OGTexturePair objects in UltraskinsConfigmenu.GetComponent<OGSkinsManager>().RawSkins)
-                            {
-                                BatonPass.Debug("test: " + objects.key);
-                            }
-                            Dictionary<string,Texture> ogman = UltraskinsConfigmenu.GetComponent<OGSkinsManager>().OGSKINS;
-                            foreach (KeyValuePair<string, Texture> pair in ogman)
-                            {
-                               BatonPass.Debug("testicle" + pair.Key.ToString());
-                            }*/
-                           
-                            Mman.SD = UltraskinsConfigmenu.GetComponent<EditMenuManager>().skindetails;
+                            /*                            foreach (OGTexturePair objects in UltraskinsConfigmenu.GetComponent<OGSkinsManager>().RawSkins)
+                                                        {
+                                                            BatonPass.Debug("test: " + objects.key);
+                                                        }
+                                                        Dictionary<string,Texture> ogman = UltraskinsConfigmenu.GetComponent<OGSkinsManager>().OGSKINS;
+                                                        foreach (KeyValuePair<string, Texture> pair in ogman)
+                                                        {
+                                                           BatonPass.Debug("testicle" + pair.Key.ToString());
+                                                        }*/
+                            EditMenuManager EMM = UltraskinsConfigmenu.GetComponent<EditMenuManager>();
+
+                            Mman.SD = EMM.skindetails;
+                            EMM.campCreator.CreateButton.onClick.AddListener(() => Mman.CreateSkinFromEditor(EMM));
                             GameObject ReturnButton = Editorpanel.transform.Find("PanelLeft/ReturnButton").gameObject;
                             GameObject ApplyButton = Editorpanel.transform.Find("PanelLeft/Apply").gameObject;
                             GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/PanelLeft/Scroll View/Viewport/Content/UltraButton").gameObject;
@@ -445,5 +447,6 @@ namespace UltraSkins.UI
             BatonPass.Debug("INIT BATON PASS: We are returning");
             return;
         }
+       
     }
 }

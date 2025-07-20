@@ -4,6 +4,12 @@ using BepInEx;
 using System.Collections.Generic;
 using UnityEngine;
 using plog;
+using System.Text.Json;
+using System.IO;
+using UltraSkins.Utils;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Linq;
 
 namespace BatonPassLogger
 {
@@ -27,7 +33,7 @@ namespace BatonPassLogger
 
         public static ManualLogSource BatonPassLogger = new ManualLogSource("BatonPass");
 
-        
+
         public enum LogLevel
         {
             Debug,
@@ -50,6 +56,9 @@ namespace BatonPassLogger
         // Main logging method
         public static void Log(string message, LogLevel level = LogLevel.Info)
         {
+            if (level < BootstrapLoggerConfig.BPLogLevel)
+                return;
+
             foreach (var terminal in _terminals)
             {
                 if (terminal.Enabled)
@@ -161,7 +170,7 @@ namespace BatonPassLogger
         public BepInExTerminal(ManualLogSource source)
         {
             _logSource = source;
-            
+
         }
 
         public void Log(string message, BatonPass.LogLevel level)
@@ -172,7 +181,7 @@ namespace BatonPassLogger
             {
                 case BatonPass.LogLevel.Debug:
                     _logSource.LogDebug(message);
-                    
+
                     break;
                 case BatonPass.LogLevel.Warning:
                     _logSource.LogWarning(message);
@@ -193,6 +202,52 @@ namespace BatonPassLogger
             }
         }
     }
+
+    public static class BootstrapLoggerConfig
+    {
+        public static BatonPass.LogLevel BPLogLevel { get; private set; } = GetDefaultLevel();
+
+        static BootstrapLoggerConfig()
+        {
+            try
+            {
+                string path = SkinEventHandler.getUserSettingsFile();
+                if (!File.Exists(path)) return;
+
+                string json = File.ReadAllText(path);
+                var allSettings = JsonConvert.DeserializeObject<List<BPSetting>>(json);
+
+                var logSetting = allSettings?.FirstOrDefault(s => s.id == "LogLevel" && !string.IsNullOrEmpty(s.savedOption));
+
+                if (logSetting != null && Enum.TryParse(logSetting.savedOption, true, out BatonPass.LogLevel parsedLevel))
+                {
+                    BPLogLevel = parsedLevel;
+                }
+            }
+            catch
+            {
+                // Do nothing; stick with default
+            }
+        }
+        private static BatonPass.LogLevel GetDefaultLevel()
+        {
+
+
+#if ALPHA || CANARY || DEBUG
+            return BatonPass.LogLevel.Debug;
+#else
+        return LogLevel.Warn;
+#endif
+        }
+        public class BPSetting
+        {
+            public string id { get; set; }
+            public string savedOption { get; set; }
+        }
+
+    }
+
+
 
 }
 
