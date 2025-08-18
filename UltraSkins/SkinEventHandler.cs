@@ -26,7 +26,7 @@ namespace UltraSkins.Utils
         public GameObject Activator;
 		public string path;
 		public string pname;
-		public ULTRASKINHand UKSH;
+		public static ULTRASKINHand UKSH = ULTRASKINHand.HandInstance;
         public class Metadata
         {
             public string FileVersion { get; set; }
@@ -62,7 +62,7 @@ namespace UltraSkins.Utils
         {
             
             
-            string[] profileInfo = GetThunderstoreProfileName();
+            string[] profileInfo = UKSH.ThunderProfInfo;
             string ProfDir = null;
             
             if (profileInfo != null && profileInfo.Length == 2)
@@ -82,7 +82,7 @@ namespace UltraSkins.Utils
         {
 
 
-            string[] profileInfo = GetThunderstoreProfileName();
+            string[] profileInfo = UKSH.ThunderProfInfo;
             string ProfDir = null;
 
             if (profileInfo != null && profileInfo.Length == 2)
@@ -112,7 +112,7 @@ namespace UltraSkins.Utils
             string VerDir = Path.Combine(USC.GCDIR, USC.VERNAME, USC.VERSION);
             
             string ProfDir = null;
-            string[] profileInfo = GetThunderstoreProfileName();
+            string[] profileInfo = UKSH.ThunderProfInfo;
             if (profileInfo != null && profileInfo.Length == 2)
             {
                 string profileName = profileInfo[0];
@@ -207,18 +207,18 @@ namespace UltraSkins.Utils
 
             string parentDir = Directory.GetParent(USC.MODPATH).FullName;
 
-            string[] profileInfo = GetThunderstoreProfileName();
+            string[] profileInfo = UKSH.ThunderProfInfo;
             string profileName = null;
             string profileType = null;
             
             string GlobalDir = Path.Combine(USC.GCDIR, USC.UNISKIN);
-            string VerDir = Path.Combine(USC.GCDIR, USC.VERNAME,USC.VERSION);
+            //string VerDir = Path.Combine(USC.GCDIR, USC.VERNAME,USC.VERSION);
 
             Dictionary<String, String> Locations = new Dictionary<String,String>();
 
 
             Locations.Add("Global", GlobalDir);
-            Locations.Add("Version", VerDir);
+            //Locations.Add("Version", VerDir);
             BatonPass.Info("Location Found: " + "Global" + " " + GlobalDir);
             if (profileInfo != null && profileInfo.Length == 2)
             {
@@ -412,7 +412,7 @@ namespace UltraSkins.Utils
             }
         }
 
-        static string[] GetThunderstoreProfileName()
+        public static string[] GetThunderstoreProfileName()
         {
             string dllLocation = Assembly.GetExecutingAssembly().Location;
             string[] parts = dllLocation.Split(Path.DirectorySeparatorChar);
@@ -446,6 +446,7 @@ namespace UltraSkins.Utils
                     string[] InfoObject = new string[2]; 
                     InfoObject[0] = parts[i+1];
                     InfoObject[1] = Dirtype;
+                    
                     return InfoObject;
                 }
             }

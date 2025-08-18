@@ -8,11 +8,17 @@ namespace UltraSkins
 {
     internal static class USC
     {
-        // MAIN STUFF
+        // Versions
         public const string VERSION = "7.0.0";
+        public static readonly string[] SupportedPackFormats = { "4.0" };
+        public const string GCSKINVERSION = "4.0";
+
+
+        // MAIN STUFF
+        
         public static string MODPATH => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static string GCDIR => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "bobthecorn2000", "ULTRAKILL", "ultraskinsGC-V2");
-
+        public static string LEGACYGCDIR => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "bobthecorn2000", "ULTRAKILL", "ultraskinsGC");
         //Folder names
         public const string SAVEDATA = "SaveData";
         public const string UNISKIN = "GlobalSkins";
@@ -32,6 +38,10 @@ namespace UltraSkins
         public const string DATAFILE = "Data.USGC";
         public const string SETTINGSFILE = "Settings.USGC";
         public const string DEFAULTSETTINGS = "DefaultSettings.USGC";
+        public const string MDFILE = "metadata.GCMD";
+        public const string PACKFILE = "pack.GCMD";
+        public const string TSMANIFEST = "manifest.json";
+
 
         // Resticted info
         public static readonly Dictionary<string, string> ReservedNameJokes = new(StringComparer.OrdinalIgnoreCase)
@@ -54,7 +64,7 @@ namespace UltraSkins
             { "COM\u00B3", "I could calculate COM cubed, i just dont feel like it" },
             { "LPT1", "I'm not going to print your skins" },
             { "LPT2", "I'm not going to print your skins" },
-            { "LPT3", "does the L stand for lesbian, no.... ok" },
+            { "LPT3", "does the L stand for ligma, no.... ok" },
             { "LPT4", "Who just has 4 printers" },
             { "LPT5", "Is this funny yet" },
             { "LPT6", "Really think, When was the last time you used a Parallel port" },

@@ -173,7 +173,20 @@ namespace UltraSkins.UI
                             GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/PanelLeft/Scroll View/Viewport/Content/UltraButton").gameObject;
                             ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
                             Mman.GenerateButtons(contentfolder, activateanimator);
-
+                            Mman.RefreshableActivateAnimator = activateanimator;
+                            Mman.RefreshableContentFolder = contentfolder;
+                            if (Directory.Exists(USC.LEGACYGCDIR))
+                            {
+                                
+                                EMM.MigrationToolButton.SetActive(true);
+                                Mman.PopulateMigrateMenu(EMM.MigrationPage,EMM);
+                                EMM.MigrationPage.ActivateMigratorTool();
+                            }
+                            if (handInstance.ThunderStoreMode)
+                            {
+                                EMM.ThunderstoreFixButton.SetActive(true);
+                                Mman.PopulateThunderstoreMenu(EMM.thunderstoreHandle,EMM);
+                            }
                             // Now load the ultraskins button
                             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
                             {
@@ -187,7 +200,7 @@ namespace UltraSkins.UI
                                     Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
                                     //ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = "ULTRASKINS";
                                     // Pass UltraskinsConfigmenu to the listener
-                                    ultraskinsbutton.onClick.AddListener(() => Openskineditor(mainmenu, Editorpanel, fallNoiseOn));
+                                    ultraskinsbutton.onClick.AddListener(() => Openskineditor(mainmenu,menuanimator, Editorpanel, fallNoiseOn));
                                     ReturnButton.GetComponent<Button>().onClick.AddListener(() => Mman.Closeskineditor(mainmenu, Editorpanel, fallNoiseOff, menuanimator,activateanimator,contentfolder));
                                     ApplyButton.GetComponent<Button>().onClick.AddListener(() => Mman.applyskins(contentfolder));
                                     BatonPass.Debug("Successfully loaded and instantiated ultraskinsMenuButton.");
@@ -292,13 +305,13 @@ namespace UltraSkins.UI
 
 
 
-        public static void Openskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseon)
+        public static void Openskineditor(GameObject mainmenucanvas, Animator animator, GameObject Configmenu, GameObject fallnoiseon)
         {
             BatonPass.Debug("opened the editor");
             mainmenucanvas.SetActive(false);
             fallnoiseon.SetActive(true);
             Configmenu.SetActive(true);
-            
+            animator.Play("MenuOpen");
             handInstance.settingsmanager.ShowSettingsAssets(true);
             handInstance.settingsmanager.ShowPreviewWireFrame(true);
 

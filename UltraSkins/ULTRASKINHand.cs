@@ -19,6 +19,8 @@ using UltraSkins.UI;
 using StringSerializer = UltraSkins.Utils.SkinEventHandler.StringSerializer;
 using BatonPassLogger;
 using System.Xml.Serialization;
+using static UltraSkins.ULTRASKINHand.HoldEm;
+
 
 
 
@@ -67,7 +69,9 @@ namespace UltraSkins
         public UltraSkins.UI.SettingsManager settingsmanager;
         public TowStorage PtowStorage;
         public Dictionary<string, Texture2D> IconCache = new Dictionary<string, Texture2D>();
+        public Dictionary<string, Sprite> SpriteCache = new Dictionary<string, Sprite>();
         Harmony UKSHarmony;
+        
         public static ULTRASKINHand HandInstance { get; private set; }
 
         //public void Start(SkinEventHandler skinEventHandler)
@@ -77,7 +81,9 @@ namespace UltraSkins
         //    LoadTextures(modFolderPath);
 
         //}
-
+        public bool ThunderStoreMode = false;
+        public string[] ThunderProfInfo = null;
+        public bool OldSaveDataFound = false;
         public static ManualLogSource BatonPassLogger = new ManualLogSource("BatonPass");
         private void Awake()
         {
@@ -148,6 +154,11 @@ namespace UltraSkins
             try
             {
                 BatonPass.Debug("Creating the SkinEvent Handler");
+                ThunderProfInfo = SkinEventHandler.GetThunderstoreProfileName();
+                if (ThunderProfInfo != null)
+                {
+                    ThunderStoreMode = true;
+                }
                 SkinEventHandler skinEventHandler = new SkinEventHandler();
                 BatonPass.Debug("INIT BATON PASS: GETMODFOLDERPATH()");
                 string[] modFolderPath = skinEventHandler.GetModFolderPath();
@@ -224,7 +235,16 @@ namespace UltraSkins
             //LoadTextures(filepath);
 
         }
-
+        [HarmonyPatch]
+        public class HarmonyUIPatcher
+        {
+            [HarmonyPatch(typeof(StyleHUD), "Start")]
+            [HarmonyPostfix]
+            static void StyleHudStartPost(StyleHUD __instance)
+            {
+                RANKTITLESWAPPER.swapthestylerank(__instance);
+            }
+        }
         [HarmonyPatch]
         public class HarmonyGunPatcher
         {
@@ -578,7 +598,11 @@ namespace UltraSkins
             {
                 BatonPass.Info("Cant make menu, currently watching a movie");
             }
-            else { MenuCreator.makethePausemenu(); }
+            else { 
+                
+                //Pause menu is disabled for now
+                //MenuCreator.makethePausemenu();
+            }
 
         }
 
@@ -765,7 +789,44 @@ namespace UltraSkins
         }
 
 
+        internal class RANKTITLESWAPPER
+        {
 
+            internal static void swapthestylerank(StyleHUD stylehudINST)
+            {
+
+                BatonPass.Debug("stylehud has started");
+                foreach (StyleRank sr in stylehudINST.ranks)
+                {
+                    string spritelookup = sr.sprite.name;
+                    BatonPass.Debug($"looking for {spritelookup}");
+                    if (HoldEm.Bluff(HoldemType.SC, spritelookup))
+                    {
+                        sr.sprite = HoldEm.Draw<Sprite>(HoldemType.SC, spritelookup);
+                        BatonPass.Debug($"found in bluff");
+                    }
+
+
+                }
+            }
+            internal static void makethestylerank()
+            {
+                string[] styleranks = new string[8] { "RankSSS", "RankSS", "RankS", "RankA", "RankB", "RankC", "RankD", "RankU" };
+                BatonPass.Debug("stylehud has started");
+                
+
+                foreach (string sr in styleranks)
+                {
+                    string spritelookup = sr;
+
+                    HoldEm.Bet(HoldemType.SC, spritelookup, HoldEm.Call(spritelookup));
+                    BatonPass.Debug($"Betting {spritelookup}");
+
+
+
+                }
+            }
+        }
 
         internal class ReadOut
         {
@@ -1023,7 +1084,7 @@ namespace UltraSkins
 
             }
             autoSwapCache.Clear();
-
+            HoldEm.Fold(HoldemType.SC);
 
 
             System.Array.Reverse(fpaths);
@@ -1054,6 +1115,7 @@ namespace UltraSkins
             {
                 BPGUI.HideGUI(2);
             }
+            RANKTITLESWAPPER.makethestylerank();
         }
 
         public archivetype TypeDetection(string path)
@@ -1241,15 +1303,28 @@ namespace UltraSkins
 
 
 
-
+        /// <summary>
+        /// The HoldEm system allows you to request and modify the textures Ultraskins currently keeps track of
+        /// </summary>
         public class HoldEm
         {
-            
 
+            /// <summary>
+            /// one of either 
+            /// ASC - AUTOSWAPCACHE (the users loaded skins)
+            /// OGS - OGSKINS (the master list of all supported skins, the secondary cache)
+            /// IC - ICONCACHE (all skin icons for this session) 
+            /// SC - SPRITECACHE (all currently known sprites)
+            /// </summary>
             public enum HoldemType
             {
-                ASC = 0, OGS = 1, IC = 2
+                ASC = 0, OGS = 1, IC = 2, SC = 3
             }
+            /// <summary>
+            /// Returns the Texture If it exists in either Primary or Secondary Cache
+            /// </summary>
+            /// <param name="key">The KEY we are looking for</param>
+            /// <returns>A Texture</returns>
             public static Texture Call(string key)
             {
                 if (autoSwapCache.TryGetValue(key, out Texture texture))
@@ -1269,6 +1344,11 @@ namespace UltraSkins
                     return null;
                 }
             }
+            /// <summary>
+            /// Check if a KEY exists in either Primary Cache or Secondary Cache
+            /// </summary>
+            /// <param name="key">the KEY we are looking for</param>
+            /// <returns>Bool "True" if we have it "False" if we don't</returns>
             public static bool Check(string key)
             {
                 if (autoSwapCache.ContainsKey(key))
@@ -1288,6 +1368,11 @@ namespace UltraSkins
                     return false;
                 }
             }
+            /// <summary>
+            /// Removes a specific item from the Dictionary
+            /// </summary>
+            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
+            /// <param name="name">The KEY we are removing</param>
             public static void Discard(HoldemType holdemType, string name)
             {
 
@@ -1313,31 +1398,56 @@ namespace UltraSkins
                     case HoldemType.IC:
                         if (HandInstance.IconCache.ContainsKey(name))
                         {
-                            Texture workingfile = HandInstance.IconCache[name];
-                            UnityEngine.Object.Destroy(workingfile);
+                         
                             HandInstance.IconCache.Remove(name);
+                        }
+                        break;
+                    case HoldemType.SC:
+                        if (HandInstance.SpriteCache.ContainsKey(name))
+                        {
+
+                            HandInstance.SpriteCache.Remove(name);
                         }
                         break;
                 }
             }
-       
-            public static void Bet(HoldemType holdemType,string TextureName,Texture2D texture2D)
+            /// <summary>
+            /// Adds a Key Value pair into the Holdem System, Placing a Bet on the table
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
+            /// <param name="TextureName">The KEY for the dict</param>
+            /// <param name="texture2D">the VALUE for the dict, In the case of IC this is a byte[]</param>
+            public static void Bet(HoldemType holdemType,string TextureName,Texture texture2D)
             {
                 switch (holdemType)
                 {
-                    case HoldemType.ASC: 
+                    case HoldemType.ASC:
+                        
                         autoSwapCache.Add(TextureName, texture2D);
                         break;
                     case HoldemType.OGS:
                         HandInstance.ogSkinsManager.OGSKINS.Add(TextureName, texture2D);
                         break;
                     case HoldemType.IC:
-                        HandInstance.IconCache.Add(TextureName, texture2D);
+                        HandInstance.IconCache.Add(TextureName, texture2D as Texture2D);
+                        break;
+                    case HoldemType.SC:
+                        texture2D.filterMode = FilterMode.Bilinear;
+                        Sprite newsprite = Sprite.Create(texture2D as Texture2D, new Rect(0, 0, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f));
+                        HandInstance.SpriteCache.Add(TextureName, newsprite);
                         break;
 
                 }
             }
-            public static Texture2D Draw(HoldemType holdemType, string name)
+            /// <summary>
+            /// Pulls a Value from a Key in the Holdem System, ,
+            /// </summary>
+            /// <typeparam name="T">Either a Texture or a Sprite</typeparam>
+            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
+            /// <param name="name">The KEY we are asking for</param>
+            /// <returns>Draw a Texture or byte[] into your hand</returns>
+            public static T Draw<T>(HoldemType holdemType, string name) where T : class
             {
 
                 switch (holdemType)
@@ -1345,20 +1455,54 @@ namespace UltraSkins
                     case HoldemType.ASC:
                         autoSwapCache.TryGetValue(name, out Texture rawASCtexture);
                         Texture2D ASCtexture = rawASCtexture as Texture2D;
-                        return ASCtexture;
+                        return ASCtexture as T;
 
                     case HoldemType.OGS:
                         HandInstance.ogSkinsManager.OGSKINS.TryGetValue(name, out Texture rawOGtexture);
                         Texture2D OGtexture = rawOGtexture as Texture2D;
-                        return OGtexture;
+                        return OGtexture as T;
 
                     case HoldemType.IC:
                         HandInstance.IconCache.TryGetValue(name, out Texture2D ICtexture);
-                        return ICtexture;
+                        return ICtexture as T;
+                    case HoldemType.SC:
+                        HandInstance.SpriteCache.TryGetValue(name, out Sprite SCtexture);
+                        return SCtexture as T;
+                    default:
+                        return null;
 
                 }
-                return null;
+
             }
+            /// <summary>
+            /// Check a specific holdem stash for a texture
+            /// </summary>
+            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
+            /// <param name="name">The KEY we are asking for</param>
+            /// <returns></returns>
+            public static bool Bluff(HoldemType holdemType, string name)
+            {
+                switch (holdemType)
+                {
+                    case HoldemType.ASC:
+                        return (autoSwapCache.ContainsKey(name)) ? true : false; 
+
+
+                    case HoldemType.OGS:
+                        return (HandInstance.ogSkinsManager.OGSKINS.ContainsKey(name)) ? true : false;
+
+                    case HoldemType.IC:
+                        return (HandInstance.IconCache.ContainsKey(name)) ? true : false;
+                    case HoldemType.SC:
+                        return (HandInstance.SpriteCache.ContainsKey(name)) ? true : false;
+
+                }
+                return false;
+            }
+            /// <summary>
+            /// Danger: Purges an entire Dictionary and resets it,
+            /// </summary>
+            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
             public static void Fold(HoldemType holdemType)
             {
 
@@ -1390,17 +1534,22 @@ namespace UltraSkins
                         HandInstance.ogSkinsManager.OGSKINS.Clear();
                         break;
                     case HoldemType.IC:
-                        foreach (KeyValuePair<string, Texture2D> kvp in HandInstance.IconCache)
+
+                        HandInstance.IconCache.Clear();
+                        break;
+                    case HoldemType.SC:
+                        foreach (KeyValuePair<string, Sprite> kvp in HandInstance.SpriteCache)
                         {
 
                             string name = kvp.Key;
-                            BatonPass.Debug("Deleting " + name + " from Holdem ASC");
-                            Texture workingfile = HandInstance.IconCache[name];
+                            BatonPass.Debug("Deleting " + name + " from Holdem SC");
+                            Sprite workingfile = HandInstance.SpriteCache[name];
                             UnityEngine.Object.Destroy(workingfile);
 
                         }
-                        HandInstance.IconCache.Clear();
+                        HandInstance.SpriteCache.Clear();
                         break;
+
 
                 }
             }
