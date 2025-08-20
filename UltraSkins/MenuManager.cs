@@ -131,16 +131,27 @@ namespace UltraSkins.UI
                                 {
                                     foreach (string path in PD.SubDirectories)
                                     {
-                                        string subsubfolder = Path.Combine(subfolder, path);
-
-                                        if (File.Exists(subsubfolder))
+                                        
+                                        UnsafeNotice safe = CheckIfUnsafe(path);
+                                        if (safe.IsSafe)
                                         {
-                                            BuildButton(Location, contentfolder, MDR, prefab, subsubfolder);
+                                            string subsubfolder = Path.Combine(subfolder, path);
+                                            if (Directory.Exists(subsubfolder) && safe.IsSafe)
+                                            {
+                                                BuildButton(Location, contentfolder, MDR, prefab, subsubfolder);
+                                            }
+                                            else
+                                            {
+                                                BatonPass.Warn("\"" + subsubfolder + "\" does not exist in the Pack. This is most likely an incorrect folder name in the Pack.GCMD file located in \"" + PackPath + "\". Code -\"MMAN-GENERATEBUTTONS-MAINMENU-PACKPATH_MISSING_LOCATION\"");
+                                            }
                                         }
                                         else
                                         {
-                                            BatonPass.Warn("\"" + subsubfolder + "\" does not exist in the Pack. This is most likely an incorrect folder name in the Pack.GCMD file located in \"" + PackPath + "\". Code -\"MMAN-GENERATEBUTTONS-MAINMENU-PACKPATH_MISSING_LOCATION\"");
+                                            BatonPass.Warn("Refusing to load Subdirectory at " + path);
+                                            BatonPass.Warn(safe.Reason1);
+                                            BatonPass.Warn(safe.Reason2);
                                         }
+                                        
                                     }
 
 
@@ -1001,7 +1012,7 @@ namespace UltraSkins.UI
                 string[] subfolders = Directory.GetDirectories(parentDir);
                 foreach (string folder in subfolders)
                 {
-                    if (!File.Exists(Path.Combine(folder, USC.MDFILE)) && !File.Exists(Path.Combine(folder, USC.MDFILE + ".old")))
+                    if (!File.Exists(Path.Combine(folder, USC.MDFILE)) && !File.Exists(Path.Combine(folder, USC.MDFILE + ".old")) && !File.Exists(Path.Combine(folder, USC.PACKFILE)) && !File.Exists(Path.Combine(folder, USC.PACKFILE + ".old")))
                     {
                         if (folder != name)
                         {

@@ -288,7 +288,7 @@ namespace UltraSkins.Utils
                 }
 
                 // Return the SkinLocation property from the deserialized object
-                BatonPass.Error("returning " + data.ToString());
+                //BatonPass.Error("returning " + data.ToString());
                 return data;
             }
         }

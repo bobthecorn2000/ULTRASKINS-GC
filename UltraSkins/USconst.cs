@@ -24,7 +24,7 @@ namespace UltraSkins
         public const string UNISKIN = "GlobalSkins";
         public const string VERNAME = "Versions";
 #if RELEASE
-        public const string BUILDTYPE = "Standalone";
+        public const string BUILDTYPE = "Release";
 #elif DEBUG
         public const string BUILDTYPE = "Debug";
 #elif CANARY 

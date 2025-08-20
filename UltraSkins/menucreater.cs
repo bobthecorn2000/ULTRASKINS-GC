@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using UltraSkins.Utils;
 using BatonPassLogger.GUI;
 using System.Threading.Tasks;
+using BepInEx.Bootstrap;
 
 
 
@@ -177,13 +178,14 @@ namespace UltraSkins.UI
                             Mman.RefreshableContentFolder = contentfolder;
                             if (Directory.Exists(USC.LEGACYGCDIR))
                             {
-                                
+                                sMan.aboutMenu.MDtag.SetActive(true);
                                 EMM.MigrationToolButton.SetActive(true);
                                 Mman.PopulateMigrateMenu(EMM.MigrationPage,EMM);
                                 EMM.MigrationPage.ActivateMigratorTool();
                             }
                             if (handInstance.ThunderStoreMode)
                             {
+                                sMan.aboutMenu.TStag.SetActive(true);
                                 EMM.ThunderstoreFixButton.SetActive(true);
                                 Mman.PopulateThunderstoreMenu(EMM.thunderstoreHandle,EMM);
                             }
@@ -200,7 +202,7 @@ namespace UltraSkins.UI
                                     Button ultraskinsbutton = instance.GetComponentInChildren<Button>();
                                     //ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = "ULTRASKINS";
                                     // Pass UltraskinsConfigmenu to the listener
-                                    ultraskinsbutton.onClick.AddListener(() => Openskineditor(mainmenu,menuanimator, Editorpanel, fallNoiseOn));
+                                    ultraskinsbutton.onClick.AddListener(() => Openskineditor(mainmenu,menuanimator, Editorpanel, fallNoiseOn,EMM));
                                     ReturnButton.GetComponent<Button>().onClick.AddListener(() => Mman.Closeskineditor(mainmenu, Editorpanel, fallNoiseOff, menuanimator,activateanimator,contentfolder));
                                     ApplyButton.GetComponent<Button>().onClick.AddListener(() => Mman.applyskins(contentfolder));
                                     BatonPass.Debug("Successfully loaded and instantiated ultraskinsMenuButton.");
@@ -248,6 +250,8 @@ namespace UltraSkins.UI
                     instance.SetActive(true);
                     sMan = instance.GetComponent<SettingsManager>();
                     handInstance.ogSkinsManager = instance.GetComponent<OGSkinsManager>();
+                    sMan.aboutMenu.SetAboutVersionInfo(USC.VERSION, USC.BUILDTYPE, USC.GCSKINVERSION, USC.SupportedPackFormats);
+                    sMan.aboutMenu.HPtag.SetActive(BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.flazhik.handpaint"));
                     string usersettings = SkinEventHandler.getUserSettingsFile();
                     BatonPass.Debug("loading user settings");
                     try
@@ -256,7 +260,7 @@ namespace UltraSkins.UI
                     }
                     catch (Exception ex)
                     {
-                        BatonPass.Warn("Users custom settings dont exist using defaults CODE -\"MCREATE-MAKETHEMENU-USERSETTINGSFILE-CORRUPTED_OR_MISSING\"");
+                        BatonPass.Warn("Users custom settings dont exist, using defaults CODE -\"MCREATE-MAKETHEMENU-USERSETTINGSFILE-CORRUPTED_OR_MISSING\"");
                     }
                     BatonPass.Debug("loading settings options");
                     try
@@ -305,12 +309,14 @@ namespace UltraSkins.UI
 
 
 
-        public static void Openskineditor(GameObject mainmenucanvas, Animator animator, GameObject Configmenu, GameObject fallnoiseon)
+        public static void Openskineditor(GameObject mainmenucanvas, Animator animator, GameObject Configmenu, GameObject fallnoiseon,EditMenuManager emm)
         {
             BatonPass.Debug("opened the editor");
             mainmenucanvas.SetActive(false);
             fallnoiseon.SetActive(true);
+
             Configmenu.SetActive(true);
+            emm.EnableMenuSound.Play();
             animator.Play("MenuOpen");
             handInstance.settingsmanager.ShowSettingsAssets(true);
             handInstance.settingsmanager.ShowPreviewWireFrame(true);

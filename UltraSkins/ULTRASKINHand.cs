@@ -338,6 +338,28 @@ namespace UltraSkins
                 //ReloadTextureOverWatch(TOWS);
             }
 
+            [HarmonyPatch(typeof(ShopZone), "Start")]
+            [HarmonyPostfix]
+            public static void Start(ShopZone __instance)
+            {
+                //Transform trans = FindDeepChildByPathIncludeInactive(__instance.transform, "Canvas/Background/Main Panel/Weapons/Arm Window");
+                //if (trans != null)
+                //{
+                //    //List<TextureOverWatch> SHOPTOWS = AddTOWs(__instance.gameObject, true, true, false, true);
+                //    Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/HandPaintPlusColors.prefab").Completed += handle =>
+                //    {
+                //        GameObject prefabmenu = handle.Result;
+
+
+                    
+                //        GameObject ColorMenu = Instantiate(prefabmenu, trans);
+                    
+                //    };
+                //}
+
+                //ReloadTextureOverWatch(TOWS);
+            }
+
             [HarmonyPatch(typeof(GunControl), "YesWeapon")]
             [HarmonyPostfix]
             public static void WeaponYesPost(GunControl __instance)
@@ -562,7 +584,30 @@ namespace UltraSkins
         }
 
 
+        public static Transform FindDeepChildByPathIncludeInactive(Transform root, string path)
+        {
+            string[] parts = path.Split('/');
+            Transform current = root;
 
+            foreach (string part in parts)
+            {
+                bool found = false;
+                foreach (Transform child in current)
+                {
+                    if (child.name == part)
+                    {
+                        current = child;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                    return null; // Path is invalid
+            }
+
+            return current;
+        }
 
         private void SceneManagerOnsceneLoaded(Scene scene, Scene mode)
         {
