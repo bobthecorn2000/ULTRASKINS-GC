@@ -326,7 +326,7 @@ namespace UltraSkins.UI
             }
             instance.name = folder;
             BEM.filePath = subfolder;
-            AvailbleSkins.Add(folder, ultraskinsbutton);
+            AvailbleSkins.Add(folder + subfolder.GetHashCode(), ultraskinsbutton);
             // Add button to list
             BEM.DecideColor();
             BEM.makeObject();
@@ -1114,7 +1114,10 @@ namespace UltraSkins.UI
             }
 
             handle.gameObject.SetActive(false);
+
             RefreshHandlerPage();
+            handle.ClearUI();
+            PopulateThunderstoreMenu(handle, eMM);
             eMM.Editor.SetActive(true);
         }
 
@@ -1129,6 +1132,7 @@ namespace UltraSkins.UI
             gcmd.PackFormat = USC.GCSKINVERSION;
             metadataWriter MDW = new metadataWriter();
             MDWriteReturn status = await MDW.WriteMD(file, gcmd);
+
         }
 
 

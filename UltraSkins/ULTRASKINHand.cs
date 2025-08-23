@@ -20,6 +20,10 @@ using StringSerializer = UltraSkins.Utils.SkinEventHandler.StringSerializer;
 using BatonPassLogger;
 using System.Xml.Serialization;
 using static UltraSkins.ULTRASKINHand.HoldEm;
+using UltraSkins.API;
+using static UltraSkins.API.USAPI;
+
+
 
 
 
@@ -123,7 +127,8 @@ namespace UltraSkins
 
             SceneManager.activeSceneChanged += SceneManagerOnsceneLoaded;
             BatonPass.Info("Scenemanager Created");
-
+            USAPI.OnTexLoadFinished += RANKTITLESWAPPER.makethestylerank;
+            BatonPass.Info("Subscribing to the API");
             // The GUID of the configurator must not be changed as it is used to locate the config file path
             BatonPass.Debug("INIT BATON PASS: ONMODLOADED()");
             OnModLoaded();
@@ -854,22 +859,28 @@ namespace UltraSkins
 
                 }
             }
-            internal static void makethestylerank()
+            internal static void makethestylerank(TextureLoadEventArgs e)
+
+
             {
-                string[] styleranks = new string[8] { "RankSSS", "RankSS", "RankS", "RankA", "RankB", "RankC", "RankD", "RankU" };
-                BatonPass.Debug("stylehud has started");
-                
-
-                foreach (string sr in styleranks)
+                if (e.Failed != true)
                 {
-                    string spritelookup = sr;
-
-                    HoldEm.Bet(HoldemType.SC, spritelookup, HoldEm.Call(spritelookup));
-                    BatonPass.Debug($"Betting {spritelookup}");
+                    string[] styleranks = new string[8] { "RankSSS", "RankSS", "RankS", "RankA", "RankB", "RankC", "RankD", "RankU" };
+                    BatonPass.Debug("stylehud has started");
 
 
+                    foreach (string sr in styleranks)
+                    {
+                        string spritelookup = sr;
 
+                        HoldEm.Bet(HoldemType.SC, spritelookup, HoldEm.Call(spritelookup));
+                        BatonPass.Debug($"Betting {spritelookup}");
+
+
+
+                    }
                 }
+
             }
         }
 
@@ -1160,7 +1171,11 @@ namespace UltraSkins
             {
                 BPGUI.HideGUI(2);
             }
-            RANKTITLESWAPPER.makethestylerank();
+
+
+
+            USAPI.BroadcastTextureFinished(new USAPI.TextureLoadEventArgs(failed));
+           
         }
 
         public archivetype TypeDetection(string path)
