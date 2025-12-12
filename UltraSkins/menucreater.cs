@@ -252,7 +252,7 @@ namespace UltraSkins.UI
                     handInstance.ogSkinsManager = instance.GetComponent<OGSkinsManager>();
                     sMan.aboutMenu.SetAboutVersionInfo(USC.VERSION, USC.BUILDTYPE, USC.GCSKINVERSION, USC.SupportedPackFormats);
                     sMan.aboutMenu.HPtag.SetActive(BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.flazhik.handpaint"));
-                    string usersettings = SkinEventHandler.getUserSettingsFile();
+                    string usersettings = SkinEventHandler.getUserSettingsLoc();
                     BatonPass.Debug("loading user settings");
                     try
                     {

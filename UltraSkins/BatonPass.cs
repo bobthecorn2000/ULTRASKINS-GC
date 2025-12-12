@@ -10,6 +10,7 @@ using UltraSkins.Utils;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Linq;
+using UltraSkins;
 
 namespace BatonPassLogger
 {
@@ -211,7 +212,7 @@ namespace BatonPassLogger
         {
             try
             {
-                string path = SkinEventHandler.getUserSettingsFile();
+                string path = Path.Combine(SkinEventHandler.getUserSettingsLoc(), USC.SETTINGSFILE);
                 if (!File.Exists(path)) return;
 
                 string json = File.ReadAllText(path);
@@ -236,7 +237,7 @@ namespace BatonPassLogger
 #if ALPHA || CANARY || DEBUG
             return BatonPass.LogLevel.Debug;
 #else
-        return LogLevel.Warn;
+        return BatonPass.LogLevel.Warning;
 #endif
         }
         public class BPSetting

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System;
 using static UltraSkins.ULTRASKINHand;
 
+
 namespace UltraSkins
 {
     //tempcomment5
@@ -62,6 +63,10 @@ namespace UltraSkins
                 
                 foreach (Material mat in renderer.materials)
                 {
+/*                    if (mat.name == "Pistol New (Instance)")
+                    {
+                        renderer.SetMaterial(PrismManager.PrismMan.toon);
+                    }*/
                     iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
                     swapname = "Swapped_" + swapType + "_" + mat.name;
                     if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
@@ -77,6 +82,9 @@ namespace UltraSkins
             }
 			
 		}
+
+        
+
 
 		public void UpdateMaterials()
 		{

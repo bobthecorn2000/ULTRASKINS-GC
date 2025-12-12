@@ -22,6 +22,7 @@ using System.Xml.Serialization;
 using static UltraSkins.ULTRASKINHand.HoldEm;
 using UltraSkins.API;
 using static UltraSkins.API.USAPI;
+//using UltraSkins.Prism;
 
 
 
@@ -144,6 +145,12 @@ namespace UltraSkins
                 BPGUI = BPGUIManager.BPGUIinstance;
             }
             MenuCreator.CreateSMan();
+/*            if (PrismManager.PrismMan == null)
+            {
+                GameObject PrismManagerObject = new GameObject("Prism");
+                PrismManagerObject.AddComponent<PrismManager>();
+            }*/
+            
         }
         public void OnModLoaded()
         {
@@ -343,27 +350,27 @@ namespace UltraSkins
                 //ReloadTextureOverWatch(TOWS);
             }
 
-            [HarmonyPatch(typeof(ShopZone), "Start")]
+/*            [HarmonyPatch(typeof(ShopZone), "Start")]
             [HarmonyPostfix]
             public static void Start(ShopZone __instance)
             {
-                //Transform trans = FindDeepChildByPathIncludeInactive(__instance.transform, "Canvas/Background/Main Panel/Weapons/Arm Window");
-                //if (trans != null)
-                //{
-                //    //List<TextureOverWatch> SHOPTOWS = AddTOWs(__instance.gameObject, true, true, false, true);
-                //    Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/HandPaintPlusColors.prefab").Completed += handle =>
-                //    {
-                //        GameObject prefabmenu = handle.Result;
+                Transform trans = FindDeepChildByPathIncludeInactive(__instance.transform, "Canvas/Background/Main Panel/Weapons/Arm Window");
+                if (trans != null)
+                {
+                    //List<TextureOverWatch> SHOPTOWS = AddTOWs(__instance.gameObject, true, true, false, true);
+                    Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/PrismUI.prefab").Completed += handle =>
+                    {
+                       GameObject prefabmenu = handle.Result;
 
 
                     
-                //        GameObject ColorMenu = Instantiate(prefabmenu, trans);
+                       GameObject ColorMenu = Instantiate(prefabmenu, trans);
                     
-                //    };
-                //}
+                   };
+                }
 
                 //ReloadTextureOverWatch(TOWS);
-            }
+            }*/
 
             [HarmonyPatch(typeof(GunControl), "YesWeapon")]
             [HarmonyPostfix]
@@ -374,6 +381,12 @@ namespace UltraSkins
                     TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
                     ReloadTextureOverWatch(TOWS);
                 }
+            }
+            [HarmonyPatch(typeof(HookArm), "Start")]
+            [HarmonyPostfix]
+            public static void HookArmRay(HookArm __instance)
+            {
+
             }
 
 
@@ -717,6 +730,9 @@ namespace UltraSkins
                                 textureToResolve = mat.mainTexture.name + "_ID";
                                 break;
                         }
+                        break;
+                    case "_ReflectionMask":
+                        textureToResolve = mat.mainTexture.name + "_Ref";
                         break;
                     case "ROCKIT":
                         textureToResolve = (mat.name.Contains("Swapped_rocket_AltarUnlitRed") && !texturename.StartsWith("T_")) ? "skull2rocketbonus" : texturename.Contains("T_Sakuya") ? "" : "skull2rocket";

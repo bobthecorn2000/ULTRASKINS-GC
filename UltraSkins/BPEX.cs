@@ -75,4 +75,20 @@ namespace BatonPassLogger.EX
             TargetPath = path;
         }
     }
+
+    public class BPWeirdRay : BPException
+    {
+        public string Messagething { get; }
+
+        public BPWeirdRay(string message) : base($"The Ray File is unsupported for reason: {message}")
+        {
+            Messagething = message;
+        }
+
+        public BPWeirdRay(string message, Exception inner) : base($"The Ray File is unsupported for reason: {message}", inner)
+
+        {
+            Messagething = message;
+        }
+    }
 }

@@ -78,7 +78,7 @@ namespace UltraSkins.Utils
             }
                 return ProfDir;
         }
-        public static string getUserSettingsFile()
+        public static string getUserSettingsLoc()
         {
 
 
@@ -89,12 +89,12 @@ namespace UltraSkins.Utils
             {
                 string profileName = profileInfo[0];
                 string profileType = profileInfo[1];
-                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, profileType, profileName, USC.SETTINGSFILE);
+                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, profileType, profileName);
 
             }
             else
             {
-                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, USC.BUILDTYPE, USC.SETTINGSFILE);
+                ProfDir = Path.Combine(USC.GCDIR, USC.SAVEDATA, USC.BUILDTYPE);
             }
             return ProfDir;
         }

@@ -12,6 +12,7 @@ namespace UltraSkins
         public const string VERSION = "7.0.0";
         public static readonly string[] SupportedPackFormats = { "4.0" };
         public const string GCSKINVERSION = "4.0";
+        public const int RAYVERSION = 1;
 
 
         // MAIN STUFF
@@ -23,6 +24,7 @@ namespace UltraSkins
         public const string SAVEDATA = "SaveData";
         public const string UNISKIN = "GlobalSkins";
         public const string VERNAME = "Versions";
+        public const string PRISM = "Prism";
 #if RELEASE
         public const string BUILDTYPE = "Release";
 #elif DEBUG
@@ -78,5 +80,7 @@ namespace UltraSkins
 
 
         };
+
+
     }
 }
