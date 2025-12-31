@@ -22,6 +22,8 @@ using System.Xml.Serialization;
 using static UltraSkins.ULTRASKINHand.HoldEm;
 using UltraSkins.API;
 using static UltraSkins.API.USAPI;
+using static UltraSkins.ULTRASKINHand;
+
 //using UltraSkins.Prism;
 
 
@@ -773,7 +775,7 @@ namespace UltraSkins
                 }
 
                 forceswap = false;
-                Texture resolvedTexture = new Texture();
+                Texture resolvedTexture;
                 string texturename = HandInstance.GetTextureName(mat.name);
                 BatonPass.Info("I should change" + TOW.iChange);
                 BatonPass.Debug("requested " + mat.name + " got " + texturename);
@@ -1150,7 +1152,7 @@ namespace UltraSkins
 
                 string name = kvp.Key;
                 BatonPass.Debug("Deleting " + name + " from Holdem ASC");
-                BPGUI.AddTermLine("Creating " + name + " from Holdem ASC");
+                BPGUI.AddTermLine("Deleting " + name + " from Holdem ASC");
                 Texture workingfile = autoSwapCache[name];
                 UnityEngine.Object.Destroy(workingfile);
 
@@ -1162,20 +1164,20 @@ namespace UltraSkins
             System.Array.Reverse(fpaths);
             BatonPass.Debug("starting ForEach");
             bool failed = false;
+            Dictionary<string,string> pathbook = new Dictionary<string,string>();
             foreach (string fpath in fpaths)
             {
-                TexOpData texOpData = new TexOpData();
+                
                 switch (TypeDetection(fpath))
                 {
                     case archivetype.folder:
-                        texOpData = await LoadTexturesFromFolder(fpath);
+                        pathbook = QueryTexturesInFolder(fpath,pathbook);
                         break;
                 }
-                await ConvertToTextures(texOpData);
 
-                
-                
             }
+            TexOpData texOpData = await LoadOpDataFromPathBook(pathbook);
+            await ConvertToTextures(texOpData);
             if (!failed)
             {
                 BPGUI.DisableTerminal();
@@ -1228,6 +1230,85 @@ namespace UltraSkins
             public bool FailState { get; set; }
         }
 
+
+        public Dictionary<string, string> QueryTexturesInFolder(string fpath, Dictionary<string,string> pathbook)
+        {
+            BatonPass.Info("ULTRASKINS IS SEARCHING " + fpath.ToString());
+
+            DirectoryInfo dir = new DirectoryInfo(fpath);
+
+            if (!dir.Exists)
+            {
+                BPGUI.DisableTerminal();
+                BPGUI.BatonPassAnnoucement(Color.red, "failed, CODE - \"USHAND-LOADTEXTURES-DIR_NOT_FOUND\" \n FILEPATH:" + fpath);
+                BatonPass.Error("Dir does not exist, CODE - \"USHAND-LOADTEXTURES-DIR_NOT_FOUND\" ");
+                //failed = true;
+                BPGUI.HideGUI(5);
+                return pathbook; // Exit early if the directory doesn't exist
+            }
+
+            FileInfo[] Files = dir.GetFiles("*.png");
+            BatonPass.Debug("Beginning file swap loop");
+
+            if (Files.Length > 0)
+            {
+                int totalFiles = Files.Length;
+
+
+
+                foreach (FileInfo file in Files)
+                {
+                    if (file.Exists)
+                    {
+                        pathbook[file.Name] = file.FullName;
+                        BatonPass.Debug("found " + file.FullName);
+                    }
+                }
+            }
+            return pathbook;
+        }
+
+        public async Task<TexOpData> LoadOpDataFromPathBook(Dictionary<string,string> pathbook, float ProgressDone = 0, bool failed = false)
+        {
+            TexOpData texOpData = new TexOpData();
+            foreach (KeyValuePair<string, string> kvp in pathbook)
+            {
+                try
+                {
+
+                    // Read file asynchronously
+                    byte[] data = await File.ReadAllBytesAsync(kvp.Value);
+                    string name = Path.GetFileNameWithoutExtension(kvp.Value);
+                    if (autoSwapCache.ContainsKey(name))
+                    {
+                        Texture workingfile = autoSwapCache[name];
+                        UnityEngine.Object.Destroy(workingfile);
+                        autoSwapCache.Remove(name);
+                    }
+
+
+                    BatonPass.Debug("Reading " + kvp.Value);
+                    texOpData.RawData.Add((name, data));
+                    BPGUI.AddTermLine("Creating " + name);
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("Error reading or processing texture file: " + kvp.Value + " Error: " + ex.Message);
+                    failed = true;
+                    BPGUI.DisableTerminal();
+                    BPGUI.BatonPassAnnoucement(Color.red, "failed");
+                }
+            }
+            return texOpData;
+        }
+
+
+
+
+
+
+        [Obsolete]
         public async Task<TexOpData> LoadTexturesFromFolder(string fpath, float ProgressDone = 0, bool failed = false)
         {
             TexOpData texOpData = new TexOpData();
