@@ -108,11 +108,5 @@
 	  </Reference>
   </ItemGroup>
   
-  <ItemGroup>
-    <EditorConfigFiles Remove="C:\Users\andrew fox\source\repos\ULTRASKINS\UltraSkins\.editorconfig" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <None Include="C:\Users\andrew fox\source\repos\ULTRASKINS\UltraSkins\.editorconfig" />
-  </ItemGroup>
+
 </Project>
