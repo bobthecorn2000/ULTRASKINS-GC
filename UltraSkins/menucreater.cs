@@ -166,16 +166,21 @@ namespace UltraSkins.UI
                                                            BatonPass.Debug("testicle" + pair.Key.ToString());
                                                         }*/
                             EditMenuManager EMM = UltraskinsConfigmenu.GetComponent<EditMenuManager>();
-
+                            Mman.DisabledContentFolder = EMM.disabledColumn;
+                            Mman.EnabledContentFolder = EMM.EnabledColumn;
                             Mman.SD = EMM.skindetails;
                             EMM.campCreator.CreateButton.onClick.AddListener(() => Mman.CreateSkinFromEditor(EMM));
-                            UltraskinsConfigmenu.GetComponent<MenuEsc>().previousPage = mainmenu;
-                            GameObject ApplyButton = Editorpanel.transform.Find("PanelLeft/Apply").gameObject;
-                            GameObject contentfolder = UltraskinsConfigmenu.transform.Find("Canvas/editor/PanelLeft/Scroll View/Viewport/Content/").gameObject;
-                            ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
-                            Mman.GenerateButtons(contentfolder, activateanimator);
-                            Mman.RefreshableActivateAnimator = activateanimator;
-                            Mman.RefreshableContentFolder = contentfolder;
+                            BatonPass.Debug("setting up menuesc");
+                            //UltraskinsConfigmenu.GetComponent<MenuEsc>().previousPage = mainmenu;
+                            Editorpanel.GetComponent<AnimationEventToUltraskinsEvent>().OnAnimationTriggered.AddListener(() => Closeskineditor(mainmenu, Editorpanel, fallNoiseOff));
+                            BatonPass.Debug("binding apply button");
+                            GameObject ApplyButton = Editorpanel.transform.Find("PanelMiddle/Apply").gameObject;
+
+                            //ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
+                            BatonPass.Debug("generating buttons");
+                            Mman.GenerateButtons();
+                           // Mman.RefreshableActivateAnimator = activateanimator;
+                           // Mman.RefreshableContentFolder = contentfolder;
                             if (Directory.Exists(USC.LEGACYGCDIR))
                             {
                                 sMan.aboutMenu.MDtag.SetActive(true);
@@ -204,7 +209,7 @@ namespace UltraSkins.UI
                                     // Pass UltraskinsConfigmenu to the listener
                                     ultraskinsbutton.onClick.AddListener(() => Openskineditor(mainmenu,menuanimator, Editorpanel, fallNoiseOn,EMM));
                                     //ReturnButton.GetComponent<Button>().onClick.AddListener(() => Mman.Closeskineditor(mainmenu, Editorpanel, fallNoiseOff, menuanimator,activateanimator,contentfolder));
-                                    ApplyButton.GetComponent<Button>().onClick.AddListener(() => Mman.applyskins(contentfolder));
+                                    ApplyButton.GetComponent<Button>().onClick.AddListener(() => Mman.applyskins());
                                     BatonPass.Debug("Successfully loaded and instantiated ultraskinsMenuButton.");
                                 }
                                 else
@@ -227,7 +232,7 @@ namespace UltraSkins.UI
             }
             catch (Exception e)
             {
-                BatonPass.Error("HEAR YEE HEAR YEE MainConfigMenu not loaded " + e.ToString());
+                BatonPass.Error("MainConfigMenu not loaded " + e.ToString());
                 BatonPass.Error("Ultraskins may still work, but the MainConfigMenu will not be accessible. CODE -\"MCREATE-MAKETHEMENU-EX\"");
                 
             }
@@ -265,7 +270,7 @@ namespace UltraSkins.UI
                     BatonPass.Debug("loading settings options");
                     try
                     {
-                        sMan.LoadSettingsFromJson(USC.MODPATH + Path.DirectorySeparatorChar + USC.DEFAULTSETTINGS);
+                        sMan.LoadSettingsFromJson();
                     }
                     catch (Exception ex)
                     {
@@ -282,7 +287,7 @@ namespace UltraSkins.UI
                         BatonPass.Debug("clearing PTOW");
                         PTOW.Clear();
                         BatonPass.Debug("adding new tows");
-                        PTOW = ULTRASKINHand.HarmonyGunPatcher.AddPTOWs(PreviewFather, true);
+                        //PTOW = ULTRASKINHand.HarmonyGunPatcher.AddPTOWs(PreviewFather, true);
                         BatonPass.Success("Added TOW");
                         handInstance.PtowStorage = PreviewFather.gameObject.AddComponent<TowStorage>();
                         handInstance.PtowStorage.TOWS = PTOW;
@@ -292,8 +297,8 @@ namespace UltraSkins.UI
                         BatonPass.Error("Cannot make PTOW. CODE -\"MCREATE-MAKETHEMENU-SKIN_PREVIEWER-UNABLE_TO_LOAD\"");
                         BatonPass.Error(ex.Message);
                     }
-
-                }
+                instance.SetActive(false);
+            }
                 else
                 {
                     BatonPass.Error("Failed to load UltraskinsSettingsmenu: " + Settingshandle.OperationException.Message);
@@ -322,6 +327,16 @@ namespace UltraSkins.UI
             handInstance.settingsmanager.ShowPreviewWireFrame(true);
 
         }
+        public static void Closeskineditor(GameObject mainmenucanvas, GameObject Configmenu,GameObject fallnoiseoff)
+        {
+            Configmenu.SetActive(false);
+            handInstance.settingsmanager.ShowPreviewWireFrame(false);
+            handInstance.settingsmanager.ShowSettingsAssets(false);
+            mainmenucanvas.SetActive(true);
+            fallnoiseoff.SetActive(true);
+        }
+
+
         public static void Openpausedskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject backdrop, OptionsManager controller)
         {
             GameStateManager.Instance.RegisterState(new GameState("configpause", backdrop)

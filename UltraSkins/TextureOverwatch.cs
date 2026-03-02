@@ -33,8 +33,8 @@ namespace UltraSkins
                 
             }
             if (hammerInstance != null) {
-                ULTRASKINHand.ReadOut.SwapTheDial(this);
-                ReadOut.updateMeter(hammerInstance, true);
+                //ULTRASKINHand.ReadOut.SwapTheDial(this);
+               // ReadOut.updateMeter(hammerInstance, true);
             }
             if (GetComponentInParent<Grenade>())
             {
@@ -93,7 +93,7 @@ namespace UltraSkins
 				Material[] materials = renderer.materials;
 				for (int i = 0; i < materials.Length; i++)
 				{
-					ULTRASKINHand.PerformTheSwap(materials[i], forceswap, transform.GetComponent<TextureOverWatch>(), swapType);
+					//ULTRASKINHand.PerformTheSwap(materials[i], forceswap, transform.GetComponent<TextureOverWatch>(), swapType);
 				}
 				cachedMaterials = renderer.materials;
             }

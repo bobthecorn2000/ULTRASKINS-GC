@@ -104,7 +104,7 @@ namespace BatonPassLogger
     // Unity-based logging terminal (optional, if using Unity)
     public class UnityTerminal : IBatonPassTerminal
     {
-        public bool Enabled { get; set; } = true;
+        public bool Enabled { get; set; } = false;
 
         public void Log(string message, BatonPass.LogLevel level)
         {
@@ -127,7 +127,7 @@ namespace BatonPassLogger
 
     public class UKPlog : IBatonPassTerminal
     {
-        public bool Enabled { get; set; } = true;
+        public bool Enabled { get; set; } = false;
         private readonly plog.Logger _logSource;
         public UKPlog(string name)
         {

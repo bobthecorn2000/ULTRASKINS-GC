@@ -30,7 +30,6 @@ using Unity.Audio;
 
 
 
-
 namespace UltraSkins.UI
 {
     internal class MenuManager : MonoBehaviour
@@ -41,6 +40,8 @@ namespace UltraSkins.UI
         List<GameObject> loadedButtons = new List<GameObject>();
         Dictionary<string, Button> AvailbleSkins = new Dictionary<string, Button>();
         public SkinDetails SD = null;
+        public GameObject DisabledContentFolder;
+        public GameObject EnabledContentFolder;
         public GameObject RefreshableContentFolder;
         public ObjectActivateInSequence RefreshableActivateAnimator;
         public BPGUIManager BPGUI = BPGUIManager.Instance;
@@ -52,10 +53,10 @@ namespace UltraSkins.UI
         }
 
 
-
+        [Obsolete]
         public void Closeskineditor(GameObject mainmenucanvas, GameObject Configmenu, GameObject fallnoiseoff, Animator animator, ObjectActivateInSequence oais, GameObject content)
         {
-            MMinstance.orderifier(oais, content);
+            //MMinstance.orderifier(oais, content);
             fallnoiseoff.SetActive(true);
             handInstance.settingsmanager.ShowPreviewWireFrame(false);
             handInstance.settingsmanager.ShowSettingsAssets(false);
@@ -66,7 +67,7 @@ namespace UltraSkins.UI
             MMinstance.StartCoroutine(MMinstance.DisableAfterCloseAnimation(mainmenucanvas, Configmenu, animator));
 
         }
-
+        [Obsolete]
         private IEnumerator DisableAfterCloseAnimation(GameObject mainmenucanvas, GameObject Configmenu, Animator animator)
         {
             // Wait until the animation finishes
@@ -87,9 +88,8 @@ namespace UltraSkins.UI
         /// <summary>
         /// A generator for skin buttons, mostly used in main menus
         /// </summary>
-        /// <param name="contentfolder">The Folder to act as the parent</param>
-        /// <param name="activateanimator">An instance of ObjectActivateInSequence, should be attached to the contentfolder</param>
-        public void GenerateButtons(GameObject contentfolder, ObjectActivateInSequence activateanimator)
+
+        public void GenerateButtons()
         {
 
             Dictionary<string, string> Locations = SkinEventHandler.GetCurrentLocations();
@@ -138,7 +138,7 @@ namespace UltraSkins.UI
                                             string subsubfolder = Path.Combine(subfolder, path);
                                             if (Directory.Exists(subsubfolder) && safe.IsSafe)
                                             {
-                                                BuildButton(Location, contentfolder, MDR, prefab, subsubfolder);
+                                                BuildButton(Location, DisabledContentFolder, MDR, prefab, subsubfolder);
                                             }
                                             else
                                             {
@@ -166,14 +166,14 @@ namespace UltraSkins.UI
                             }
                             else
                             {
-                                BuildButton(Location, contentfolder, MDR, prefab, subfolder);
+                                BuildButton(Location, DisabledContentFolder, MDR, prefab, subfolder);
                             }
 
                             buttonsLoaded++;
                         }
                     }
-                    orderfixer(contentfolder);
-                    orderifier(activateanimator, contentfolder);
+                    orderfixer(DisabledContentFolder);
+                    //orderifier(activateanimator, contentfolder);
 
 
                 }
@@ -376,7 +376,7 @@ namespace UltraSkins.UI
 
             }
         }
-
+        [Obsolete]
         void orderifier(ObjectActivateInSequence activateanimator, GameObject contentfolder)
         {
             loadedButtons.Clear();
@@ -398,7 +398,7 @@ namespace UltraSkins.UI
             BatonPass.Debug("Successfully set up ObjectActivateInSequence.");
         }
 
-        void orderfixer(GameObject contentfolder)
+        void orderfixer(GameObject contentfolder) 
         {
             BatonPass.Debug("attempting to order files");
             string[] filepathrev = handInstance.filepathArray.Reverse().ToArray();
@@ -421,7 +421,9 @@ namespace UltraSkins.UI
                 {
                     int index = System.Array.IndexOf(filepathrev, specialpath);
                     BatonPass.Debug(child.name + " has path: " + specialpath + " and index of: " + index);
+                    child.SetParent(EnabledContentFolder.transform);
                     finalorder.Add((child, index, BEM));
+                    
 
 
                 }
@@ -539,9 +541,9 @@ namespace UltraSkins.UI
             };
         }
 
-        public void applyskins(GameObject content)
+        public void applyskins()
         {
-
+            GameObject content = EnabledContentFolder;
             List<string> validButtons = new List<string>();
             foreach (Transform childTransform in content.transform)
             {
@@ -987,11 +989,11 @@ namespace UltraSkins.UI
                 GameObject child = RefreshableContentFolder.transform.GetChild(i).gameObject;
                 GameObject.Destroy(child);
             }
-            RefreshableContentFolder.SetActive(false);
+            DisabledContentFolder.SetActive(false);
             //loadedButtons.Clear();
             // AvailbleSkins.Clear();
-            GenerateButtons(RefreshableContentFolder, RefreshableActivateAnimator);
-            RefreshableContentFolder.SetActive(true);
+            GenerateButtons();
+            DisabledContentFolder.SetActive(true);
 
         }
 
@@ -1258,6 +1260,7 @@ namespace UltraSkins.UI
 
 
 
+
     /// <summary>
     /// Metadata Object
     /// </summary>
@@ -1391,6 +1394,7 @@ namespace UltraSkins.UI
     }
     public class TSjson
     {
+
 
 
         public string name { get; set; }

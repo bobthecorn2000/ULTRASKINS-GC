@@ -23,6 +23,7 @@ using static UltraSkins.ULTRASKINHand.HoldEm;
 using UltraSkins.API;
 using static UltraSkins.API.USAPI;
 using static UltraSkins.ULTRASKINHand;
+using UltraSkins.Prism;
 
 //using UltraSkins.Prism;
 
@@ -77,6 +78,8 @@ namespace UltraSkins
         public TowStorage PtowStorage;
         public Dictionary<string, Texture2D> IconCache = new Dictionary<string, Texture2D>();
         public Dictionary<string, Sprite> SpriteCache = new Dictionary<string, Sprite>();
+        public CompatLayer compatlayer = new CompatLayer();
+        public bool UsingCompatLayer = false;
         Harmony UKSHarmony;
         
         public static ULTRASKINHand HandInstance { get; private set; }
@@ -146,12 +149,13 @@ namespace UltraSkins
                 managerObject.AddComponent<BPGUIManager>();
                 BPGUI = BPGUIManager.BPGUIinstance;
             }
+            UsingCompatLayer = compatlayer.PluginConfigCompatBoot();
             MenuCreator.CreateSMan();
-/*            if (PrismManager.PrismMan == null)
+            if (Prism.PrismManager.Instance == null)
             {
                 GameObject PrismManagerObject = new GameObject("Prism");
-                PrismManagerObject.AddComponent<PrismManager>();
-            }*/
+                PrismManagerObject.AddComponent<Prism.PrismManager>();
+            }
             
         }
         public void OnModLoaded()
@@ -178,15 +182,20 @@ namespace UltraSkins
                 string[] modFolderPath = skinEventHandler.GetModFolderPath();
                 BatonPass.Debug("BATON PASS: WELCOME BACK TO ONMODLOADED() WE RECIEVED " + modFolderPath);
                 
-                HandInstance.MaterialNames.Add("Swapped_weapon_GreenArm (Instance)(Clone) (Instance)", "T_GreenArm");
-                HandInstance.MaterialNames.Add("Swapped_weapon_FeedbackerLit (Instance)(Clone) (Instance)", "T_Feedbacker");
-                HandInstance.MaterialNames.Add("Swapped_weapon_RedArmLit (Instance)(Clone) (Instance)", "v2_armtex");
-                HandInstance.MaterialNames.Add("Swapped_weapon_MainArmLit (Instance)(Clone) (Instance)", "T_MainArm");
+                HandInstance.MaterialNames.Add("Swapped_WL_GreenArm (Instance)(Clone) (Instance)", "T_GreenArm");
+                HandInstance.MaterialNames.Add("Swapped_FB_FeedbackerLit (Instance)(Clone) (Instance)", "T_Feedbacker");
+                HandInstance.MaterialNames.Add("Swapped_KB_RedArmLit (Instance)(Clone) (Instance)", "v2_armtex");
+                HandInstance.MaterialNames.Add("Swapped_arm_MainArmLit (Instance)(Clone) (Instance)", "T_MainArm");
 
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                BatonPass.Warn("Something didnt return correctly Error -\"USHAND-ONMODLOADED-AOOR\"" + ex.Message);
             }
             catch (Exception ex)
             {
-                BatonPass.Error("Hear Ye Hear Ye, ULTRASKINS HAS FAILED Error -\"USHAND-ONMODLOADED\"" + ex.Message);
+                BatonPass.Error("ULTRASKINS HAS FAILED TO INIT Error -\"USHAND-ONMODLOADED-EX\"" + ex.Message);
+                BatonPass.Error("If you don't see the button to open the menu. try setting HideManagerGameobject to true in your bepinex settings");
 
 
             }
@@ -233,7 +242,7 @@ namespace UltraSkins
         void refreshskins()
         {
 
-            BatonPass.Debug("BATON PASS: WE ARE IN REFRESHSKINS(), THERE ARE NO OTHER ARGUMENTS");
+            
             StringSerializer serializer = new StringSerializer();
             BatonPass.Debug("Created The Serializer");
             BatonPass.Debug("looking for the dll, appdata paths and merging the directory strings");
@@ -243,7 +252,6 @@ namespace UltraSkins
 
             filepathArray = serializer.DeserializeStringFromFile(save);
             BatonPass.Info("Read data.USGC from " + filepathArray);
-            BatonPass.Debug("INIT BATON PASS: RELOADTEXTURES(TRUE," + filepathArray + ")");
             ReloadTextures(filepathArray,true);
 
             //LoadTextures(filepath);
@@ -256,255 +264,357 @@ namespace UltraSkins
             [HarmonyPostfix]
             static void StyleHudStartPost(StyleHUD __instance)
             {
+                BatonPass.Debug("hooking to the style meter");
                 RANKTITLESWAPPER.swapthestylerank(__instance);
+            }
+
+
+
+            [HarmonyPatch(typeof(ShopZone), "Start")]
+            [HarmonyPostfix]
+            public static void Start(ShopZone __instance)
+            {
+                //BatonPass.Debug("Started a ShopZone " + __instance.gameObject.name + " " + __instance.GetInstanceID());
+                Transform trans = FindDeepChildByPathIncludeInactive(__instance.transform, "Canvas/Background/Main Panel/Weapons");
+
+                Transform buttonloc = FindDeepChildByPathIncludeInactive(trans, "Arm Window/Variation Screen/Variations");
+                BatonPass.Debug("found both transforms");
+                if (trans != null)
+                {
+                    Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/SmileOSbutton.prefab").Completed += handle =>
+                    {
+                        BatonPass.Debug("button callback");
+                        GameObject ColorButton = Instantiate(handle.Result, buttonloc);
+
+
+
+                        //List<TextureOverWatch> SHOPTOWS = AddTOWs(__instance.gameObject, true, true, false, true);
+                        Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/PrismUI.prefab").Completed += prismhandle =>
+                        {
+                            BatonPass.Debug("PrismCallBack");
+                            GameObject prefabmenu = prismhandle.Result;
+
+
+
+                            GameObject ColorMenu = Instantiate(prefabmenu, trans);
+                            ColorButton.GetComponent<Button>().onClick.AddListener(() => ColorMenu.SetActive(true));
+                            ColorMenu.SetActive(false);
+                        };
+                    };
+                }
+
+                //ReloadTextureOverWatch(TOWS);
             }
         }
         [HarmonyPatch]
         public class HarmonyGunPatcher
         {
 
-            public static List<TextureOverWatch> AddPTOWs(GameObject gameobject,bool refresh)
-            {
-                List<TextureOverWatch> ptows = new List<TextureOverWatch>();
-                Renderer[] childRenderers = gameobject.GetComponentsInChildren<Renderer>(true);
-                foreach (Renderer renderer in childRenderers)
-                {
-                    if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
-                    {
-                        if (!renderer.GetComponent<TextureOverWatch>())
-                        {
-                            TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
-                            ptows.Add(tow);
-                        }
-                        else
-                        {
-                            renderer.GetComponent<TextureOverWatch>().enabled = refresh;
 
-                        }
-                    }
-                }
-                return ptows;
-            }
-            public static List<TextureOverWatch> AddTOWs(GameObject gameobject, bool toself = true, bool tochildren = false, bool toparent = false, bool refresh = false)
-            {
-                BatonPass.Debug("added " + gameobject.name + "to textureoverwatch");
-                List<TextureOverWatch> tows = new List<TextureOverWatch>();
-                if (toself)
-                {
-                    if (!gameobject.GetComponent<TextureOverWatch>())
-                    {
-                        TextureOverWatch tow = gameobject.AddComponent<TextureOverWatch>();
-                        tows.Add(tow);
-                    }
-                    else
-                    {
-                        gameobject.GetComponent<TextureOverWatch>().enabled = refresh;
-                    }
-                }
-                if (toparent)
-                {
-                    Renderer[] parentRenderers = gameobject.GetComponentsInParent<Renderer>();
-                    foreach (Renderer renderer in parentRenderers)
-                    {
-                        if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
-                        {
-                            if (!renderer.GetComponent<TextureOverWatch>())
-                            {
-                                TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
-                                tows.Add(tow);
-                            }
-                            else
-                            {
-                                renderer.GetComponent<TextureOverWatch>().enabled = refresh;
-                            }
-                        }
-                    }
-                }
-                if (tochildren)
-                {
-                    Renderer[] childRenderers = gameobject.GetComponentsInChildren<Renderer>();
-                    foreach (Renderer renderer in childRenderers)
-                    {
-                        if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
-                        {
-                            if (!renderer.GetComponent<TextureOverWatch>())
-                            {
-                                TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
-                                tows.Add(tow);
-                            }
-                            else
-                            {
-                                renderer.GetComponent<TextureOverWatch>().enabled = refresh;
-                                
-                            }
-                        }
-                    }
-                }
-                return tows;
-            }
-
-            [HarmonyPatch(typeof(GunControl), "SwitchWeapon", new Type[] { typeof(int), typeof(int?), typeof(bool), typeof(bool), typeof(bool) })]
+            private static readonly AccessTools.FieldRef<Punch, SkinnedMeshRenderer> smrRef = AccessTools.FieldRefAccess<Punch, SkinnedMeshRenderer>("smr");
+            [HarmonyPatch(typeof(Punch), "Start")]
             [HarmonyPostfix]
-            public static void SwitchWeaponPost(GunControl __instance, int targetSlotIndex, int? targetVariationIndex = null, bool useRetainedVariation = false, bool cycleSlot = false, bool cycleVariation = false)
-            {
-
-                //TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
-                //ReloadTextureOverWatch(TOWS);
-            }
-
-/*            [HarmonyPatch(typeof(ShopZone), "Start")]
-            [HarmonyPostfix]
-            public static void Start(ShopZone __instance)
-            {
-                Transform trans = FindDeepChildByPathIncludeInactive(__instance.transform, "Canvas/Background/Main Panel/Weapons/Arm Window");
-                if (trans != null)
-                {
-                    //List<TextureOverWatch> SHOPTOWS = AddTOWs(__instance.gameObject, true, true, false, true);
-                    Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/PrismUI.prefab").Completed += handle =>
-                    {
-                       GameObject prefabmenu = handle.Result;
-
-
-                    
-                       GameObject ColorMenu = Instantiate(prefabmenu, trans);
-                    
-                   };
-                }
-
-                //ReloadTextureOverWatch(TOWS);
-            }*/
-
-            [HarmonyPatch(typeof(GunControl), "YesWeapon")]
-            [HarmonyPostfix]
-            public static void WeaponYesPost(GunControl __instance)
-            {
-                if (!__instance.noWeapons)
-                {
-                    TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
-                    ReloadTextureOverWatch(TOWS);
-                }
-            }
-            [HarmonyPatch(typeof(HookArm), "Start")]
-            [HarmonyPostfix]
-            public static void HookArmRay(HookArm __instance)
-            {
-
-            }
-
-
-
-
-            [HarmonyPatch(typeof(GunControl), "UpdateWeaponList", new Type[] { typeof(bool) })]
-            [HarmonyPostfix]
-            public static void UpdateWeaponListPost(GunControl __instance, bool firstTime = false)
-            {
-                InitOWGameObjects(true);
-                TextureOverWatch[] TOWS = CameraController.Instance.gameObject.GetComponentsInChildren<TextureOverWatch>(true);
-                ReloadTextureOverWatch(TOWS);
-            }
-
-
-
-
-
-            [HarmonyPatch(typeof(FistControl), "YesFist")]
-            [HarmonyPostfix]
-            public static void YesFistPost(FistControl __instance)
-            {
-                if (__instance.currentArmObject)
-                {
-                    TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                    ReloadTextureOverWatch(TOWS);
-                }
-            }
-
-            [HarmonyPatch(typeof(FistControl), "ArmChange", new Type[] { typeof(int) })]
-            [HarmonyPostfix]
-            public static void SwitchFistPost(FistControl __instance, int orderNum)
+            public static void PunchArm(Punch __instance)
             {
                 try
                 {
-                    TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                    ReloadTextureOverWatch(TOWS);
-                }
-                catch (ArgumentOutOfRangeException AOOR) {
-                    BatonPass.Warn("HEAR YEE HEAR YEE CurrentArmObject Argument Out of Range " + AOOR.ToString());
-                    BatonPass.Warn("currentArmObject is empty, this is normal if you are in 5-S, P-1 or P-2  CODE -\"USHAND-GUNPATCHER-FC_ARMCHANGE_SFP-ARG_OUT_OF_RANGE\"");
-                }
-
-            }
-
-            [HarmonyPatch(typeof(FistControl), "ResetFists")]
-            [HarmonyPostfix]
-            public static void ResetFistsPost(FistControl __instance)
-            {
-                InitOWGameObjects(false);
-                TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                ReloadTextureOverWatch(TOWS);
-            }
-
-
-            [HarmonyPatch(typeof(DualWieldPickup), "PickedUp")]
-            [HarmonyPostfix]
-            public static void DPickedupPost(DualWieldPickup __instance)
-            {
-                if (GunControl.Instance)
-                {
-                    if (PlayerTracker.Instance.playerType != PlayerType.Platformer)
+                    GameObject model = smrRef(__instance).gameObject;
+                    if (!model.GetComponent<Fractal>())
                     {
-                        DualWield[] DWs = GunControl.Instance.GetComponentsInChildren<DualWield>(true);
-                        foreach (DualWield DW in DWs)
-                        {
-                            if (DW)
-                            {
-                                Renderer[] renderers = DW.GetComponentsInChildren<Renderer>(true);
-                                foreach (Renderer renderer in renderers)
-                                {
-                                    if (renderer && renderer.gameObject.layer == 13 && !renderer.gameObject.GetComponent<ParticleSystemRenderer>() && !renderer.gameObject.GetComponent<CanvasRenderer>())
-                                    {
-                                        if (!renderer.gameObject.GetComponent<TextureOverWatch>())
-                                        {
-                                            
-                                            TextureOverWatch TOW = renderer.gameObject.AddComponent<TextureOverWatch>();
-                                        }
-                                    }
-                                }
-                            }
-                        }
+
+                        Fractal fract = model.gameObject.AddComponent<Fractal>();
+                        fract.Init(__instance);
+                        fract.PrepareSwap();
+                    }
+                    if (!model.GetComponent<PrismColorGetter>())
+                    {
+                        //todo add prismcolorgetter
                     }
                 }
-            }
-
-
-            [HarmonyPatch(typeof(DualWield), "UpdateWeapon")]
-            [HarmonyPostfix]
-            public static void DUpdateWPost(DualWield __instance)
-            {
-                TextureOverWatch[] TOWS = __instance.GetComponentsInChildren<TextureOverWatch>(true);
-                ReloadTextureOverWatch(TOWS);
-            }
-
-
-            [HarmonyPatch(typeof(PlayerTracker), "ChangeToFPS")]
-            [HarmonyPostfix]
-            public static void ChangeToFPSPost(PlayerTracker __instance)
-            {
-                TextureOverWatch[] WTOWS = GameObject.FindGameObjectWithTag("GunControl").GetComponent<GunControl>().currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
-                ReloadTextureOverWatch(WTOWS);
-                TextureOverWatch[] FTOWS = GameObject.FindGameObjectWithTag("MainCamera").GetComponentInChildren<FistControl>().currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                ReloadTextureOverWatch(FTOWS);
-            }
-
-
-            public static void ReloadTextureOverWatch(TextureOverWatch[] TOWS)
-            {
-                foreach (TextureOverWatch TOW in TOWS)
+                catch (Exception Ex)
                 {
-                    TOW.enabled = true;
+                    BatonPass.Error("Punch Patch failed to load. CODE - \"USHAND-HGP-PUNCH-EX\"");
+                    BatonPass.Error(Ex.ToString());
                 }
             }
-        }
 
+            private static readonly AccessTools.FieldRef<HookArm, LineRenderer> lrRef = AccessTools.FieldRefAccess<HookArm, LineRenderer>("lr");
+            private static readonly AccessTools.FieldRef<HookArm, GameObject> hookArmModelRef = AccessTools.FieldRefAccess<HookArm, GameObject>("model");
+            
+
+            [HarmonyPatch(typeof(HookArm), "Start")]
+            [HarmonyPostfix]
+            public static void HookArm(HookArm __instance)
+            {
+                try
+                {
+                    GameObject hookmodel = __instance.hookModel;
+                    if (!hookmodel.GetComponent<Fractal>())
+                    {
+
+                        Fractal fract = hookmodel.gameObject.AddComponent<Fractal>();
+                        fract.Init(__instance);
+                        fract.PrepareSwap();
+                    }
+                    if (!hookmodel.GetComponent<PrismColorGetter>())
+                    {
+                        //todo add prismcolorgetter
+                    }
+                }
+                catch(Exception Ex)
+                {
+                    BatonPass.Error("HookArm Patch HOOK failed to load. CODE - \"USHAND-HGP-HOOKARM-HOOK-EX\"");
+                    BatonPass.Error(Ex.ToString());
+                }
+
+                try
+                {
+                    GameObject model = hookArmModelRef(__instance);
+                    if (!model.GetComponent<Fractal>())
+                    {
+
+                        Fractal fract = model.gameObject.AddComponent<Fractal>();
+                        fract.Init(__instance);
+                        fract.PrepareSwap();
+                    }
+                    if (!model.GetComponent<PrismColorGetter>())
+                    {
+                        //todo add prismcolorgetter
+                    }
+                }
+                catch (Exception Ex)
+                {
+                    BatonPass.Error("HookArm ARM Patch failed to load. CODE - \"USHAND-HGP-HOOKARM-ARM-EX\"");
+                    BatonPass.Error(Ex.ToString());
+                }
+
+            }
+            [HarmonyPatch(typeof(GunColorGetter), "Awake")]
+            [HarmonyPrefix]
+            public static void startawake(GunColorGetter __instance)
+            {
+                BatonPass.Debug(__instance.name + " I HAVE AWOKEN");
+                if (!__instance.GetComponent<Fractal>())
+                {
+                    Fractal fract = __instance.gameObject.AddComponent<Fractal>();
+                    fract.Init(__instance);
+                    fract.PrepareSwap();
+                }
+
+            }
+
+            /*
+             public static List<TextureOverWatch> AddPTOWs(GameObject gameobject, bool refresh)
+             {
+                 List<TextureOverWatch> ptows = new List<TextureOverWatch>();
+                 Renderer[] childRenderers = gameobject.GetComponentsInChildren<Renderer>(true);
+                 foreach (Renderer renderer in childRenderers)
+                 {
+                     if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
+                     {
+                         if (!renderer.GetComponent<TextureOverWatch>())
+                         {
+                             TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
+                             ptows.Add(tow);
+                         }
+                         else
+                         {
+                             renderer.GetComponent<TextureOverWatch>().enabled = refresh;
+
+                         }
+                     }
+                 }
+                 return ptows;
+             }
+             public static List<TextureOverWatch> AddTOWs(GameObject gameobject, bool toself = true, bool tochildren = false, bool toparent = false, bool refresh = false)
+             {
+                 BatonPass.Debug("added " + gameobject.name + "to textureoverwatch");
+                 List<TextureOverWatch> tows = new List<TextureOverWatch>();
+                 if (toself)
+                 {
+                     if (!gameobject.GetComponent<TextureOverWatch>())
+                     {
+                         TextureOverWatch tow = gameobject.AddComponent<TextureOverWatch>();
+                         tows.Add(tow);
+                     }
+                     else
+                     {
+                         gameobject.GetComponent<TextureOverWatch>().enabled = refresh;
+                     }
+                 }
+                 if (toparent)
+                 {
+                     Renderer[] parentRenderers = gameobject.GetComponentsInParent<Renderer>();
+                     foreach (Renderer renderer in parentRenderers)
+                     {
+                         if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
+                         {
+                             if (!renderer.GetComponent<TextureOverWatch>())
+                             {
+                                 TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
+                                 tows.Add(tow);
+                             }
+                             else
+                             {
+                                 renderer.GetComponent<TextureOverWatch>().enabled = refresh;
+                             }
+                         }
+                     }
+                 }
+                 if (tochildren)
+                 {
+                     Renderer[] childRenderers = gameobject.GetComponentsInChildren<Renderer>();
+                     foreach (Renderer renderer in childRenderers)
+                     {
+                         if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
+                         {
+                             if (!renderer.GetComponent<TextureOverWatch>())
+                             {
+                                 TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
+                                 tows.Add(tow);
+                             }
+                             else
+                             {
+                                 renderer.GetComponent<TextureOverWatch>().enabled = refresh;
+
+                             }
+                         }
+                     }
+                 }
+                 return tows;
+             }
+
+             [HarmonyPatch(typeof(GunControl), "SwitchWeapon", new Type[] { typeof(int), typeof(int?), typeof(bool), typeof(bool), typeof(bool) })]
+             [HarmonyPostfix]
+             public static void SwitchWeaponPost(GunControl __instance, int targetSlotIndex, int? targetVariationIndex = null, bool useRetainedVariation = false, bool cycleSlot = false, bool cycleVariation = false)
+             {
+
+                 //TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
+                 //ReloadTextureOverWatch(TOWS);
+             }
+             [HarmonyPatch(typeof(GunControl), "YesWeapon")]
+             [HarmonyPostfix]
+             public static void WeaponYesPost(GunControl __instance)
+             {
+                 if (!__instance.noWeapons)
+                 {
+                     TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
+                     ReloadTextureOverWatch(TOWS);
+                 }
+             }
+             [HarmonyPatch(typeof(GunControl), "UpdateWeaponList", new Type[] { typeof(bool) })]
+             [HarmonyPostfix]
+             public static void UpdateWeaponListPost(GunControl __instance, bool firstTime = false)
+             {
+                 //InitOWGameObjects(true);
+                 //TextureOverWatch[] TOWS = CameraController.Instance.gameObject.GetComponentsInChildren<TextureOverWatch>(true);
+                 //ReloadTextureOverWatch(TOWS);
+             }
+
+
+             */
+
+
+
+            /* [HarmonyPatch(typeof(FistControl), "YesFist")]
+             [HarmonyPostfix]
+             public static void YesFistPost(FistControl __instance)
+             {
+                 if (__instance.currentArmObject)
+                 {
+                     TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
+                     ReloadTextureOverWatch(TOWS);
+                 }
+             }
+
+             [HarmonyPatch(typeof(FistControl), "ArmChange", new Type[] { typeof(int) })]
+             [HarmonyPostfix]
+             public static void SwitchFistPost(FistControl __instance, int orderNum)
+             {
+                 try
+                 {
+                     TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
+                     ReloadTextureOverWatch(TOWS);
+                 }
+                 catch (ArgumentOutOfRangeException AOOR) {
+                     BatonPass.Warn("HEAR YEE HEAR YEE CurrentArmObject Argument Out of Range " + AOOR.ToString());
+                     BatonPass.Warn("currentArmObject is empty, this is normal if you are in 5-S, P-1 or P-2  CODE -\"USHAND-GUNPATCHER-FC_ARMCHANGE_SFP-ARG_OUT_OF_RANGE\"");
+                 }
+
+             }
+
+             [HarmonyPatch(typeof(FistControl), "ResetFists")]
+             [HarmonyPostfix]
+             public static void ResetFistsPost(FistControl __instance)
+             {
+                 InitOWGameObjects(false);
+                 TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
+                 ReloadTextureOverWatch(TOWS);
+             }
+
+
+             [HarmonyPatch(typeof(DualWieldPickup), "PickedUp")]
+             [HarmonyPostfix]
+             public static void DPickedupPost(DualWieldPickup __instance)
+             {
+                 if (GunControl.Instance)
+                 {
+                     if (PlayerTracker.Instance.playerType != PlayerType.Platformer)
+                     {
+                         DualWield[] DWs = GunControl.Instance.GetComponentsInChildren<DualWield>(true);
+                         foreach (DualWield DW in DWs)
+                         {
+                             if (DW)
+                             {
+                                 Renderer[] renderers = DW.GetComponentsInChildren<Renderer>(true);
+                                 foreach (Renderer renderer in renderers)
+                                 {
+                                     if (renderer && renderer.gameObject.layer == 13 && !renderer.gameObject.GetComponent<ParticleSystemRenderer>() && !renderer.gameObject.GetComponent<CanvasRenderer>())
+                                     {
+                                         if (!renderer.gameObject.GetComponent<TextureOverWatch>())
+                                         {
+
+                                             TextureOverWatch TOW = renderer.gameObject.AddComponent<TextureOverWatch>();
+                                         }
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                 }
+             }
+
+
+             [HarmonyPatch(typeof(DualWield), "UpdateWeapon")]
+             [HarmonyPostfix]
+             public static void DUpdateWPost(DualWield __instance)
+             {
+                 TextureOverWatch[] TOWS = __instance.GetComponentsInChildren<TextureOverWatch>(true);
+                 ReloadTextureOverWatch(TOWS);
+             }
+
+
+             [HarmonyPatch(typeof(PlayerTracker), "ChangeToFPS")]
+             [HarmonyPostfix]
+             public static void ChangeToFPSPost(PlayerTracker __instance)
+             {
+                 TextureOverWatch[] WTOWS = GameObject.FindGameObjectWithTag("GunControl").GetComponent<GunControl>().currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
+                 ReloadTextureOverWatch(WTOWS);
+                 TextureOverWatch[] FTOWS = GameObject.FindGameObjectWithTag("MainCamera").GetComponentInChildren<FistControl>().currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
+                 ReloadTextureOverWatch(FTOWS);
+             }
+
+
+             public static void ReloadTextureOverWatch(TextureOverWatch[] TOWS)
+             {
+                 foreach (TextureOverWatch TOW in TOWS)
+                 {
+                     TOW.enabled = true;
+                 }
+             }
+         }
+ */
+        }
         [HarmonyPatch]
         public class HarmonyProjectilePatcher
         {
@@ -514,8 +624,15 @@ namespace UltraSkins
             {
                 if (__instance.sawblade)
                 {
-                    AddTOWs(__instance.gameObject, false, true);
+                    if (!__instance.GetComponent<Fractal>())
+                    {
+
+                        Fractal fract = __instance.gameObject.AddComponent<Fractal>();
+                        fract.Init(__instance);
+                        fract.PrepareSwap();
+                    }
                 }
+
 
             }
 
@@ -523,21 +640,40 @@ namespace UltraSkins
             [HarmonyPostfix]
             public static void MagnetPost(Magnet __instance)
             {
-                AddTOWs(__instance.transform.parent.gameObject, false, true);
+                if (!__instance.GetComponent<Fractal>())
+                {
+
+                    Fractal fract = __instance.gameObject.AddComponent<Fractal>();
+                    fract.Init(__instance);
+                    fract.PrepareSwap();
+                }
             }
 
             [HarmonyPatch(typeof(Grenade), "Start")]
             [HarmonyPostfix]
             public static void GrenadePost(Grenade __instance)
             {
-                AddTOWs(__instance.gameObject, false, true);
+                if (!__instance.GetComponent<Fractal>())
+                {
+
+                    Fractal fract = __instance.gameObject.AddComponent<Fractal>();
+                    fract.Init(__instance);
+                    fract.PrepareSwap();
+                }
             }
 
             [HarmonyPatch(typeof(Coin), "Start")]
             [HarmonyPostfix]
             public static void coinPost(Coin __instance)
             {
-                AddTOWs(__instance.gameObject, false,true);
+                if (!__instance.GetComponent<Fractal>())
+                {
+
+                    Fractal fract = __instance.gameObject.AddComponent<Fractal>();
+                    fract.Init(__instance);
+                    fract.PrepareSwap();
+                }
+
             }
 
             public static void ReloadTextureOverWatch(TextureOverWatch[] TOWS)
@@ -674,187 +810,9 @@ namespace UltraSkins
 
 
 
-        public static Texture ResolveTheTextureProperty(Material mat, string property, string texturename, string propertyfallback = "_MainTex")
-        {
-
-            if (mat != null && texturename == null)
-                return null;
-
-            string textureToResolve = "";
-            if (mat && !texturename.StartsWith("TNR_") && property != "_Cube")
-            {
-                switch (property)
-                {
-                    case "_MainTex":
-                        textureToResolve = texturename;
-                        break;
-                    case "_EmissiveTex":
-                        switch (texturename)
-                        {
-                            case "T_NailgunNew_NoGlow":
-                                textureToResolve = "T_Nailgun_New_Glow";
-                                break;
-                            case "T_RocketLauncher_Desaturated":
-                                textureToResolve = "T_RocketLauncher_Emissive";
-                                if (HoldEm.Check(textureToResolve))
-                                {
-                                    mat.EnableKeyword("EMISSIVE");
-                                    mat.SetInt("_UseAlbedoAsEmissive", 0);
-                                }
-                                break;
-                            case "T_ImpactHammer":
-                                textureToResolve = "T_ImpactHammer_Glow";
-                                break;
-                            default:
-                                textureToResolve = texturename + "_Emissive";
-                                if (HoldEm.Check(textureToResolve))
-                                {
-                                    mat.EnableKeyword("EMISSIVE");
-                                    mat.SetInt("_UseAlbedoAsEmissive", 0);
-                                }
-
-                                break;
-                        }
-                        break;
-                    case "_IDTex":
-                        switch (mat.mainTexture.name)
-                        {
-                            case "T_RocketLauncher_Desaturated":
-                                textureToResolve = "T_RocketLauncher_ID";
-                                break;
-                            case "T_NailgunNew_NoGlow":
-                                textureToResolve = "T_NailgunNew_ID";
-                                break;
-                            case "Railgun_Main_AlphaGlow":
-                                textureToResolve = "T_Railgun_ID";
-                                break;
-                            default:
-                                textureToResolve = mat.mainTexture.name + "_ID";
-                                break;
-                        }
-                        break;
-                    case "_ReflectionMask":
-                        textureToResolve = mat.mainTexture.name + "_Ref";
-                        break;
-                    case "ROCKIT":
-                        textureToResolve = (mat.name.Contains("Swapped_rocket_AltarUnlitRed") && !texturename.StartsWith("T_")) ? "skull2rocketbonus" : texturename.Contains("T_Sakuya") ? "" : "skull2rocket";
-                        break;
-                    case "THROWITBACK":
-                        textureToResolve = "skull2grenade";
-                        break;
-                    default:
-                        textureToResolve = "";
-                        break;
-                }
-                if (textureToResolve != "" && HoldEm.Check(textureToResolve))
-                    return HoldEm.Call(textureToResolve);
-            }
-            return mat.GetTexture(propertyfallback);
-        }
-        string GetTextureName(string materialName)
-        {
-            if (ULTRASKINHand.HandInstance.MaterialNames.TryGetValue(materialName, out string textureName))
-            {
-                // If the material name exists, return the texture name
-                return textureName;
-            }
-            else
-            {
-                // If the material name does not exist, return a default value (e.g., "Texture Not Found")
-                return null;
-            }
-        }
-        public static void PerformTheSwap(Material mat, bool forceswap = false, TextureOverWatch TOW = null, string swapType = "weapon")
-        {
-            if (mat && (!mat.name.StartsWith("Swapped_") || forceswap))
-            {
-
-                if (!mat.name.StartsWith("Swapped_"))
-                {
-                    mat.name = "Swapped_" + swapType + "_" + mat.name;
-                }
-
-                forceswap = false;
-                Texture resolvedTexture;
-                string texturename = HandInstance.GetTextureName(mat.name);
-                BatonPass.Info("I should change" + TOW.iChange);
-                BatonPass.Debug("requested " + mat.name + " got " + texturename);
-
-                if (swapType == "weapon")
-                {
-
-                    string[] textureProperties = mat.GetTexturePropertyNames();
-
-                    foreach (string property in textureProperties)
-                    {
 
 
 
-
-                        resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, property, texturename, property);
-                        //BatonPass.Info("Attempting to swap " + property + " of " + mat.name.ToString() + " with " + resolvedTexture.name.ToString());
-                        if (resolvedTexture && resolvedTexture != null && mat.HasProperty(property) && mat.GetTexture(property) != resolvedTexture)
-                        {
-                            //Debug.Log("swapping " + property + " of " + mat.name.ToString());
-
-                            mat.SetTexture(property, resolvedTexture);
-
-                        }
-
-                        if (TOW != null && mat.HasProperty("_EmissiveColor"))
-                        {
-
-                            if (mat.name.ToString() == "Swapped_weapon_ImpactHammerDial (Instance)")
-                            {
-                                break;
-                            }
-                            else
-                            {
-
-                                //Debug.Log("swapping " + property + " of " + mat.name.ToString());
-                                Color VariantColor = GetVarationColor(TOW);
-                                Color VariantColor2 = new Color(255, 255, 255, 255);
-                                mat.SetColor("_EmissiveColor", VariantColor);
-                            }
-                        }
-
-                    }
-
-
-                }
-                else if (swapType == "projectile")
-                {
-                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "_MainTex", texturename);
-                    if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
-                    {
-
-                        mat.SetTexture("_MainTex", resolvedTexture);
-
-                    }
-                }
-                else if (swapType == "grenade")
-                {
-                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "THROWITBACK", texturename);
-                    if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
-                    {
-
-                        mat.SetTexture("_MainTex", resolvedTexture);
-
-                    }
-                }
-                else if (swapType == "rocket")
-                {
-                    resolvedTexture = ULTRASKINHand.ResolveTheTextureProperty(mat, "ROCKIT", texturename);
-                    if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
-                    {
-
-                        mat.SetTexture("_MainTex", resolvedTexture);
-
-                    }
-                }
-
-            }
-        }
 
 
         internal class RANKTITLESWAPPER
@@ -916,7 +874,7 @@ namespace UltraSkins
             internal static UpdateMeterDelegate updateMeter = AccessTools.MethodDelegate<UpdateMeterDelegate>(updateMeterMethod);
 
 
-            internal static void SwapTheDial(TextureOverWatch TOW)
+            internal static void SwapTheDial(Fractal TOW)
             {
 
 
@@ -972,58 +930,13 @@ namespace UltraSkins
             }
         }
 
-       
-        
 
 
 
 
 
-        public static Color GetVarationColor(TextureOverWatch TOW)
-        {
-            Color VariantColor = new Color(0, 0, 0, 0);
-            if (TOW.GetComponentInParent<WeaponIcon>())
-            {
 
-                WeaponIcon WPI = TOW.GetComponentInParent<WeaponIcon>();
-                Type type = WPI.GetType();
-                PropertyInfo propertyInfo = type.GetProperty("variationColor", BindingFlags.NonPublic | BindingFlags.Instance);
-                int value = (int)propertyInfo.GetValue(WPI);
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[value].r,
-                    ColorBlindSettings.Instance.variationColors[value].g,
-                    ColorBlindSettings.Instance.variationColors[value].b, 1f);
-            }
-            else if (TOW.GetComponentInParent<Punch>())
-            {
-                Punch P = TOW.GetComponentInParent<Punch>();
-                switch (P.type)
-                {
-                    case FistType.Heavy:
-                        VariantColor = new Color(ColorBlindSettings.Instance.variationColors[2].r,
-                    ColorBlindSettings.Instance.variationColors[2].g,
-                    ColorBlindSettings.Instance.variationColors[2].b, 1f);
 
-                        break;
-                    case FistType.Standard:
-                        VariantColor = new Color(ColorBlindSettings.Instance.variationColors[0].r,
-                   ColorBlindSettings.Instance.variationColors[0].g,
-                   ColorBlindSettings.Instance.variationColors[0].b, 1f);
-                        break;
-                }
-
-            }
-            else if (TOW.GetComponentInParent<HookArm>())
-            {
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[1].r,
-                    ColorBlindSettings.Instance.variationColors[1].g,
-                    ColorBlindSettings.Instance.variationColors[1].b, 1f);
-            }
-            else if (TOW.GetComponentInParent<BandScroller>())
-            {
-
-            }
-                return VariantColor;
-        }
 
 
 
@@ -1042,6 +955,8 @@ namespace UltraSkins
                }
            }
    */
+
+        [Obsolete]
         public static bool CheckTextureInCache(string name)
         {
             if (autoSwapCache.ContainsKey(name))
@@ -1049,16 +964,18 @@ namespace UltraSkins
             return false;
         }
 
+
+
+
+        /// <summary>
+        /// Disables Buttons in the menu and awaits texture loading then dispatches them to their respective fractals
+        /// </summary>
+        /// <param name="path">the array of paths to load</param>
+        /// <param name="firsttime">whether or not the menu should disable buttons</param>
         public async void ReloadTextures(string[] path, bool firsttime = false)
         {
             BatonPass.Debug("BATON PASS: WE ARE IN ReloadTextures() We have variables \n FIRSTTIME:" + firsttime + "\n PATH:" + path);
-            BatonPass.Debug("Start Comparing");
 
-#pragma warning restore CS1717 // Assignment made to same variable
-            BatonPass.Debug("INIT BATON PASS: INITOWGAMEOBJECTS(" + firsttime + ")");
-
-            BatonPass.Debug("BATON PASS: WELCOME BACK TO RELOADTEXTURES()");
-            BatonPass.Debug("INIT BATON PASS: LOADTEXTURES(" + path + ")");
             if (!firsttime)
             {
                 MenuManager.MMinstance.DisableButtons();
@@ -1069,19 +986,20 @@ namespace UltraSkins
             {
                 await LoadTextures(path, firsttime);
             }
-            InitOWGameObjects(firsttime);
-            foreach (var kvp in ULTRASKINHand.HandInstance.MaterialNames)
-            {
-                BatonPass.Debug($"Key: {kvp.Key}, Value: {kvp.Value}");
-            }
-/*            var textures = Resources.FindObjectsOfTypeAll<Texture2D>();
-                        foreach (var tex in textures)
+            USAPI.BroadcastTextureUpdate(this, new FractalTextureUpdateArgs(true));
+
+            /*                      foreach (var kvp in ULTRASKINHand.HandInstance.MaterialNames)
                         {
-                            if (!AssetInUse(tex))
-                            {
-                                BatonPass.Info($"Unused Texture: {tex.name} - Potential leak");
-                            }
-                        }*/
+                            BatonPass.Debug($"Key: {kvp.Key}, Value: {kvp.Value}");
+                        }
+            var textures = Resources.FindObjectsOfTypeAll<Texture2D>();
+                                    foreach (var tex in textures)
+                                    {
+                                        if (!AssetInUse(tex))
+                                        {
+                                            BatonPass.Info($"Unused Texture: {tex.name} - Potential leak");
+                                        }
+                                    }*/
 
         }
         bool AssetInUse(UnityEngine.Object asset)
@@ -1092,34 +1010,59 @@ namespace UltraSkins
                 c is Image img && img.sprite && img.sprite.texture == asset ||
                 c is RawImage rawImg && rawImg.texture == asset);
         }
+
+        [Obsolete]
         public static void InitOWGameObjects(bool firsttime = false)
         {
+            /*
+            
+            //BatonPass.Debug("initializing Overwatch protocall");
             GameObject cam = GameObject.FindGameObjectWithTag("MainCamera");
-
+            //BatonPass.Debug("finding renderer");
             foreach (Renderer renderer in cam.GetComponentsInChildren<Renderer>(true))
             {
+                //BatonPass.Debug("Renderer found: checking usabilty");
                 if (renderer.gameObject.layer == 13 && !renderer.gameObject.GetComponent<ParticleSystemRenderer>() && !renderer.gameObject.GetComponent<TrailRenderer>() && !renderer.gameObject.GetComponent<LineRenderer>())
                 {
+                    //BatonPass.Debug("Its usable");
                     if (renderer.GetComponent<TextureOverWatch>() && !firsttime)
                     {
+                        //BatonPass.Debug("Has Overwatchable Mat");
                         TextureOverWatch TOW = renderer.GetComponent<TextureOverWatch>();
                         TOW.enabled = true;
                         TOW.forceswap = true;
                     }
                     else if (!renderer.GetComponent<TextureOverWatch>())
                     {
+                        //BatonPass.Debug("Creating Overwatch Component");
                         renderer.gameObject.AddComponent<TextureOverWatch>().enabled = true;
                     }
                 }
             }
-            foreach(TextureOverWatch tow in HandInstance.PtowStorage.TOWS)
+            try
             {
-                tow.enabled = true;
-                tow.forceswap = true;
+                foreach (TextureOverWatch tow in HandInstance.PtowStorage.TOWS)
+                {
+                    tow.enabled = true;
+                    tow.forceswap = true;
+                }
+            } catch
+            {
+                BatonPass.Error("Previewer is not available");
             }
+            */
 
         }
 
+
+
+
+        /// <summary>
+        /// Loads textures from disk async
+        /// </summary>
+        /// <param name="fpaths">paths to load</param>
+        /// <param name="firsttime"></param>
+        /// <returns></returns>
         public async Task LoadTextures(string[] fpaths, bool firsttime = false)
         {
             float ProgressTotal = 0;
@@ -1191,7 +1134,7 @@ namespace UltraSkins
             }
 
 
-
+            
             USAPI.BroadcastTextureFinished(new USAPI.TextureLoadEventArgs(failed));
            
         }
