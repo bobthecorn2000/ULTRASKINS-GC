@@ -28,7 +28,7 @@ namespace UltraSkins.API
         public class FractalTextureUpdateArgs : EventArgs
         {
             public bool doAll { get; }
-            public Fractal.SwapType? swaptype{ get; }
+            public Fractal.BaseFractal.SwapType? swaptype{ get; }
             public int? GCGgroup { get; }
             public bool? GCGalt { get; }
 
@@ -37,13 +37,13 @@ namespace UltraSkins.API
                 doAll = doall;
             }
 
-            public FractalTextureUpdateArgs (Fractal.SwapType type)
+            public FractalTextureUpdateArgs (Fractal.BaseFractal.SwapType type)
             {
                 swaptype = type;
             }
             public FractalTextureUpdateArgs (int group,bool alt)
             {
-                swaptype = Fractal.SwapType.Weapon;
+                swaptype = Fractal.BaseFractal.SwapType.Weapon;
                 GCGgroup = group;
                 GCGalt = alt;
             }
@@ -56,7 +56,9 @@ namespace UltraSkins.API
         {
             RefreshFractals?.Invoke(sender, args);
         }
-        
+
+
+        public static event Action DoDynamicEmissiveSwap;
 
 
 

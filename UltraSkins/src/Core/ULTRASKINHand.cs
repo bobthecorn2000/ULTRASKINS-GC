@@ -15,7 +15,7 @@ using UnityEngine.UI;
 using BatonPassLogger.GUI;
 using UltraSkins.Utils;
 using UltraSkins.UI;
-
+using UltraSkins.Fractal;
 using StringSerializer = UltraSkins.Utils.SkinEventHandler.StringSerializer;
 using BatonPassLogger;
 using System.Xml.Serialization;
@@ -45,7 +45,7 @@ namespace UltraSkins
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
 
 
-    public class ULTRASKINHand : BaseUnityPlugin
+    public partial class ULTRASKINHand : BaseUnityPlugin
     {
 
 
@@ -310,6 +310,82 @@ namespace UltraSkins
         public class HarmonyGunPatcher
         {
 
+            [HarmonyPatch(typeof(ColorBlindSettings), "UpdateWeaponColors")]
+            [HarmonyPostfix]
+            public static void UWCPost()
+            {
+
+            }
+
+
+            [HarmonyPatch(typeof(RocketLauncher), "Start")]
+            [HarmonyPostfix]
+            public static void RockSetup(RocketLauncher __instance)
+            {
+                if (__instance.rocket)
+                {
+                    GameObject rocket = __instance.rocket;
+                    if (!rocket.GetComponent<GrenadeFractal>() && rocket.TryGetComponent<Grenade>(out Grenade FractGrenade))
+                    {
+
+                        GrenadeFractal fract = rocket.AddComponent<GrenadeFractal>();
+                        fract.Init(FractGrenade);
+                        fract.PrepareSwap();
+                    }
+                }
+
+            }
+            [HarmonyPatch(typeof(Shotgun), "Start")]
+            [HarmonyPostfix]
+            public static void GrenadePost(Shotgun __instance)
+            {
+                if (__instance.grenade)
+                {
+                    GameObject grenade = __instance.grenade;
+                    if (!grenade.GetComponent<GrenadeFractal>() && grenade.TryGetComponent<Grenade>(out Grenade FractGrenade))
+                    {
+
+                        GrenadeFractal fract = grenade.AddComponent<GrenadeFractal>();
+                        fract.Init(FractGrenade);
+                        fract.PrepareSwap();
+                    }
+                }
+
+            }
+
+            [HarmonyPatch(typeof(Revolver), "Start")]
+            [HarmonyPostfix]
+            public static void RevSetup(Revolver __instance)
+            {
+                if (__instance.coin)
+                {
+
+                    if (!__instance.coin.GetComponent<Fractal.CoinFractal>() && __instance.coin.TryGetComponent<Coin>(out Coin FractCoin))
+                    {
+
+                        CoinFractal fract = __instance.coin.AddComponent<Fractal.CoinFractal>();
+                        fract.Init(FractCoin);
+                        fract.PrepareSwap();
+                    }
+                }
+
+
+            }
+            [HarmonyPatch(typeof(ShotgunHammer), "Awake")]
+            [HarmonyPostfix]
+            public static void HammerSetup(ShotgunHammer __instance)
+            {
+
+                    if (!__instance.GetComponent<Fractal.DialFractal>())
+                    {
+
+                        DialFractal fract = __instance.gameObject.AddComponent<Fractal.DialFractal>();
+                        fract.Init(__instance);
+                        fract.PrepareSwap();
+                    }
+                
+            }
+
 
             private static readonly AccessTools.FieldRef<Punch, SkinnedMeshRenderer> smrRef = AccessTools.FieldRefAccess<Punch, SkinnedMeshRenderer>("smr");
             [HarmonyPatch(typeof(Punch), "Start")]
@@ -319,10 +395,10 @@ namespace UltraSkins
                 try
                 {
                     GameObject model = smrRef(__instance).gameObject;
-                    if (!model.GetComponent<Fractal>())
+                    if (!model.GetComponent<ArmFractal>())
                     {
 
-                        Fractal fract = model.gameObject.AddComponent<Fractal>();
+                        ArmFractal fract = model.gameObject.AddComponent<ArmFractal>();
                         fract.Init(__instance);
                         fract.PrepareSwap();
                     }
@@ -349,10 +425,10 @@ namespace UltraSkins
                 try
                 {
                     GameObject hookmodel = __instance.hookModel;
-                    if (!hookmodel.GetComponent<Fractal>())
+                    if (!hookmodel.GetComponent<ArmFractal>())
                     {
 
-                        Fractal fract = hookmodel.gameObject.AddComponent<Fractal>();
+                        ArmFractal fract = hookmodel.gameObject.AddComponent<ArmFractal>();
                         fract.Init(__instance);
                         fract.PrepareSwap();
                     }
@@ -369,11 +445,12 @@ namespace UltraSkins
 
                 try
                 {
-                    GameObject model = hookArmModelRef(__instance);
-                    if (!model.GetComponent<Fractal>())
+                    GameObject parent = hookArmModelRef(__instance);
+                    GameObject model = parent.transform.Find("Arm").gameObject;
+                    if (!model.GetComponent<ArmFractal>())
                     {
 
-                        Fractal fract = model.gameObject.AddComponent<Fractal>();
+                        ArmFractal fract = model.AddComponent<ArmFractal>();
                         fract.Init(__instance);
                         fract.PrepareSwap();
                     }
@@ -394,226 +471,16 @@ namespace UltraSkins
             public static void startawake(GunColorGetter __instance)
             {
                 BatonPass.Debug(__instance.name + " I HAVE AWOKEN");
-                if (!__instance.GetComponent<Fractal>())
+                if (!__instance.GetComponent<GCGFractal>())
                 {
-                    Fractal fract = __instance.gameObject.AddComponent<Fractal>();
+                    GCGFractal fract = __instance.gameObject.AddComponent<GCGFractal>();
                     fract.Init(__instance);
                     fract.PrepareSwap();
                 }
 
             }
 
-            /*
-             public static List<TextureOverWatch> AddPTOWs(GameObject gameobject, bool refresh)
-             {
-                 List<TextureOverWatch> ptows = new List<TextureOverWatch>();
-                 Renderer[] childRenderers = gameobject.GetComponentsInChildren<Renderer>(true);
-                 foreach (Renderer renderer in childRenderers)
-                 {
-                     if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
-                     {
-                         if (!renderer.GetComponent<TextureOverWatch>())
-                         {
-                             TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
-                             ptows.Add(tow);
-                         }
-                         else
-                         {
-                             renderer.GetComponent<TextureOverWatch>().enabled = refresh;
-
-                         }
-                     }
-                 }
-                 return ptows;
-             }
-             public static List<TextureOverWatch> AddTOWs(GameObject gameobject, bool toself = true, bool tochildren = false, bool toparent = false, bool refresh = false)
-             {
-                 BatonPass.Debug("added " + gameobject.name + "to textureoverwatch");
-                 List<TextureOverWatch> tows = new List<TextureOverWatch>();
-                 if (toself)
-                 {
-                     if (!gameobject.GetComponent<TextureOverWatch>())
-                     {
-                         TextureOverWatch tow = gameobject.AddComponent<TextureOverWatch>();
-                         tows.Add(tow);
-                     }
-                     else
-                     {
-                         gameobject.GetComponent<TextureOverWatch>().enabled = refresh;
-                     }
-                 }
-                 if (toparent)
-                 {
-                     Renderer[] parentRenderers = gameobject.GetComponentsInParent<Renderer>();
-                     foreach (Renderer renderer in parentRenderers)
-                     {
-                         if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
-                         {
-                             if (!renderer.GetComponent<TextureOverWatch>())
-                             {
-                                 TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
-                                 tows.Add(tow);
-                             }
-                             else
-                             {
-                                 renderer.GetComponent<TextureOverWatch>().enabled = refresh;
-                             }
-                         }
-                     }
-                 }
-                 if (tochildren)
-                 {
-                     Renderer[] childRenderers = gameobject.GetComponentsInChildren<Renderer>();
-                     foreach (Renderer renderer in childRenderers)
-                     {
-                         if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
-                         {
-                             if (!renderer.GetComponent<TextureOverWatch>())
-                             {
-                                 TextureOverWatch tow = renderer.gameObject.AddComponent<TextureOverWatch>();
-                                 tows.Add(tow);
-                             }
-                             else
-                             {
-                                 renderer.GetComponent<TextureOverWatch>().enabled = refresh;
-
-                             }
-                         }
-                     }
-                 }
-                 return tows;
-             }
-
-             [HarmonyPatch(typeof(GunControl), "SwitchWeapon", new Type[] { typeof(int), typeof(int?), typeof(bool), typeof(bool), typeof(bool) })]
-             [HarmonyPostfix]
-             public static void SwitchWeaponPost(GunControl __instance, int targetSlotIndex, int? targetVariationIndex = null, bool useRetainedVariation = false, bool cycleSlot = false, bool cycleVariation = false)
-             {
-
-                 //TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
-                 //ReloadTextureOverWatch(TOWS);
-             }
-             [HarmonyPatch(typeof(GunControl), "YesWeapon")]
-             [HarmonyPostfix]
-             public static void WeaponYesPost(GunControl __instance)
-             {
-                 if (!__instance.noWeapons)
-                 {
-                     TextureOverWatch[] TOWS = __instance.currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
-                     ReloadTextureOverWatch(TOWS);
-                 }
-             }
-             [HarmonyPatch(typeof(GunControl), "UpdateWeaponList", new Type[] { typeof(bool) })]
-             [HarmonyPostfix]
-             public static void UpdateWeaponListPost(GunControl __instance, bool firstTime = false)
-             {
-                 //InitOWGameObjects(true);
-                 //TextureOverWatch[] TOWS = CameraController.Instance.gameObject.GetComponentsInChildren<TextureOverWatch>(true);
-                 //ReloadTextureOverWatch(TOWS);
-             }
-
-
-             */
-
-
-
-            /* [HarmonyPatch(typeof(FistControl), "YesFist")]
-             [HarmonyPostfix]
-             public static void YesFistPost(FistControl __instance)
-             {
-                 if (__instance.currentArmObject)
-                 {
-                     TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                     ReloadTextureOverWatch(TOWS);
-                 }
-             }
-
-             [HarmonyPatch(typeof(FistControl), "ArmChange", new Type[] { typeof(int) })]
-             [HarmonyPostfix]
-             public static void SwitchFistPost(FistControl __instance, int orderNum)
-             {
-                 try
-                 {
-                     TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                     ReloadTextureOverWatch(TOWS);
-                 }
-                 catch (ArgumentOutOfRangeException AOOR) {
-                     BatonPass.Warn("HEAR YEE HEAR YEE CurrentArmObject Argument Out of Range " + AOOR.ToString());
-                     BatonPass.Warn("currentArmObject is empty, this is normal if you are in 5-S, P-1 or P-2  CODE -\"USHAND-GUNPATCHER-FC_ARMCHANGE_SFP-ARG_OUT_OF_RANGE\"");
-                 }
-
-             }
-
-             [HarmonyPatch(typeof(FistControl), "ResetFists")]
-             [HarmonyPostfix]
-             public static void ResetFistsPost(FistControl __instance)
-             {
-                 InitOWGameObjects(false);
-                 TextureOverWatch[] TOWS = __instance.currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                 ReloadTextureOverWatch(TOWS);
-             }
-
-
-             [HarmonyPatch(typeof(DualWieldPickup), "PickedUp")]
-             [HarmonyPostfix]
-             public static void DPickedupPost(DualWieldPickup __instance)
-             {
-                 if (GunControl.Instance)
-                 {
-                     if (PlayerTracker.Instance.playerType != PlayerType.Platformer)
-                     {
-                         DualWield[] DWs = GunControl.Instance.GetComponentsInChildren<DualWield>(true);
-                         foreach (DualWield DW in DWs)
-                         {
-                             if (DW)
-                             {
-                                 Renderer[] renderers = DW.GetComponentsInChildren<Renderer>(true);
-                                 foreach (Renderer renderer in renderers)
-                                 {
-                                     if (renderer && renderer.gameObject.layer == 13 && !renderer.gameObject.GetComponent<ParticleSystemRenderer>() && !renderer.gameObject.GetComponent<CanvasRenderer>())
-                                     {
-                                         if (!renderer.gameObject.GetComponent<TextureOverWatch>())
-                                         {
-
-                                             TextureOverWatch TOW = renderer.gameObject.AddComponent<TextureOverWatch>();
-                                         }
-                                     }
-                                 }
-                             }
-                         }
-                     }
-                 }
-             }
-
-
-             [HarmonyPatch(typeof(DualWield), "UpdateWeapon")]
-             [HarmonyPostfix]
-             public static void DUpdateWPost(DualWield __instance)
-             {
-                 TextureOverWatch[] TOWS = __instance.GetComponentsInChildren<TextureOverWatch>(true);
-                 ReloadTextureOverWatch(TOWS);
-             }
-
-
-             [HarmonyPatch(typeof(PlayerTracker), "ChangeToFPS")]
-             [HarmonyPostfix]
-             public static void ChangeToFPSPost(PlayerTracker __instance)
-             {
-                 TextureOverWatch[] WTOWS = GameObject.FindGameObjectWithTag("GunControl").GetComponent<GunControl>().currentWeapon.GetComponentsInChildren<TextureOverWatch>(true);
-                 ReloadTextureOverWatch(WTOWS);
-                 TextureOverWatch[] FTOWS = GameObject.FindGameObjectWithTag("MainCamera").GetComponentInChildren<FistControl>().currentArmObject.GetComponentsInChildren<TextureOverWatch>(true);
-                 ReloadTextureOverWatch(FTOWS);
-             }
-
-
-             public static void ReloadTextureOverWatch(TextureOverWatch[] TOWS)
-             {
-                 foreach (TextureOverWatch TOW in TOWS)
-                 {
-                     TOW.enabled = true;
-                 }
-             }
-         }
- */
+            
         }
         [HarmonyPatch]
         public class HarmonyProjectilePatcher
@@ -624,10 +491,10 @@ namespace UltraSkins
             {
                 if (__instance.sawblade)
                 {
-                    if (!__instance.GetComponent<Fractal>())
+                    if (!__instance.GetComponent<BaseFractal>())
                     {
 
-                        Fractal fract = __instance.gameObject.AddComponent<Fractal>();
+                        BaseFractal fract = __instance.gameObject.AddComponent<BaseFractal>();
                         fract.Init(__instance);
                         fract.PrepareSwap();
                     }
@@ -640,42 +507,17 @@ namespace UltraSkins
             [HarmonyPostfix]
             public static void MagnetPost(Magnet __instance)
             {
-                if (!__instance.GetComponent<Fractal>())
+                if (!__instance.GetComponent<BaseFractal>() )
                 {
 
-                    Fractal fract = __instance.gameObject.AddComponent<Fractal>();
+                    BaseFractal fract = __instance.gameObject.AddComponent<BaseFractal>();
                     fract.Init(__instance);
                     fract.PrepareSwap();
                 }
             }
 
-            [HarmonyPatch(typeof(Grenade), "Start")]
-            [HarmonyPostfix]
-            public static void GrenadePost(Grenade __instance)
-            {
-                if (!__instance.GetComponent<Fractal>())
-                {
 
-                    Fractal fract = __instance.gameObject.AddComponent<Fractal>();
-                    fract.Init(__instance);
-                    fract.PrepareSwap();
-                }
-            }
-
-            [HarmonyPatch(typeof(Coin), "Start")]
-            [HarmonyPostfix]
-            public static void coinPost(Coin __instance)
-            {
-                if (!__instance.GetComponent<Fractal>())
-                {
-
-                    Fractal fract = __instance.gameObject.AddComponent<Fractal>();
-                    fract.Init(__instance);
-                    fract.PrepareSwap();
-                }
-
-            }
-
+            [Obsolete]
             public static void ReloadTextureOverWatch(TextureOverWatch[] TOWS)
             {
 
@@ -684,7 +526,7 @@ namespace UltraSkins
                     TOW.enabled = true;
                 }
             }
-
+            [Obsolete]
             public static void AddTOWs(GameObject gameobject, bool toself = true, bool tochildren = false, bool toparent = false, bool refresh = false)
             {
                 BatonPass.Debug("added " + gameobject.name + "to textureoverwatch");
@@ -860,75 +702,7 @@ namespace UltraSkins
             }
         }
 
-        internal class ReadOut
-        {
-
-            private static readonly AccessTools.FieldRef<ShotgunHammer, Texture[]> meterEmissivesRef = AccessTools.FieldRefAccess<ShotgunHammer, Texture[]>("meterEmissives");
-
-            private static readonly AccessTools.FieldRef<ShotgunHammer, Image> secondaryMeterRef = AccessTools.FieldRefAccess<ShotgunHammer, Image>("secondaryMeter");
-
-            internal delegate void UpdateMeterDelegate(ShotgunHammer instance, bool forceUpdateTexture = false);
-
-            static MethodInfo updateMeterMethod = AccessTools.Method(typeof(ShotgunHammer), "UpdateMeter");
-
-            internal static UpdateMeterDelegate updateMeter = AccessTools.MethodDelegate<UpdateMeterDelegate>(updateMeterMethod);
-
-
-            internal static void SwapTheDial(Fractal TOW)
-            {
-
-
-                if (meterEmissivesRef == null)
-                {
-                    BatonPass.Error("Failed to find 'meterEmissives' field.");
-                    return;
-                }
-                ShotgunHammer shotgunHammer = TOW.GetComponentInParent<ShotgunHammer>();
-                var meterEmissives = meterEmissivesRef(shotgunHammer);
-                var meterMask = secondaryMeterRef(shotgunHammer);
-                Texture glow1;
-                Texture glow2;
-                Texture glow3;
-                if (HoldEm.Check("T_DialGlow1"))
-                {
-                    glow1 = HoldEm.Call("T_DialGlow1");
-                }
-                else
-                {
-                    glow1 = meterEmissives[0];
-                }
-                if (HoldEm.Check("T_DialGlow2"))
-                {
-                    glow2 = HoldEm.Call("T_DialGlow2");
-                }
-                else
-                {
-                    glow2 = meterEmissives[1];
-                }
-                if (HoldEm.Check("T_DialGlow3"))
-                {
-                    glow3 = HoldEm.Call("T_DialGlow3");
-                }
-                else
-                {
-                    glow3 = meterEmissives[2];
-                }
-                meterEmissivesRef(shotgunHammer) = new Texture[3]
-                    {
-                        glow1,
-                        glow2,
-                        glow3,
-                    };
-
-                if (HoldEm.Check("T_DialMask"))
-                {
-                    Texture dialmask = HoldEm.Call("T_DialMask");
-
-                    Sprite masksprite = Sprite.Create((Texture2D)dialmask, new Rect(0, 0, dialmask.width, dialmask.height), new Vector2(0.5f, 0.5f));
-                    meterMask.sprite = masksprite;
-                }
-            }
-        }
+       
 
 
 
@@ -1362,7 +1136,7 @@ namespace UltraSkins
             }
             texOpData.FailState = failed;
             texOpData.ProgressState = ProgressDone;
-
+            
             return texOpData;
         }
 
@@ -1394,266 +1168,6 @@ namespace UltraSkins
             uniOpData.ProgressState = progress;
             uniOpData.FailState = failed;
             return uniOpData;
-        }
-
-
-
-
-
-
-
-
-        /// <summary>
-        /// The HoldEm system allows you to request and modify the textures Ultraskins currently keeps track of
-        /// </summary>
-        public class HoldEm
-        {
-
-            /// <summary>
-            /// one of either 
-            /// ASC - AUTOSWAPCACHE (the users loaded skins)
-            /// OGS - OGSKINS (the master list of all supported skins, the secondary cache)
-            /// IC - ICONCACHE (all skin icons for this session) 
-            /// SC - SPRITECACHE (all currently known sprites)
-            /// </summary>
-            public enum HoldemType
-            {
-                ASC = 0, OGS = 1, IC = 2, SC = 3
-            }
-            /// <summary>
-            /// Returns the Texture If it exists in either Primary or Secondary Cache
-            /// </summary>
-            /// <param name="key">The KEY we are looking for</param>
-            /// <returns>A Texture</returns>
-            public static Texture Call(string key)
-            {
-                if (autoSwapCache.TryGetValue(key, out Texture texture))
-                {
-                    BatonPass.Debug("ASC Call:" + key);
-                    return texture;
-                }
-                else if (HandInstance.ogSkinsManager.OGSKINS.TryGetValue(key, out Texture originalTexture))
-                {
-                    BatonPass.Debug("OGS Call:" + key);
-                    return originalTexture;
-                }
-                else
-                {
-                    BatonPass.Debug("Call NoKeyFound" + key);
-                    // Not found anywhere
-                    return null;
-                }
-            }
-            /// <summary>
-            /// Check if a KEY exists in either Primary Cache or Secondary Cache
-            /// </summary>
-            /// <param name="key">the KEY we are looking for</param>
-            /// <returns>Bool "True" if we have it "False" if we don't</returns>
-            public static bool Check(string key)
-            {
-                if (autoSwapCache.ContainsKey(key))
-                {
-                    BatonPass.Debug("ASC Check:" + key);
-                    return true;
-                }
-                else if (HandInstance.ogSkinsManager.OGSKINS.ContainsKey(key))
-                {
-                    BatonPass.Debug("OGS Check:" + key);
-                    return true;
-                }
-                else
-                {
-                    // Not found anywhere
-                    BatonPass.Debug("Check NoKeyFound" + key);
-                    return false;
-                }
-            }
-            /// <summary>
-            /// Removes a specific item from the Dictionary
-            /// </summary>
-            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
-            /// <param name="name">The KEY we are removing</param>
-            public static void Discard(HoldemType holdemType, string name)
-            {
-
-
-                switch (holdemType)
-                {
-                    case HoldemType.ASC:
-                        if (autoSwapCache.ContainsKey(name))
-                        {
-                            Texture workingfile = autoSwapCache[name];
-                            UnityEngine.Object.Destroy(workingfile);
-                            autoSwapCache.Remove(name);
-                        }
-                        break;
-                    case HoldemType.OGS:
-                        if (HandInstance.ogSkinsManager.OGSKINS.ContainsKey(name))
-                        {
-                            Texture workingfile = HandInstance.ogSkinsManager.OGSKINS[name];
-                            UnityEngine.Object.Destroy(workingfile);
-                            HandInstance.ogSkinsManager.OGSKINS.Remove(name);
-                        }
-                        break;
-                    case HoldemType.IC:
-                        if (HandInstance.IconCache.ContainsKey(name))
-                        {
-                         
-                            HandInstance.IconCache.Remove(name);
-                        }
-                        break;
-                    case HoldemType.SC:
-                        if (HandInstance.SpriteCache.ContainsKey(name))
-                        {
-
-                            HandInstance.SpriteCache.Remove(name);
-                        }
-                        break;
-                }
-            }
-            /// <summary>
-            /// Adds a Key Value pair into the Holdem System, Placing a Bet on the table
-            /// </summary>
-            /// <typeparam name="T"></typeparam>
-            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
-            /// <param name="TextureName">The KEY for the dict</param>
-            /// <param name="texture2D">the VALUE for the dict, In the case of IC this is a byte[]</param>
-            public static void Bet(HoldemType holdemType,string TextureName,Texture texture2D)
-            {
-                switch (holdemType)
-                {
-                    case HoldemType.ASC:
-                        
-                        autoSwapCache.Add(TextureName, texture2D);
-                        break;
-                    case HoldemType.OGS:
-                        HandInstance.ogSkinsManager.OGSKINS.Add(TextureName, texture2D);
-                        break;
-                    case HoldemType.IC:
-                        HandInstance.IconCache.Add(TextureName, texture2D as Texture2D);
-                        break;
-                    case HoldemType.SC:
-                        texture2D.filterMode = FilterMode.Bilinear;
-                        Sprite newsprite = Sprite.Create(texture2D as Texture2D, new Rect(0, 0, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f));
-                        HandInstance.SpriteCache.Add(TextureName, newsprite);
-                        break;
-
-                }
-            }
-            /// <summary>
-            /// Pulls a Value from a Key in the Holdem System, ,
-            /// </summary>
-            /// <typeparam name="T">Either a Texture or a Sprite</typeparam>
-            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
-            /// <param name="name">The KEY we are asking for</param>
-            /// <returns>Draw a Texture or byte[] into your hand</returns>
-            public static T Draw<T>(HoldemType holdemType, string name) where T : class
-            {
-
-                switch (holdemType)
-                {
-                    case HoldemType.ASC:
-                        autoSwapCache.TryGetValue(name, out Texture rawASCtexture);
-                        Texture2D ASCtexture = rawASCtexture as Texture2D;
-                        return ASCtexture as T;
-
-                    case HoldemType.OGS:
-                        HandInstance.ogSkinsManager.OGSKINS.TryGetValue(name, out Texture rawOGtexture);
-                        Texture2D OGtexture = rawOGtexture as Texture2D;
-                        return OGtexture as T;
-
-                    case HoldemType.IC:
-                        HandInstance.IconCache.TryGetValue(name, out Texture2D ICtexture);
-                        return ICtexture as T;
-                    case HoldemType.SC:
-                        HandInstance.SpriteCache.TryGetValue(name, out Sprite SCtexture);
-                        return SCtexture as T;
-                    default:
-                        return null;
-
-                }
-
-            }
-            /// <summary>
-            /// Check a specific holdem stash for a texture
-            /// </summary>
-            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
-            /// <param name="name">The KEY we are asking for</param>
-            /// <returns></returns>
-            public static bool Bluff(HoldemType holdemType, string name)
-            {
-                switch (holdemType)
-                {
-                    case HoldemType.ASC:
-                        return (autoSwapCache.ContainsKey(name)) ? true : false; 
-
-
-                    case HoldemType.OGS:
-                        return (HandInstance.ogSkinsManager.OGSKINS.ContainsKey(name)) ? true : false;
-
-                    case HoldemType.IC:
-                        return (HandInstance.IconCache.ContainsKey(name)) ? true : false;
-                    case HoldemType.SC:
-                        return (HandInstance.SpriteCache.ContainsKey(name)) ? true : false;
-
-                }
-                return false;
-            }
-            /// <summary>
-            /// Danger: Purges an entire Dictionary and resets it,
-            /// </summary>
-            /// <param name="holdemType">The Type of Dictionary we are Changing</param>
-            public static void Fold(HoldemType holdemType)
-            {
-
-
-                switch (holdemType)
-                {
-                    case HoldemType.ASC:
-                        foreach (KeyValuePair<string, Texture> kvp in autoSwapCache)
-                        {
-
-                            string name = kvp.Key;
-                            BatonPass.Debug("Deleting " + name + " from Holdem ASC");
-                            Texture workingfile = autoSwapCache[name];
-                            UnityEngine.Object.Destroy(workingfile);
-
-                        }
-                        autoSwapCache.Clear();
-                        break;
-                    case HoldemType.OGS:
-                        foreach (KeyValuePair<string, Texture> kvp in HandInstance.ogSkinsManager.OGSKINS)
-                        {
-
-                            string name = kvp.Key;
-                            BatonPass.Debug("Deleting " + name + " from Holdem ASC");
-                            Texture workingfile = HandInstance.ogSkinsManager.OGSKINS[name];
-                            UnityEngine.Object.Destroy(workingfile);
-
-                        }
-                        HandInstance.ogSkinsManager.OGSKINS.Clear();
-                        break;
-                    case HoldemType.IC:
-
-                        HandInstance.IconCache.Clear();
-                        break;
-                    case HoldemType.SC:
-                        foreach (KeyValuePair<string, Sprite> kvp in HandInstance.SpriteCache)
-                        {
-
-                            string name = kvp.Key;
-                            BatonPass.Debug("Deleting " + name + " from Holdem SC");
-                            Sprite workingfile = HandInstance.SpriteCache[name];
-                            UnityEngine.Object.Destroy(workingfile);
-
-                        }
-                        HandInstance.SpriteCache.Clear();
-                        break;
-
-
-                }
-            }
-
         }
         //Baton Pass handles debug logging for several different types of debuggers
 

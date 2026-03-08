@@ -1,8 +1,10 @@
-﻿using System;
+﻿
+using System;
 
 using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
+
 
 namespace UltraSkins
 {
@@ -29,7 +31,7 @@ namespace UltraSkins
         public const string BUILDTYPE = "Release";
 #elif DEBUG
         public const string BUILDTYPE = "Debug";
-#elif CANARY 
+#elif CANARY
         public const string BUILDTYPE = "Canary";
 #elif ALPHA
         public const string BUILDTYPE = "Alpha";

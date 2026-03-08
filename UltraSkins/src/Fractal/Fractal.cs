@@ -8,20 +8,18 @@ using UltraSkins.UI;
 using UnityEngine;
 using static UltraSkins.ULTRASKINHand;
 
-namespace UltraSkins
+namespace UltraSkins.Fractal
 {
-    public class Fractal : MonoBehaviour
+    public class BaseFractal : MonoBehaviour
     {
         public Material[] cachedMaterials;
         public Renderer renderer;
         public bool forceswap;
-        SwapType swapType = SwapType.Unknown;
-        SubType subType = SubType.Generic;
+        protected SwapType swapType = SwapType.Unknown;
+        protected SubType subType = SubType.Generic;
         public string iChange;
-        private int GCGnum = -1;
-        private bool GCGAlt = false;
-        GunColorGetter GCGref;
-        private bool HasDoneColorSwap = false;
+
+        protected bool HasDoneColorSwap = false;
 
         public enum SwapType {
             Unknown,
@@ -44,50 +42,10 @@ namespace UltraSkins
         }
 
         
-        public void Init(GunColorGetter GCG)
-        {
-            swapType = SwapType.Weapon;
-            //not how i would have done it but whatever
-            //1:Pistol 2:Shotgun 3:Nailgun 4:Railcannon 5:RocketLauncher
-            //1+Alt:SlabRevolver 2+Alt:JackHammer 3+Alt:SawbladeLauncher
-            GCGnum = GCG.weaponNumber;
-            GCGAlt = GCG.altVersion;
-            if (GCGnum == 2 && GCGAlt == true)
-            {
-                ShotgunHammer hammerInstance = GetComponentInParent<ShotgunHammer>();
 
 
 
-                if (hammerInstance != null)
-                {
-                    subType = SubType.Hammer;
-                    ULTRASKINHand.ReadOut.SwapTheDial(this);
-                    ReadOut.updateMeter(hammerInstance, true);
-                }
-            }
-            GCGref = GCG;
 
-        }
-
-        public void Init(Punch P)
-        {
-            swapType = SwapType.Arm;
-            switch (P.type)
-            {
-                case FistType.Standard:
-                    subType = SubType.FB;
-                    break;
-                case FistType.Heavy:
-                    subType = SubType.KB;
-                    break;
-            }
-            
-        }
-        public void Init(HookArm HA)
-        {
-            swapType = SwapType.Arm;
-            subType = SubType.WL;
-        }
 
         public void Init(Magnet M)
         {
@@ -99,42 +57,13 @@ namespace UltraSkins
             swapType = SwapType.Nail;
         }
 
-        public void Init(Grenade grenade)
-        {
-            swapType = grenade.rocket ? SwapType.Rocket : SwapType.Grenade;
-            if (swapType == SwapType.Rocket)
-            {
-                // perhaps at some point when this is called we could cache it after the first one?
-
-                Material[] chargemats = GetComponent<ChangeMaterials>().materials;
-                if (chargemats != null)
-                {
-                    Material newrocketmat = new Material(chargemats[0]);
-                    chargemats[0] = newrocketmat;
-                    if (ULTRASKINHand.HoldEm.Check("skull2rocketcharge"))
-                    {
-                        chargemats[0].mainTexture = ULTRASKINHand.HoldEm.Call("skull2rocketcharge");
-                    }
-                    if (ULTRASKINHand.HoldEm.Check("skull2rocketbonuscharge"))
-                    {
-                        chargemats[1].mainTexture = ULTRASKINHand.HoldEm.Call("skull2rocketbonuscharge");
-                    }
-                }
-            }
-        }
-
-        public void Init(Coin coin)
-        {
-            swapType = SwapType.Coin;
-            if (HoldEm.Check("coin01_3"))
-            {
-                coin.uselessMaterial.mainTexture = ULTRASKINHand.HoldEm.Call("coin01_3");
-            }
-        }
 
 
 
-        void Awake()
+
+
+
+        protected virtual void Awake()
         {
             USAPI.RefreshFractals += PrepareSwap;
         }
@@ -142,7 +71,7 @@ namespace UltraSkins
 
 
 
-        public void PrepareSwap(object sender, USAPI.FractalTextureUpdateArgs args)
+        public virtual void PrepareSwap(object sender, USAPI.FractalTextureUpdateArgs args)
         {
             if (args.doAll)
             {
@@ -155,65 +84,52 @@ namespace UltraSkins
 
 
         }
-        public void PrepareSwap(bool fs = false) {
+        public virtual void PrepareSwap(bool fs = false) {
             forceswap = fs;
             setupRenderer();
             UpdateMaterials();
         }
         
 
-        void setupRenderer()
+        protected virtual void setupRenderer()
         {
-            if (!renderer)
+            try
             {
-                renderer = GetComponent<Renderer>();
-                string swapname;
+                if (!renderer)
+                {
+                    renderer = GetComponent<Renderer>();
+                    string swapname;
+                    cachedMaterials = renderer.materials;
+                    foreach (Material mat in cachedMaterials)
+                    {
+                        /*                    if (mat.name == "Pistol New (Instance)")
+                                            {
+                                                renderer.SetMaterial(PrismManager.PrismMan.toon);
+                                            }*/
+                        iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
+                            swapname = "Swapped_" + swapType + "_" + mat.name;
 
-                foreach (Material mat in renderer.materials)
-                {
-                    /*                    if (mat.name == "Pistol New (Instance)")
-                                        {
-                                            renderer.SetMaterial(PrismManager.PrismMan.toon);
-                                        }*/
-                    iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                    swapname = "Swapped_" + swapType + "_" + mat.name;
-                    if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
-                    {
-                        string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                        ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
-                    }
-                }
-                if (swapType == SwapType.Weapon)
-                {
-                    foreach (Material mat in GCGref.defaultMaterials)
-                    {
-                        swapname = "Swapped_" + swapType + "_" + mat.name;
                         if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
                         {
                             string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
                             ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
                         }
                     }
-                    foreach (Material mat in GCGref.coloredMaterials)
-                    {
-                        swapname = "Swapped_" + swapType + "_" + mat.name;
-                        if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
-                        {
-                            string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                            ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
-                        }
-                    }
-
                 }
             }
+            catch (Exception ex)
+            {
+                BatonPass.Error("Renderer could not be set up, Code-\"BASEFRACTAL-RENDERERSETUP-EX\" ");
+            }
+
             
         }
 
 
-        public void UpdateMaterials()
+        public virtual void UpdateMaterials()
         {
             BatonPass.Debug("attempting to update fractal mat");
-            if (renderer && swapType != SwapType.Weapon)
+            if (renderer)
             {
                 Material[] materials = renderer.materials;
                 for (int i = 0; i < materials.Length; i++)
@@ -226,25 +142,10 @@ namespace UltraSkins
             {
                 //BatonPass.Warn($"Fractal cannot find renderer, Code-\"FRACTAL-{swapType.ToString()}-MISSING_RENDERER\"");
             }
-            if (swapType == SwapType.Weapon)
-            {
-
-                for (int i = 0; i < GCGref.defaultMaterials.Length; i++)
-                {
-                    PerformTheSwap(GCGref.defaultMaterials[i], forceswap);
-                    
-                }
-                for (int i = 0; i < GCGref.coloredMaterials.Length; i++)
-                {
-                    PerformTheSwap(GCGref.coloredMaterials[i], forceswap);
-
-                }
-                
-            }
             
         }
 
-       void OnDestroy()
+        protected virtual void OnDestroy()
         {
             USAPI.RefreshFractals -= PrepareSwap;
         }
@@ -252,47 +153,11 @@ namespace UltraSkins
 
 
 
-        //TODO Replace this with a system that grabs this from the fract and not at runtime
-        public Color GetVarationColor()
+        
+        public virtual Color GetVarationColor()
         {
             Color VariantColor = new Color(0, 0, 0, 0);
-            
-            if (swapType == SwapType.Weapon)
-            {
-
-                WeaponIcon WPI = transform.GetComponentInParent<WeaponIcon>();
-                if (WPI != null)
-                {
-
-                    VariantColor = new Color(ColorBlindSettings.Instance.variationColors[(int)WPI.weaponDescriptor.variationColor].r,
-                        ColorBlindSettings.Instance.variationColors[(int)WPI.weaponDescriptor.variationColor].g,
-                        ColorBlindSettings.Instance.variationColors[(int)WPI.weaponDescriptor.variationColor].b, 1f);
-                }
-                else
-                {
-                    BatonPass.Warn("Couldnt find WeaponDescriptior Code-\"FRACTAL-GETVARCOLOR-WPI_NULLREF\" ");
-                }
-
-            }
-            else if (subType == SubType.FB)
-            {
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[0].r,
-                ColorBlindSettings.Instance.variationColors[0].g,
-                ColorBlindSettings.Instance.variationColors[0].b, 1f);
-
-            }
-            else if (subType == SubType.KB)
-            {
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[2].r,
-                ColorBlindSettings.Instance.variationColors[2].g,
-                ColorBlindSettings.Instance.variationColors[2].b, 1f);
-            }
-            else if (subType == SubType.WL)
-            {
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[1].r,
-                    ColorBlindSettings.Instance.variationColors[1].g,
-                    ColorBlindSettings.Instance.variationColors[1].b, 1f);
-            }
+            BatonPass.Debug("Variation Color on a Base Fractal is not supported");
             return VariantColor;
         }
 
@@ -385,80 +250,78 @@ namespace UltraSkins
                 }
 
                 forceswap = false;
-                Texture resolvedTexture;
+                
                 string texturename = GetTextureName(mat.name);
             
                 BatonPass.Debug("requested " + mat.name + " got " + texturename);
 
-                if (swapType == SwapType.Weapon || swapType == SwapType.Arm)
-                {
-
-                    string[] textureProperties = mat.GetTexturePropertyNames();
-
-                    foreach (string property in textureProperties)
-                    {
-
-
-
-                       // BatonPass.Debug("Resolving " + property);
-                        resolvedTexture = ResolveTheTextureProperty(mat, property, texturename, property);
-                        //BatonPass.Info("Attempting to swap " + property + " of " + mat.name.ToString() + " with " + resolvedTexture.name.ToString());
-                        if (resolvedTexture != null && mat.HasProperty(property) && mat.GetTexture(property) != resolvedTexture)
-                        {
-                            //BatonPass.Debug("swapping " + property + " of " + mat.name.ToString());
-
-                            mat.SetTexture(property, resolvedTexture);
-                            //BatonPass.Debug("set");
-                        }
-
-
-                    }
-
-                    
-
-
-                }
-                else if (swapType == SwapType.Nail || swapType == SwapType.Coin)
-                {
-                    resolvedTexture = ResolveTheTextureProperty(mat, "_MainTex", texturename);
-                    if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
-                    {
-
-                        mat.SetTexture("_MainTex", resolvedTexture);
-
-                    }
-                }
-                else if (swapType == SwapType.Grenade)
-                {
-                    resolvedTexture = ResolveTheTextureProperty(mat, "THROWITBACK", texturename);
-                    if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
-                    {
-
-                        mat.SetTexture("_MainTex", resolvedTexture);
-
-                    }
-                }
-                else if (swapType == SwapType.Rocket)
-                {
-                    resolvedTexture = ResolveTheTextureProperty(mat, "ROCKIT", texturename);
-                    if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
-                    {
-
-                        mat.SetTexture("_MainTex", resolvedTexture);
-
-                    }
-                }
+                DoSwapLogic(mat, texturename);
 
             }
-            if (mat.HasProperty("_EmissiveColor") && HasDoneColorSwap == false)
+
+        }
+
+
+        protected virtual void DoSwapLogic(Material mat,string texturename)
+        {
+            DeepSwap(mat, texturename);
+        }
+
+
+
+
+        /// <summary>
+        /// Swap all params in a Mat
+        /// </summary>
+        /// <param name="mat"></param>
+        /// <param name="texturename"></param>
+        protected void DeepSwap(Material mat,string texturename)
+        {
+            string[] textureProperties = mat.GetTexturePropertyNames();
+            Texture resolvedTexture;
+            
+            foreach (string property in textureProperties)
             {
 
-                if (subType == SubType.Hammer)
+
+
+                // BatonPass.Debug("Resolving " + property);
+                resolvedTexture = ResolveTheTextureProperty(mat, property, texturename, property);
+                //BatonPass.Info("Attempting to swap " + property + " of " + mat.name.ToString() + " with " + resolvedTexture.name.ToString());
+                if (resolvedTexture != null && mat.HasProperty(property) && mat.GetTexture(property) != resolvedTexture)
                 {
-                    BatonPass.Debug("Skipping emissive color for this specific material.");
+                    //BatonPass.Debug("swapping " + property + " of " + mat.name.ToString());
+
+                    mat.SetTexture(property, resolvedTexture);
+                    //BatonPass.Debug("set");
                 }
-                else
-                {
+
+
+            }
+        }
+
+        /// <summary>
+        /// Swap 1 param in a Mat
+        /// </summary>
+        /// <param name="mat"></param>
+        /// <param name="texturename"></param>
+        /// <param name="paramName"></param>
+        protected void SimpleSwap(Material mat,string texturename,string paramName = "_MainTex")
+        {
+            Texture resolvedTexture;
+            resolvedTexture = ResolveTheTextureProperty(mat, paramName, texturename);
+            if (resolvedTexture && resolvedTexture != null && mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != resolvedTexture)
+            {
+
+                mat.SetTexture("_MainTex", resolvedTexture);
+
+            }
+        }
+
+        protected void DoEmissiveSwap(Material mat)
+        {
+            if (mat.HasProperty("_EmissiveColor") && HasDoneColorSwap == false)
+            {
 
 
                     try
@@ -474,10 +337,12 @@ namespace UltraSkins
                         BatonPass.Error(EX.ToString());
                     }
 
-                }
+                
                 HasDoneColorSwap = true;
             }
         }
+
+
         static string GetTextureName(string materialName)
         {
             if (ULTRASKINHand.HandInstance.MaterialNames.TryGetValue(materialName, out string textureName))
@@ -491,6 +356,7 @@ namespace UltraSkins
                 return null;
             }
         }
+
 
 
 
