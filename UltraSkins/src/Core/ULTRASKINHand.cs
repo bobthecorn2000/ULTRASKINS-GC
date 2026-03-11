@@ -25,6 +25,7 @@ using static UltraSkins.API.USAPI;
 using static UltraSkins.ULTRASKINHand;
 using UltraSkins.Prism;
 
+
 //using UltraSkins.Prism;
 
 
@@ -314,7 +315,7 @@ namespace UltraSkins
             [HarmonyPostfix]
             public static void UWCPost()
             {
-
+                BroadcastDynEmSwap();
             }
 
 
@@ -369,6 +370,48 @@ namespace UltraSkins
                     }
                 }
 
+                IlluminatedGenericFractal igf = null;
+                bool dontInit = false;
+                if (__instance.altVersion)
+                {
+                    GameObject go = __instance.transform.Find("Revolver_Rerigged_Alternate/RightArm").gameObject;
+                    if (go)
+                    {
+
+                    
+                    if (!go.GetComponent<IlluminatedGenericFractal>())
+                    {
+                        igf = go.AddComponent<IlluminatedGenericFractal>();
+                    }
+                        else
+                        {
+                            dontInit = true;
+                        }
+                    }
+                }
+                else
+                {
+                    GameObject go = __instance.transform.Find("Revolver_Rerigged_Standard/RightArm").gameObject;
+                    if (go)
+                    {
+                        if (!go.GetComponent<IlluminatedGenericFractal>())
+                        {
+                            igf = go.AddComponent<IlluminatedGenericFractal>();
+                        }
+                        else
+                        {
+                            dontInit = true;
+                        }
+
+                    }
+                }
+                if (igf != null && !dontInit)
+                {
+                    igf.varcolor = __instance.gunVariation;
+                    igf.Init();
+                    igf.PrepareSwap();
+                }
+                
 
             }
             [HarmonyPatch(typeof(ShotgunHammer), "Awake")]
@@ -581,7 +624,7 @@ namespace UltraSkins
 
         }
 
-
+        
         public static Transform FindDeepChildByPathIncludeInactive(Transform root, string path)
         {
             string[] parts = path.Split('/');

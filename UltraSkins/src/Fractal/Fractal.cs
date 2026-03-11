@@ -44,7 +44,10 @@ namespace UltraSkins.Fractal
         
 
 
+        public void Init()
+        {
 
+        }
 
 
         public void Init(Magnet M)
@@ -107,7 +110,15 @@ namespace UltraSkins.Fractal
                                                 renderer.SetMaterial(PrismManager.PrismMan.toon);
                                             }*/
                         iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
+
+                        if (!mat.name.StartsWith("Swapped_")) {
                             swapname = "Swapped_" + swapType + "_" + mat.name;
+                        }
+                        else
+                        {
+                            swapname = mat.name;
+                        }
+                            
 
                         if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
                         {

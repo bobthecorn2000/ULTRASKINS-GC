@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using BatonPassLogger;
+
 using UnityEngine;
 
 namespace UltraSkins.Fractal
 {
-    public class ArmFractal : BaseFractal
+    public class ArmFractal : IlluminatedGenericFractal
     {
 
 
@@ -16,9 +17,11 @@ namespace UltraSkins.Fractal
             switch (P.type)
             {
                 case FistType.Standard:
+                    varcolor = 0;
                     subType = SubType.FB;
                     break;
                 case FistType.Heavy:
+                    varcolor = 2;
                     subType = SubType.KB;
                     break;
             }
@@ -26,40 +29,17 @@ namespace UltraSkins.Fractal
         }
         public void Init(HookArm HA)
         {
+            varcolor = 1;
             swapType = SwapType.Arm;
             subType = SubType.WL;
         }
 
 
-        public override Color GetVarationColor()
-        {
-            Color VariantColor = new Color(0, 0, 0, 0);
 
-            if (subType == SubType.FB)
-            {
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[0].r,
-                ColorBlindSettings.Instance.variationColors[0].g,
-                ColorBlindSettings.Instance.variationColors[0].b, 1f);
-
-            }
-            else if (subType == SubType.KB)
-            {
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[2].r,
-                ColorBlindSettings.Instance.variationColors[2].g,
-                ColorBlindSettings.Instance.variationColors[2].b, 1f);
-            }
-            else if (subType == SubType.WL)
-            {
-                VariantColor = new Color(ColorBlindSettings.Instance.variationColors[1].r,
-                    ColorBlindSettings.Instance.variationColors[1].g,
-                    ColorBlindSettings.Instance.variationColors[1].b, 1f);
-            }
-            return VariantColor;
-        }
         protected override void DoSwapLogic(Material mat, string texturename)
         {
             base.DoSwapLogic(mat, texturename);
-            base.DoEmissiveSwap(mat);
+            OnCBSUpdated();
         }
 
 

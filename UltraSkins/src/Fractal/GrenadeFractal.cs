@@ -22,14 +22,20 @@ namespace UltraSkins.Fractal
 
         protected override void setupRenderer()
         {
-            base.setupRenderer();
-            if (swapType == SwapType.Rocket)
+            
+            if (swapType == SwapType.Grenade)
             {
+                base.setupRenderer();
+            }
+            else if (swapType == SwapType.Rocket)
+            {
+
+                ChangeMaterials CM = GetComponentInChildren<ChangeMaterials>();
                 
 
-                Material[] chargemats = GetComponentInChildren<ChangeMaterials>().materials;
-                if (chargemats != null)
+                if (CM != null)
                 {
+                    Material[] chargemats = CM.materials;
                     Material newrocketmat = new Material(chargemats[0]);
                     chargemats[0] = newrocketmat;
                     if (ULTRASKINHand.HoldEm.Check("skull2rocketcharge"))
@@ -40,6 +46,51 @@ namespace UltraSkins.Fractal
                     {
                         chargemats[1].mainTexture = ULTRASKINHand.HoldEm.Call("skull2rocketbonuscharge");
                     }
+
+                    try
+                    {
+                        if (!renderer)
+                        {
+                            renderer = CM.GetComponent<MeshRenderer>();
+                            string swapname;
+                            cachedMaterials = renderer.materials;
+                            foreach (Material mat in cachedMaterials)
+                            {
+                                /*                    if (mat.name == "Pistol New (Instance)")
+                                                    {
+                                                        renderer.SetMaterial(PrismManager.PrismMan.toon);
+                                                    }*/
+                                iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
+
+
+                                if (!mat.name.StartsWith("Swapped_"))
+                                {
+                                    swapname = "Swapped_" + swapType + "_" + mat.name;
+                                }
+                                else
+                                {
+                                    swapname = mat.name;
+                                }
+
+                                if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
+                                {
+                                    string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
+                                    ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        BatonPass.Error("Renderer could not be set up, Code-\"GRENADEFRACTAL-ROCKETMODE-RENDERERSETUP-EX\" ");
+                    }
+
+
+
+
+
+
+
                 }
             }
         }

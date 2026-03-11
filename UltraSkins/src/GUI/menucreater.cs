@@ -324,13 +324,13 @@ namespace UltraSkins.UI
             emm.EnableMenuSound.Play();
             animator.Play("MenuOpen");
             handInstance.settingsmanager.ShowSettingsAssets(true);
-            handInstance.settingsmanager.ShowPreviewWireFrame(true);
+            //handInstance.settingsmanager.ShowPreviewWireFrame(true);
 
         }
         public static void Closeskineditor(GameObject mainmenucanvas, GameObject Configmenu,GameObject fallnoiseoff)
         {
             Configmenu.SetActive(false);
-            handInstance.settingsmanager.ShowPreviewWireFrame(false);
+            //handInstance.settingsmanager.ShowPreviewWireFrame(false);
             handInstance.settingsmanager.ShowSettingsAssets(false);
             mainmenucanvas.SetActive(true);
             fallnoiseoff.SetActive(true);
@@ -350,7 +350,7 @@ namespace UltraSkins.UI
             backdrop.SetActive(true);
             Configmenu.SetActive(true);
             handInstance.settingsmanager.ShowSettingsAssets(true);
-            handInstance.settingsmanager.ShowPreviewWireFrame(true);
+            //handInstance.settingsmanager.ShowPreviewWireFrame(true);
 
             //GameStateManager.Instance.RegisterState(configState);
         }

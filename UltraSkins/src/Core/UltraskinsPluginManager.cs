@@ -60,7 +60,10 @@ namespace UltraSkins.API
 
         public static event Action DoDynamicEmissiveSwap;
 
-
+        public static void BroadcastDynEmSwap()
+        {
+            DoDynamicEmissiveSwap?.Invoke();
+        }
 
     }
 }
