@@ -24,6 +24,7 @@ using UltraSkins.API;
 using static UltraSkins.API.USAPI;
 using static UltraSkins.ULTRASKINHand;
 using UltraSkins.Prism;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 
 //using UltraSkins.Prism;
@@ -67,7 +68,7 @@ namespace UltraSkins
         private List<Sprite> _edited;
         private bool firstmenu = true;
 
-
+        
         public string folderupdater;
         public static Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
         public  OGSkinsManager ogSkinsManager;
@@ -163,6 +164,7 @@ namespace UltraSkins
         {
             //Harmony.DEBUG = true;
             // HarmonyFileLog.Enabled = true;
+            
             UKSHarmony = new Harmony("Gcorn.UltraSkins");
             UKSHarmony.PatchAll(typeof(HarmonyGunPatcher));
             UKSHarmony.PatchAll(typeof(HarmonyProjectilePatcher));
@@ -370,7 +372,7 @@ namespace UltraSkins
                     }
                 }
 
-                IlluminatedGenericFractal igf = null;
+                ArmFractal igf = null;
                 bool dontInit = false;
                 if (__instance.altVersion)
                 {
@@ -379,9 +381,10 @@ namespace UltraSkins
                     {
 
                     
-                    if (!go.GetComponent<IlluminatedGenericFractal>())
+                    if (!go.GetComponent<ArmFractal>())
                     {
-                        igf = go.AddComponent<IlluminatedGenericFractal>();
+                         
+                        igf = go.AddComponent<ArmFractal>();
                     }
                         else
                         {
@@ -394,9 +397,9 @@ namespace UltraSkins
                     GameObject go = __instance.transform.Find("Revolver_Rerigged_Standard/RightArm").gameObject;
                     if (go)
                     {
-                        if (!go.GetComponent<IlluminatedGenericFractal>())
+                        if (!go.GetComponent<ArmFractal>())
                         {
-                            igf = go.AddComponent<IlluminatedGenericFractal>();
+                            igf = go.AddComponent<ArmFractal>();
                         }
                         else
                         {
@@ -407,13 +410,51 @@ namespace UltraSkins
                 }
                 if (igf != null && !dontInit)
                 {
-                    igf.varcolor = __instance.gunVariation;
-                    igf.Init();
+                    
+                    igf.Init(__instance);
                     igf.PrepareSwap();
                 }
                 
 
             }
+
+            [HarmonyPatch(typeof(ShotgunHammer), "Awake")]
+            [HarmonyPrefix]
+            public static void EarlyHammerSetup(ShotgunHammer __instance)
+            {
+                
+                if (!__instance.GetComponent<Fractal.ChainsawFractal>())
+                {
+                    if (__instance.variation == 2)
+                    {
+                        ChainsawFractal fract = __instance.gameObject.AddComponent<Fractal.ChainsawFractal>();
+                        fract.Init(__instance);
+                        fract.PrepareSwap();
+                    }
+
+                }
+
+            }
+            [HarmonyPatch(typeof(Shotgun), "Awake")]
+            [HarmonyPrefix]
+            public static void EarlyShotgunSetup(Shotgun __instance)
+            {
+
+                if (!__instance.GetComponent<Fractal.ChainsawFractal>())
+                {
+                    if (__instance.variation == 2)
+                    {
+                        ChainsawFractal fract = __instance.gameObject.AddComponent<Fractal.ChainsawFractal>();
+                        fract.Init(__instance);
+                        fract.PrepareSwap();
+                    }
+
+                }
+
+            }
+
+
+
             [HarmonyPatch(typeof(ShotgunHammer), "Awake")]
             [HarmonyPostfix]
             public static void HammerSetup(ShotgunHammer __instance)
@@ -650,7 +691,7 @@ namespace UltraSkins
             return current;
         }
 
-        private void SceneManagerOnsceneLoaded(Scene scene, Scene mode)
+        private async void SceneManagerOnsceneLoaded(Scene scene, Scene mode)
         {
             BatonPass.Debug("BATON PASS: WE ARE IN SceneManagerOnsceneLoaded()");
 
@@ -688,6 +729,14 @@ namespace UltraSkins
                 
                 //Pause menu is disabled for now
                 //MenuCreator.makethePausemenu();
+            }
+
+            if (mode.name == "7b3cb6a0a342eb54dafe5552d4820eeb")
+            {
+                AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/BrennanTerminal.prefab");
+                await handle.Task;
+                
+                Instantiate(handle.Result);
             }
 
         }

@@ -39,8 +39,9 @@ namespace UltraSkins.Fractal
 
         protected override void OnDestroy()
         {
-            base.OnDestroy();
             USAPI.DoDynamicEmissiveSwap -= OnCBSUpdated;
+            base.OnDestroy();
+            
         }
 
     }

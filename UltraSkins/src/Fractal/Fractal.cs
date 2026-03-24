@@ -30,6 +30,7 @@ namespace UltraSkins.Fractal
             Rocket,
             Coin,
             Magnet,
+            Chainsaw,
         }
 
         public enum SubType
@@ -39,6 +40,8 @@ namespace UltraSkins.Fractal
             KB,
             WL,
             Hammer,
+            SandBox,
+            RightArm,
         }
 
         
@@ -76,9 +79,10 @@ namespace UltraSkins.Fractal
 
         public virtual void PrepareSwap(object sender, USAPI.FractalTextureUpdateArgs args)
         {
+            
             if (args.doAll)
             {
-                
+                forceswap = true;
                 setupRenderer();
                 UpdateMaterials();
             }

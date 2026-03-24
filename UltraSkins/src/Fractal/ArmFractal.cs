@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using BatonPassLogger;
-
+using Sandbox.Arm;
 using UnityEngine;
 
 namespace UltraSkins.Fractal
@@ -34,6 +34,22 @@ namespace UltraSkins.Fractal
             subType = SubType.WL;
         }
 
+
+        public void Init(Revolver rev)
+        {
+            WeaponIcon WPI = rev.GetComponent<WeaponIcon>();
+            varcolor = (int)WPI.weaponDescriptor.variationColor;
+            subType = SubType.RightArm;
+            swapType = SwapType.Arm;
+        }
+
+        public void Init(SandboxArm sandarm)
+        {
+            WeaponIcon WPI = sandarm.GetComponent<WeaponIcon>();
+            varcolor = (int)WPI.weaponDescriptor.variationColor;
+            subType = SubType.SandBox;
+            swapType = SwapType.Arm;
+        }
 
 
         protected override void DoSwapLogic(Material mat, string texturename)

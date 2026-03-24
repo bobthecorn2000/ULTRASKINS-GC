@@ -20,7 +20,7 @@ namespace UltraSkins.Fractal
         bool NoDynamicColor = false;
 
 
-        private static readonly AccessTools.FieldRef<WeaponIcon, Renderer[]> varcolor = AccessTools.FieldRefAccess<WeaponIcon, Renderer[]>("variationColoredRenderers");
+        
         public void Init(GunColorGetter GCG)
         {
 
@@ -34,14 +34,7 @@ namespace UltraSkins.Fractal
             WPI = transform.GetComponentInParent<WeaponIcon>();
             if (WPI != null)
             {
-                if (TryGetComponent<Renderer>(out Renderer rend))
-                {
-                    if (!varcolor(WPI).Contains<Renderer>(rend))
-                    {
-                        varcolor(WPI) = varcolor(WPI).AddToArray<Renderer>(rend);
-                    }
-
-                }
+                FractalWPIhandler.AddToWPItracker(gameObject, WPI);
             }
             else
             {
