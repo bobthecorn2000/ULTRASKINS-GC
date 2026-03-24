@@ -30,10 +30,10 @@ namespace UltraSkins.Fractal
                     {
                         iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
                         swapname = "Swapped_" + swapType + "_" + mat.name;
-                        if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
+                        if (!HoldEm.Instance.MaterialNames.ContainsKey(swapname))
                         {
                             string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                            ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
+                            HoldEm.Instance.MaterialNames.Add(swapname, textureName);
                         }
                     }
                 }
@@ -64,7 +64,7 @@ namespace UltraSkins.Fractal
             base.SimpleSwap(mat, texturename);
             if (HoldEm.Check("coin01_3"))
             {
-                c.uselessMaterial.mainTexture = ULTRASKINHand.HoldEm.Call("coin01_3");
+                c.uselessMaterial.mainTexture = HoldEm.Call("coin01_3");
             }
         }
 

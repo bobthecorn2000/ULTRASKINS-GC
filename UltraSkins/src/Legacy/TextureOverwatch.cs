@@ -28,7 +28,7 @@ namespace UltraSkins.Legacy
             {
                 swapType = "projectile";
                 if (HoldEm.Check("coin01_3")){
-                    coin.uselessMaterial.mainTexture = ULTRASKINHand.HoldEm.Call("coin01_3");
+                    coin.uselessMaterial.mainTexture = HoldEm.Call("coin01_3");
                 }
                 
             }
@@ -44,13 +44,13 @@ namespace UltraSkins.Legacy
 					Material[] chargemats = GetComponent<ChangeMaterials>().materials;
                     Material newrocketmat = new Material(chargemats[0]);
 					chargemats[0] = newrocketmat;
-                    if (ULTRASKINHand.HoldEm.Check("skull2rocketcharge"))
+                    if (HoldEm.Check("skull2rocketcharge"))
 						{
-						chargemats[0].mainTexture = ULTRASKINHand.HoldEm.Call("skull2rocketcharge");
+						chargemats[0].mainTexture = HoldEm.Call("skull2rocketcharge");
 						}
-                    if (ULTRASKINHand.HoldEm.Check("skull2rocketbonuscharge"))
+                    if (HoldEm.Check("skull2rocketbonuscharge"))
                     {
-                        chargemats[1].mainTexture = ULTRASKINHand.HoldEm.Call("skull2rocketbonuscharge");
+                        chargemats[1].mainTexture = HoldEm.Call("skull2rocketbonuscharge");
                     }
 
                 }
@@ -69,10 +69,10 @@ namespace UltraSkins.Legacy
                     }*/
                     iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
                     swapname = "Swapped_" + swapType + "_" + mat.name;
-                    if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
+                    if (!HoldEm.Instance.MaterialNames.ContainsKey(swapname))
                     {
                         string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                        ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
+                        HoldEm.Instance.MaterialNames.Add(swapname, textureName);
                     }
                 }
             }

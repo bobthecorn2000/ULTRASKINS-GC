@@ -124,10 +124,10 @@ namespace UltraSkins.Fractal
                         }
                             
 
-                        if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
+                        if (!HoldEm.Instance.MaterialNames.ContainsKey(swapname))
                         {
                             string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                            ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
+                            HoldEm.Instance.MaterialNames.Add(swapname, textureName);
                         }
                     }
                 }
@@ -301,7 +301,7 @@ namespace UltraSkins.Fractal
 
 
                 // BatonPass.Debug("Resolving " + property);
-                resolvedTexture = ResolveTheTextureProperty(mat, property, texturename, property);
+                resolvedTexture = ResolveTheTextureProperty(mat, property, texturename);
                 //BatonPass.Info("Attempting to swap " + property + " of " + mat.name.ToString() + " with " + resolvedTexture.name.ToString());
                 if (resolvedTexture != null && mat.HasProperty(property) && mat.GetTexture(property) != resolvedTexture)
                 {
@@ -360,7 +360,7 @@ namespace UltraSkins.Fractal
 
         static string GetTextureName(string materialName)
         {
-            if (ULTRASKINHand.HandInstance.MaterialNames.TryGetValue(materialName, out string textureName))
+            if (HoldEm.Instance.MaterialNames.TryGetValue(materialName, out string textureName))
             {
                 // If the material name exists, return the texture name
                 return textureName;

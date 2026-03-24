@@ -10,6 +10,11 @@ namespace UltraSkins
 {
     internal static class USC
     {
+        public const string PLUGIN_NAME = "UltraSkins";
+        public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
+
+
+
         // Versions
         public const string VERSION = "7.0.0";
         public static readonly string[] SupportedPackFormats = { "4.0" };

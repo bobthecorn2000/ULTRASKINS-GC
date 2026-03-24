@@ -210,7 +210,7 @@ namespace BatonPassLogger
 
         static BootstrapLoggerConfig()
         {
-            try
+/*            try
             {
                 string path = Path.Combine(SkinEventHandler.getUserSettingsLoc(), USC.SETTINGSFILE);
                 if (!File.Exists(path)) return;
@@ -228,8 +228,16 @@ namespace BatonPassLogger
             catch
             {
                 // Do nothing; stick with default
+            }*/
+        }
+        public static void LoadUserLogPref(string logSetting)
+        {
+            if (logSetting != null && Enum.TryParse(logSetting, true, out BatonPass.LogLevel parsedLevel))
+            {
+                BPLogLevel = parsedLevel;
             }
         }
+
         private static BatonPass.LogLevel GetDefaultLevel()
         {
 
@@ -237,7 +245,7 @@ namespace BatonPassLogger
 #if ALPHA || CANARY || DEBUG
             return BatonPass.LogLevel.Debug;
 #else
-        return BatonPass.LogLevel.Warning;
+        return BatonPass.LogLevel.Info;
 #endif
         }
         public class BPSetting

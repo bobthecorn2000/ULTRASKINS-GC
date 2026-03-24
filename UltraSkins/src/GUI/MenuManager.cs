@@ -340,7 +340,7 @@ namespace UltraSkins.UI
             try
             {
                 string subhash = subfolder.GetHashCode().ToString();
-                if (handInstance.IconCache.TryGetValue(subhash, out Texture2D icon))
+                if (HoldEm.Instance.IconCache.TryGetValue(subhash, out Texture2D icon))
                 {
                     BEM.RawIcon = icon;
                     BEM.RawIcon.Apply();
@@ -401,7 +401,7 @@ namespace UltraSkins.UI
         void orderfixer(GameObject contentfolder) 
         {
             BatonPass.Debug("attempting to order files");
-            string[] filepathrev = handInstance.filepathArray.Reverse().ToArray();
+            string[] filepathrev = TextileService.Instance.filepathArray.Reverse().ToArray();
             /*  BatonPass.Debug("We know the following files");
             int debugtracker = 0;
             foreach (string item in filepathrev)
@@ -561,7 +561,7 @@ namespace UltraSkins.UI
                 }
             }
             string[] paths = validButtons.ToArray();
-            handInstance.RefreshSkins(paths);
+            TextileService.Instance.RefreshSkins(paths);
 
 
         }
@@ -680,7 +680,7 @@ namespace UltraSkins.UI
             {
                 try
                 {
-                    OGSkinsManager OGS = ULTRASKINHand.HandInstance.ogSkinsManager;
+                    OGSkinsManager OGS = HoldEm.Instance.ogSkinsManager;
                     int batchmax = ULTRASKINHand.HandInstance.settingsmanager.GetSettingValue<int>("MaxTextureToPngPerFrame");
                     if (batchmax <= 0)
                     {

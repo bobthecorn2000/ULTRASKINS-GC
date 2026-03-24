@@ -4,7 +4,7 @@ using System.Text;
 
 namespace UltraSkins.Utils
 {
-    internal class ServiceStartPackage
+    public class ServiceStartPackage
     {
         bool Successful { get;}
         string Message { get;}

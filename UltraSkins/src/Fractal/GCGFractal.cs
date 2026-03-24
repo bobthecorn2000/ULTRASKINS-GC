@@ -54,19 +54,19 @@ namespace UltraSkins.Fractal
                 foreach (Material mat in GCGref.defaultMaterials)
                 {
                     swapname = "Swapped_" + swapType + "_" + mat.name;
-                    if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
+                    if (!HoldEm.Instance.MaterialNames.ContainsKey(swapname))
                     {
                         string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                        ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
+                        HoldEm.Instance.MaterialNames.Add(swapname, textureName);
                     }
                 }
                 foreach (Material mat in GCGref.coloredMaterials)
                 {
                     swapname = "Swapped_" + swapType + "_" + mat.name;
-                    if (!ULTRASKINHand.HandInstance.MaterialNames.ContainsKey(swapname))
+                    if (!HoldEm.Instance.MaterialNames.ContainsKey(swapname))
                     {
                         string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                        ULTRASKINHand.HandInstance.MaterialNames.Add(swapname, textureName);
+                        HoldEm.Instance.MaterialNames.Add(swapname, textureName);
                     }
                 }
             }

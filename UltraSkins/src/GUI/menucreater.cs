@@ -243,7 +243,7 @@ namespace UltraSkins.UI
 
         public static void CreateSMan()
         {
-            List<TextureOverWatch> PTOW = new List<TextureOverWatch>();
+            List<Legacy.TextureOverWatch> PTOW = new List<Legacy.TextureOverWatch>();
             var Settingshandle = Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/Settings.prefab");
             GameObject prefab = Settingshandle.WaitForCompletion();
 
@@ -254,7 +254,7 @@ namespace UltraSkins.UI
                     GameObject instance = Instantiate(prefab);
                     instance.SetActive(true);
                     sMan = instance.GetComponent<SettingsManager>();
-                    handInstance.ogSkinsManager = instance.GetComponent<OGSkinsManager>();
+                    HoldEm.Instance.ogSkinsManager = instance.GetComponent<OGSkinsManager>();
                     sMan.aboutMenu.SetAboutVersionInfo(USC.VERSION, USC.BUILDTYPE, USC.GCSKINVERSION, USC.SupportedPackFormats);
                     sMan.aboutMenu.HPtag.SetActive(BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.flazhik.handpaint"));
                     string usersettings = SkinEventHandler.getUserSettingsLoc();
@@ -274,7 +274,7 @@ namespace UltraSkins.UI
                     }
                     catch (Exception ex)
                     {
-                        BatonPass.Fatal("HEAR YE, HEAR YE! Critical failure: Default Settings and their constructor are missing, UltraSkins will be unstable at best. CODE -\"MCREATE-MAKETHEMENU-SETTINGSFILE-CORRUPTED_OR_MISSING\"");
+                        BatonPass.Fatal("Critical failure: Default Settings and their constructor are missing, UltraSkins will be unstable at best. CODE -\"MCREATE-MAKETHEMENU-SETTINGSFILE-CORRUPTED_OR_MISSING\"");
                         handInstance.BPGUI.ShowGUI("Error");
                         handInstance.BPGUI.BatonPassAnnoucement(Color.red, "Fatal Error, Default Settings and their constructor are missing, UltraSkins will be unstable at best. CODE -\"MCREATE-MAKETHEMENU-SETTINGSFILE-CORRUPTED_OR_MISSING\"");
                     }
@@ -289,7 +289,7 @@ namespace UltraSkins.UI
                         BatonPass.Debug("adding new tows");
                         //PTOW = ULTRASKINHand.HarmonyGunPatcher.AddPTOWs(PreviewFather, true);
                         BatonPass.Success("Added TOW");
-                        handInstance.PtowStorage = PreviewFather.gameObject.AddComponent<TowStorage>();
+                        handInstance.PtowStorage = PreviewFather.gameObject.AddComponent<Legacy.TowStorage>();
                         handInstance.PtowStorage.TOWS = PTOW;
                     }
                     catch (Exception ex)
