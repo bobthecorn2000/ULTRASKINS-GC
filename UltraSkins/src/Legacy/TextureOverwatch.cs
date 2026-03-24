@@ -5,7 +5,7 @@ using System;
 using static UltraSkins.ULTRASKINHand;
 
 
-namespace UltraSkins
+namespace UltraSkins.Legacy
 {
     //tempcomment5
 	public class TextureOverWatch : MonoBehaviour

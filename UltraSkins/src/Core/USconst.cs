@@ -13,6 +13,7 @@ namespace UltraSkins
         // Versions
         public const string VERSION = "7.0.0";
         public static readonly string[] SupportedPackFormats = { "4.0" };
+        
         public const string GCSKINVERSION = "4.0";
         public const int RAYVERSION = 1;
 

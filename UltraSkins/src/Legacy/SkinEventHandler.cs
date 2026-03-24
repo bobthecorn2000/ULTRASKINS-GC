@@ -14,9 +14,11 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-
+#pragma warning disable
 namespace UltraSkins.Utils
 {
+
+    [Obsolete]
 	public class SkinEventHandler : MonoBehaviour
 	{
         //static PluginConfigurator config;
@@ -230,8 +232,8 @@ namespace UltraSkins.Utils
 
             }
             return Locations;
-        } 
-
+        }
+        [Obsolete]
         public class StringSerializer
         {
             public void SerializeStringToFile(string[] data, string filePath)

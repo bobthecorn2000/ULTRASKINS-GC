@@ -77,7 +77,7 @@ namespace UltraSkins
         public string serializedSet = "";
         public bool swapped = false;
         public UltraSkins.UI.SettingsManager settingsmanager;
-        public TowStorage PtowStorage;
+        public Legacy.TowStorage PtowStorage;
         public Dictionary<string, Texture2D> IconCache = new Dictionary<string, Texture2D>();
         public Dictionary<string, Sprite> SpriteCache = new Dictionary<string, Sprite>();
         public CompatLayer compatlayer = new CompatLayer();
@@ -135,7 +135,7 @@ namespace UltraSkins
 
             SceneManager.activeSceneChanged += SceneManagerOnsceneLoaded;
             BatonPass.Info("Scenemanager Created");
-            USAPI.OnTexLoadFinished += RANKTITLESWAPPER.makethestylerank;
+            USAPI.OnTexLoadFinished += RANKTITLESWAPPER.MakeTheStyleRank;
             BatonPass.Info("Subscribing to the API");
             // The GUID of the configurator must not be changed as it is used to locate the config file path
             BatonPass.Debug("INIT BATON PASS: ONMODLOADED()");
@@ -207,7 +207,7 @@ namespace UltraSkins
 
         }
 
-        public void refreshskins(string[] clickedButtons)
+        public void RefreshSkins(string[] clickedButtons)
         {
             BatonPass.Debug("BATON PASS: WE ARE IN REFRESHSKINS()");
 
@@ -242,7 +242,7 @@ namespace UltraSkins
             //LoadTextures(filepath);
 
         }
-        void refreshskins()
+        void RefreshSkins()
         {
 
             
@@ -268,7 +268,7 @@ namespace UltraSkins
             static void StyleHudStartPost(StyleHUD __instance)
             {
                 BatonPass.Debug("hooking to the style meter");
-                RANKTITLESWAPPER.swapthestylerank(__instance);
+                RANKTITLESWAPPER.SwapTheStyleRank(__instance);
             }
 
 
@@ -552,7 +552,7 @@ namespace UltraSkins
             }
             [HarmonyPatch(typeof(GunColorGetter), "Awake")]
             [HarmonyPrefix]
-            public static void startawake(GunColorGetter __instance)
+            public static void StartAwake(GunColorGetter __instance)
             {
                 BatonPass.Debug(__instance.name + " I HAVE AWOKEN");
                 if (!__instance.GetComponent<GCGFractal>())
@@ -602,10 +602,10 @@ namespace UltraSkins
 
 
             [Obsolete]
-            public static void ReloadTextureOverWatch(TextureOverWatch[] TOWS)
+            public static void ReloadTextureOverWatch(Legacy.TextureOverWatch[] TOWS)
             {
 
-                foreach (TextureOverWatch TOW in TOWS)
+                foreach (Legacy.TextureOverWatch TOW in TOWS)
                 {
                     TOW.enabled = true;
                 }
@@ -616,13 +616,13 @@ namespace UltraSkins
                 BatonPass.Debug("added " + gameobject.name + "to textureoverwatch");
                 if (toself)
                 {
-                    if (!gameobject.GetComponent<TextureOverWatch>())
+                    if (!gameobject.GetComponent<Legacy.TextureOverWatch>())
                     {
-                        gameobject.AddComponent<TextureOverWatch>();
+                        gameobject.AddComponent<Legacy.TextureOverWatch>();
                     }
                     else
                     {
-                        gameobject.GetComponent<TextureOverWatch>().enabled = refresh;
+                        gameobject.GetComponent<Legacy.TextureOverWatch>().enabled = refresh;
                     }
                 }
                 if (toparent)
@@ -632,13 +632,13 @@ namespace UltraSkins
                     {
                         if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
                         {
-                            if (!renderer.GetComponent<TextureOverWatch>())
+                            if (!renderer.GetComponent<Legacy.TextureOverWatch>())
                             {
-                                renderer.gameObject.AddComponent<TextureOverWatch>();
+                                renderer.gameObject.AddComponent<Legacy.TextureOverWatch>();
                             }
                             else
                             {
-                                renderer.GetComponent<TextureOverWatch>().enabled = refresh;
+                                renderer.GetComponent<Legacy.TextureOverWatch>().enabled = refresh;
                             }
                         }
                     }
@@ -650,13 +650,13 @@ namespace UltraSkins
                     {
                         if (renderer != null && renderer.GetType() != typeof(ParticleSystemRenderer) && renderer.GetType() != typeof(CanvasRenderer) && renderer.GetType() != typeof(LineRenderer))
                         {
-                            if (!renderer.GetComponent<TextureOverWatch>())
+                            if (!renderer.GetComponent<Legacy.TextureOverWatch>())
                             {
-                                renderer.gameObject.AddComponent<TextureOverWatch>();
+                                renderer.gameObject.AddComponent<Legacy.TextureOverWatch>();
                             }
                             else
                             {
-                                renderer.GetComponent<TextureOverWatch>().enabled = refresh;
+                                renderer.GetComponent<Legacy.TextureOverWatch>().enabled = refresh;
                             }
                         }
                     }
@@ -713,7 +713,7 @@ namespace UltraSkins
                 if (firstmenu == true)
                 {
                     firstmenu = false;
-                    refreshskins();
+                    RefreshSkins();
                 }
 
             }
@@ -752,7 +752,7 @@ namespace UltraSkins
         internal class RANKTITLESWAPPER
         {
 
-            internal static void swapthestylerank(StyleHUD stylehudINST)
+            internal static void SwapTheStyleRank(StyleHUD stylehudINST)
             {
 
                 BatonPass.Debug("stylehud has started");
@@ -769,7 +769,7 @@ namespace UltraSkins
 
                 }
             }
-            internal static void makethestylerank(TextureLoadEventArgs e)
+            internal static void MakeTheStyleRank(TextureLoadEventArgs e)
 
 
             {
@@ -979,7 +979,7 @@ namespace UltraSkins
                 
                 switch (TypeDetection(fpath))
                 {
-                    case archivetype.folder:
+                    case ArchiveType.folder:
                         pathbook = QueryTexturesInFolder(fpath,pathbook);
                         break;
                 }
@@ -1005,21 +1005,21 @@ namespace UltraSkins
            
         }
 
-        public archivetype TypeDetection(string path)
+        public ArchiveType TypeDetection(string path)
         {
             string ext = Path.GetExtension(path);
             if (ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)){
-                return archivetype.zip;
+                return ArchiveType.zip;
             }
             else {
-                return archivetype.folder;
+                return ArchiveType.folder;
             }
         }
 
 
 
 
-        public enum archivetype
+        public enum ArchiveType
         {
             folder,
             zip,

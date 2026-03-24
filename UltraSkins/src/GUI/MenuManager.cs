@@ -561,7 +561,7 @@ namespace UltraSkins.UI
                 }
             }
             string[] paths = validButtons.ToArray();
-            handInstance.refreshskins(paths);
+            handInstance.RefreshSkins(paths);
 
 
         }

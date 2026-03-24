@@ -91,4 +91,41 @@ namespace BatonPassLogger.EX
             Messagething = message;
         }
     }
+    public class BPImproperMMI : BPException
+    {
+        public string Messagething { get; }
+
+        public BPImproperMMI(string message) : base($"The ModManagerInfo was not valid for reason: {message}")
+        {
+            Messagething = message;
+        }
+
+        public BPImproperMMI(string message, Exception inner) : base($"The ModManagerInfo was not valid for reason: {message}", inner)
+
+        {
+            Messagething = message;
+        }
+    }
+
+
+    public class BPServiceNotStarted : BPException
+    {
+        public string Messagething { get; }
+        public string ExpectedService{ get; }
+
+        public BPServiceNotStarted(string expectedservice, string message) : base($"The Service {expectedservice} is not running and is required to complete this operation: {message}")
+        {
+            Messagething = message;
+            ExpectedService = expectedservice;
+        }
+
+        public BPServiceNotStarted(string expectedservice, string message, Exception inner) : base($"The ModManagerInfo was not valid for reason: {message}", inner)
+
+        {
+            Messagething = message;
+            ExpectedService = expectedservice;
+        }
+    }
+
+
 }

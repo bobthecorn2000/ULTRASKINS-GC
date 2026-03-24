@@ -177,7 +177,7 @@ namespace UltraSkins.Fractal
         }
 
     
-        public static Texture ResolveTheTextureProperty(Material mat, string property, string texturename, string propertyfallback = "_MainTex")
+        public static Texture ResolveTheTextureProperty(Material mat, string property, string texturename)
         {
 
             if (mat != null && texturename == null)
@@ -389,7 +389,7 @@ namespace UltraSkins.Fractal
 
     public class FractalStorage : MonoBehaviour
     {
-        [SerializeField] public List<TextureOverWatch> TOWS;
+        [SerializeField] public List<Legacy.TextureOverWatch> TOWS;
     }
 }
 
