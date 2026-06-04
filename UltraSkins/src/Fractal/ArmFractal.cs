@@ -55,6 +55,7 @@ namespace UltraSkins.Fractal
         protected override void DoSwapLogic(Material mat, string texturename)
         {
             base.DoSwapLogic(mat, texturename);
+            BatonPass.Debug("Arm Fractal has done swap logic");
             OnCBSUpdated();
         }
 

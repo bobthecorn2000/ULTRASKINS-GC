@@ -17,7 +17,7 @@ namespace UltraSkins.Fractal
         public bool forceswap;
         protected SwapType swapType = SwapType.Unknown;
         protected SubType subType = SubType.Generic;
-        public string iChange;
+        protected bool NewFract = true;
 
         protected bool HasDoneColorSwap = false;
 
@@ -105,29 +105,13 @@ namespace UltraSkins.Fractal
                 if (!renderer)
                 {
                     renderer = GetComponent<Renderer>();
-                    string swapname;
                     cachedMaterials = renderer.materials;
                     foreach (Material mat in cachedMaterials)
                     {
-                        /*                    if (mat.name == "Pistol New (Instance)")
-                                            {
-                                                renderer.SetMaterial(PrismManager.PrismMan.toon);
-                                            }*/
-                        iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-
-                        if (!mat.name.StartsWith("Swapped_")) {
-                            swapname = "Swapped_" + swapType + "_" + mat.name;
-                        }
-                        else
-                        {
-                            swapname = mat.name;
-                        }
                             
-
-                        if (!HoldEm.Instance.MaterialNames.ContainsKey(swapname))
+                        if (!Resolver.CheckExist(mat.name))
                         {
-                            string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                            HoldEm.Instance.MaterialNames.Add(swapname, textureName);
+                            Resolver.CacheMaterialState(mat);
                         }
                     }
                 }
@@ -140,7 +124,7 @@ namespace UltraSkins.Fractal
             
         }
 
-
+        //protected int WorkingIndex = 0;
         public virtual void UpdateMaterials()
         {
             BatonPass.Debug("attempting to update fractal mat");
@@ -149,6 +133,7 @@ namespace UltraSkins.Fractal
                 Material[] materials = renderer.materials;
                 for (int i = 0; i < materials.Length; i++)
                 {
+                    //WorkingIndex = i;
                     PerformTheSwap(materials[i], forceswap);
                 }
                 ;
@@ -181,7 +166,11 @@ namespace UltraSkins.Fractal
         {
 
             if (mat != null && texturename == null)
+            {
+                BatonPass.Warn("the material " + mat.name + " has no valid texture name");
                 return null;
+            }
+                
 
             string textureToResolve = "";
             if (mat && !texturename.StartsWith("TNR_") && property != "_Cube")
@@ -240,7 +229,7 @@ namespace UltraSkins.Fractal
                         textureToResolve = mat.mainTexture.name + "_Ref";
                         break;
                     case "ROCKIT":
-                        textureToResolve = (mat.name.Contains("Swapped_Rocket_AltarUnlitRed") && !texturename.StartsWith("T_")) ? "skull2rocketbonus" : texturename.Contains("T_Sakuya") ? "" : "skull2rocket";
+                        textureToResolve = (mat.name.Contains("AltarUnlitRed") && !texturename.StartsWith("T_")) ? "skull2rocketbonus" : texturename.Contains("T_Sakuya") ? "" : "skull2rocket";
                         break;
                     case "THROWITBACK":
                         textureToResolve = "skull2grenade";
@@ -256,20 +245,22 @@ namespace UltraSkins.Fractal
         }
         public void PerformTheSwap(Material mat, bool forceswap = false)
         {
-            if (mat && (!mat.name.StartsWith("Swapped_") || forceswap))
+            bool matdirty = Resolver.CheckDirty(mat.name);
+            if (mat && (matdirty || forceswap || NewFract))
             {
                 HasDoneColorSwap = false;
-                if (!mat.name.StartsWith("Swapped_"))
-                {
-                    mat.name = "Swapped_" + swapType + "_" + mat.name;
-                }
-
+                string texturename = USC.NullTextureName;
                 forceswap = false;
                 
-                string texturename = GetTextureName(mat.name);
-            
-                BatonPass.Debug("requested " + mat.name + " got " + texturename);
+                if (matdirty)
+                {
+                    Resolver.SetDirty(mat.name, false);
+                    
+                }
+                texturename = Resolver.RecallSingle(mat.name, "_MainTex");
 
+                BatonPass.Debug("requested " + mat.name + " got " + texturename + " State was " + matdirty + "Fractal new?:" + NewFract);
+                NewFract = false;
                 DoSwapLogic(mat, texturename);
 
             }
@@ -300,19 +291,20 @@ namespace UltraSkins.Fractal
 
 
 
-                // BatonPass.Debug("Resolving " + property);
+                BatonPass.Debug("Resolving " + property);
                 resolvedTexture = ResolveTheTextureProperty(mat, property, texturename);
-                //BatonPass.Info("Attempting to swap " + property + " of " + mat.name.ToString() + " with " + resolvedTexture.name.ToString());
+                //BatonPass.Info("Attempting to swap " + property + " of " + mat.name + " with " + resolvedTexture.name);
                 if (resolvedTexture != null && mat.HasProperty(property) && mat.GetTexture(property) != resolvedTexture)
                 {
-                    //BatonPass.Debug("swapping " + property + " of " + mat.name.ToString());
+                    BatonPass.Debug("swapping " + property + " of " + mat.name);
 
                     mat.SetTexture(property, resolvedTexture);
-                    //BatonPass.Debug("set");
+                    BatonPass.Debug("set");
                 }
 
 
             }
+            
         }
 
         /// <summary>
@@ -348,7 +340,7 @@ namespace UltraSkins.Fractal
                     }
                     catch (Exception EX)
                     {
-                        BatonPass.Error("Unable to get the variantion color. CODE - \"FRACTAL-PTSWAP-GETVARCOLOR-EX\"");
+                        BatonPass.Error("Unable to get the variation color. CODE - \"FRACTAL-PTSWAP-GETVARCOLOR-EX\"");
                         BatonPass.Error(EX.ToString());
                     }
 
@@ -357,7 +349,7 @@ namespace UltraSkins.Fractal
             }
         }
 
-
+        [Obsolete]
         static string GetTextureName(string materialName)
         {
             if (HoldEm.Instance.MaterialNames.TryGetValue(materialName, out string textureName))
@@ -368,6 +360,7 @@ namespace UltraSkins.Fractal
             else
             {
                 // If the material name does not exist, return a default value (e.g., "Texture Not Found")
+                BatonPass.Warn(materialName + " not found in cache");
                 return null;
             }
         }

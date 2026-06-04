@@ -228,7 +228,7 @@ namespace UltraSkins.UI
                     {
                         if (MD.PackFormat.IsNullOrWhiteSpace())
                         {
-                            BEM.warning = true;
+                            BEM.ET = ButtonEnableManager.ErrorType.Warning;
                             warningMessage = "Pack Format is missing, Skin may have issues";
                         }
                         else
@@ -236,7 +236,7 @@ namespace UltraSkins.UI
                             if (!USC.SupportedPackFormats.Contains(MD.PackFormat))
                             {
                                 warningMessage = "Made for a different version of ultraskins";
-                                BEM.warning = true;
+                                BEM.ET = ButtonEnableManager.ErrorType.Warning;
                             }
 
                         }
@@ -299,7 +299,7 @@ namespace UltraSkins.UI
                     {
                         ultraskinsbutton.GetComponentInChildren<TextMeshProUGUI>().text = folder;
                         BEM.SkinName = folder;
-                        BEM.warning = true;
+                        BEM.ET = ButtonEnableManager.ErrorType.Warning;
                         warningMessage = "The metadata file is null";
                         ICFinder(subfolder, BEM);
                     }
@@ -415,13 +415,14 @@ namespace UltraSkins.UI
             List<(Transform trans, int spot, ButtonEnableManager bem)> finalorder = new List<(Transform trans, int spot, ButtonEnableManager bem)>();
             foreach (Transform child in contentfolder.transform)
             {
+                BatonPass.Debug($"working on {child.name}");
                 ButtonEnableManager BEM = child.GetComponent<ButtonEnableManager>();
                 string specialpath = BEM.filePath;
                 if (filepathrev.Contains(specialpath))
                 {
                     int index = System.Array.IndexOf(filepathrev, specialpath);
                     BatonPass.Debug(child.name + " has path: " + specialpath + " and index of: " + index);
-                    child.SetParent(EnabledContentFolder.transform);
+                    
                     finalorder.Add((child, index, BEM));
                     
 
@@ -436,8 +437,9 @@ namespace UltraSkins.UI
             }
             foreach ((Transform trans, int spot, ButtonEnableManager bem) in finalorder.OrderBy(x => x.spot))
             {
+                trans.SetParent(EnabledContentFolder.transform);
                 trans.SetSiblingIndex(spot);
-                bem.IsEnabled = true;
+
 
             }
 
@@ -555,10 +557,7 @@ namespace UltraSkins.UI
                 GameObject USbutton = child.gameObject;
                 BatonPass.Debug("working on " + USbutton.name);
                 ButtonEnableManager bem = USbutton.GetComponent<ButtonEnableManager>();
-                if (bem.IsEnabled)
-                {
-                    validButtons.Add(bem.filePath);
-                }
+                validButtons.Add(bem.filePath);
             }
             string[] paths = validButtons.ToArray();
             TextileService.Instance.RefreshSkins(paths);

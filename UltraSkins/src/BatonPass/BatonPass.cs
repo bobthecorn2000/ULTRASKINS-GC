@@ -232,10 +232,12 @@ namespace BatonPassLogger
         }
         public static void LoadUserLogPref(string logSetting)
         {
+#if RELEASE
             if (logSetting != null && Enum.TryParse(logSetting, true, out BatonPass.LogLevel parsedLevel))
             {
                 BPLogLevel = parsedLevel;
             }
+#endif
         }
 
         private static BatonPass.LogLevel GetDefaultLevel()

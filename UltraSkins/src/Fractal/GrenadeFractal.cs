@@ -60,22 +60,9 @@ namespace UltraSkins.Fractal
                                                     {
                                                         renderer.SetMaterial(PrismManager.PrismMan.toon);
                                                     }*/
-                                iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-
-
-                                if (!mat.name.StartsWith("Swapped_"))
+                                if (!Resolver.CheckExist(mat.name))
                                 {
-                                    swapname = "Swapped_" + swapType + "_" + mat.name;
-                                }
-                                else
-                                {
-                                    swapname = mat.name;
-                                }
-
-                                if (!HoldEm.Instance.MaterialNames.ContainsKey(swapname))
-                                {
-                                    string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                                    HoldEm.Instance.MaterialNames.Add(swapname, textureName);
+                                    Resolver.CacheMaterialState(mat);
                                 }
                             }
                         }

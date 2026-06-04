@@ -4,6 +4,7 @@ using System;
 using UltraSkins.API;
 using UltraSkins.Fractal;
 using UltraSkins.Prism;
+using UltraSkins.UI;
 using UltraSkins.Utils;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -98,6 +99,14 @@ namespace UltraSkins.Harmonic
         public static void UWCPost()
         {
             USAPI.BroadcastDynEmSwap();
+        }
+
+
+        [HarmonyPatch(typeof(PWepTag),"Start")]
+        [HarmonyPostfix]
+        public static void CreatePreviewFractals(PWepTag __instance)
+        {
+
         }
 
 
@@ -338,6 +347,7 @@ namespace UltraSkins.Harmonic
             if (!__instance.GetComponent<GCGFractal>())
             {
                 GCGFractal fract = __instance.gameObject.AddComponent<GCGFractal>();
+                BatonPass.Debug(__instance.name + " Fractalizing....");
                 fract.Init(__instance);
                 fract.PrepareSwap();
             }

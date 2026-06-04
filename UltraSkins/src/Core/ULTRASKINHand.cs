@@ -40,50 +40,18 @@ namespace UltraSkins
     [BepInPlugin(USC.PLUGIN_GUID, USC.PLUGIN_NAME, USC.VERSION)]
 
 
-    public partial class ULTRASKINHand : BaseUnityPlugin
+    public class ULTRASKINHand : BaseUnityPlugin
     {
+        public static ULTRASKINHand HandInstance { get; private set; }
 
 
-
-
-
-        private string modFolderPath;
-        public bool loadTextureLock = false;
         public BPGUIManager BPGUI;
-
-        string skinfolderdir;
-
-
-
-
-        private List<Sprite> _default;
-        private List<Sprite> _edited;
         private bool firstmenu = true;
-
-
-        public string folderupdater;
-
-
-
-        public string[] directories;
-        public string serializedSet = "";
         public bool swapped = false;
         public UltraSkins.UI.SettingsManager settingsmanager;
         public Legacy.TowStorage PtowStorage;
-
         public CompatLayer compatlayer = new CompatLayer();
-        public bool UsingCompatLayer = false;
-        Harmony UKSHarmony;
-
-        public static ULTRASKINHand HandInstance { get; private set; }
-
-        //public void Start(SkinEventHandler skinEventHandler)
-        //{
-        //    string modFolderPath = skinEventHandler.GetModFolderPath();
-
-        //    LoadTextures(modFolderPath);
-
-        //}
+        public bool UsingCompatLayer = false;      
         public bool ThunderStoreMode = false;
         public string[] ThunderProfInfo = null;
         public bool OldSaveDataFound = false;
@@ -115,23 +83,47 @@ namespace UltraSkins
 
 
             BatonPass.Info("Starting Harmonic Service");
-
+            //Harmony patches
             HarmonicService HS = new HarmonicService();
             HarmonicService.StartService(HS);
-
+            //Texture Caching
             BatonPass.Info("Starting Holdem Service");
             HoldEm HE = new HoldEm();
             HoldEm.StartService(HE);
-
+            //Material Caching
+            BatonPass.Info("Starting Resolver Service");
+            Resolver RE = new Resolver();
+            Resolver.StartService(RE);
+            //Disk IO
             BatonPass.Info("Starting Textile Service");
             TextileService Tex = new TextileService();
             TextileService.StartService(Tex);
-
+            //Profiles
             BatonPass.Info("Starting Profile Service");
             ProfileService ps = new ProfileService();
             ProfileService.StartService(ps);
 
 
+
+            BatonPass.Info("Starting Compatibility Layer");
+            UsingCompatLayer = compatlayer.PluginConfigCompatBoot();
+
+
+
+
+            SceneManager.activeSceneChanged += SceneManagerOnsceneLoaded;
+            BatonPass.Info("Scenemanager Created");
+            USAPI.OnTexLoadFinished += RANKTITLESWAPPER.MakeTheStyleRank;
+            BatonPass.Info("Subscribing to the API");
+            
+            BatonPass.Info("Bootstrapper finished");
+            OnModLoaded();
+
+        }
+
+
+        void Start()
+        {
             BatonPass.Info("Starting BatonPassGUI");
             if (BPGUIManager.BPGUIinstance == null)
             {
@@ -139,10 +131,6 @@ namespace UltraSkins
                 managerObject.AddComponent<BPGUIManager>();
                 BPGUI = BPGUIManager.BPGUIinstance;
             }
-            BatonPass.Info("Starting Compatibility Layer");
-            UsingCompatLayer = compatlayer.PluginConfigCompatBoot();
-
-
             BatonPass.Info("Creating Settings Manager");
             MenuCreator.CreateSMan();
             BatonPass.Info("Suppressing Logs to user chosen level");
@@ -153,44 +141,21 @@ namespace UltraSkins
                 GameObject PrismManagerObject = new GameObject("Prism");
                 PrismManagerObject.AddComponent<Prism.PrismManager>();
             }
-
-            SceneManager.activeSceneChanged += SceneManagerOnsceneLoaded;
-            BatonPass.Info("Scenemanager Created");
-            USAPI.OnTexLoadFinished += RANKTITLESWAPPER.MakeTheStyleRank;
-            BatonPass.Info("Subscribing to the API");
-            // The GUID of the configurator must not be changed as it is used to locate the config file path
-            BatonPass.Debug("INIT BATON PASS: ONMODLOADED()");
-            OnModLoaded();
-
         }
+
 
 
         public void OnModLoaded()
         {
-            //Harmony.DEBUG = true;
-            // HarmonyFileLog.Enabled = true;
-
-
-
-
-            BatonPass.Success("BATON PASS: Welcome To Ultraskins, We are on the ONMODLOADED() STEP");
-
-
+            BatonPass.Success("Welcome To Ultraskins");
             try
             {
-                BatonPass.Debug("Creating the SkinEvent Handler");
-
                 if (ProfileService.Instance.MMI != null)
                 {
                     ThunderStoreMode = true;
                 }
 
                 BatonPass.Debug("INIT BATON PASS: GETMODFOLDERPATH()");
-
-                BatonPass.Debug("BATON PASS: WELCOME BACK TO ONMODLOADED() WE RECIEVED " + modFolderPath);
-
-
-
             }
             catch (ArgumentOutOfRangeException ex)
             {
@@ -200,12 +165,7 @@ namespace UltraSkins
             {
                 BatonPass.Error("ULTRASKINS HAS FAILED TO INIT Error -\"USHAND-ONMODLOADED-EX\"" + ex.Message);
                 BatonPass.Error("If you don't see the button to open the menu. try setting HideManagerGameobject to true in your bepinex settings");
-
-
             }
-
-
-
         }
         public static Transform FindDeepChildByPathIncludeInactive(Transform root, string path)
         {
@@ -238,7 +198,7 @@ namespace UltraSkins
 
 
 
-            swapped = false;
+         
 
 
 
@@ -268,7 +228,7 @@ namespace UltraSkins
             }
             else
             {
-
+                MenuCreator.makethemenu();
                 //Pause menu is disabled for now
                 //MenuCreator.makethePausemenu();
             }

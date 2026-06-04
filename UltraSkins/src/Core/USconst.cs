@@ -16,7 +16,7 @@ namespace UltraSkins
 
 
         // Versions
-        public const string VERSION = "7.0.0";
+        public const string VERSION = "8.0.0";
         public static readonly string[] SupportedPackFormats = { "4.0" };
         
         public const string GCSKINVERSION = "4.0";
@@ -46,7 +46,7 @@ namespace UltraSkins
         // File types 
 
         public const string DATAFILE = "Data.USGC";
-        public const string SETTINGSFILE = "Settings.USGC";
+        public const string SETTINGSFILE = "UserSettings.USGC";
         public const string DEFAULTSETTINGS = "DefaultSettings.USGC";
         public const string MDFILE = "metadata.GCMD";
         public const string PACKFILE = "pack.GCMD";
@@ -89,6 +89,7 @@ namespace UltraSkins
 
         };
 
-
+        //Generic Names
+        public const string NullTextureName = "NullTexture";
     }
 }

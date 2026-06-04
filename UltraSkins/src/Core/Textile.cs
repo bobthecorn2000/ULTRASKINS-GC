@@ -64,13 +64,14 @@ namespace UltraSkins
             }
             BatonPass.Debug("BATON PASS: WE ARE IN LOADTEXTURES() we have the variable FPATH");
 
-
+            
 
             HandInstance.BPGUI.EnableTerminal(10);
             HandInstance.BPGUI.ShowProgressBar(ProgressTotal);
             HoldEm.Fold(HoldemType.ASC);
             HoldEm.Fold(HoldemType.SC);
-
+            
+            
 
             System.Array.Reverse(fpaths);
             BatonPass.Debug("starting ForEach");
@@ -94,13 +95,14 @@ namespace UltraSkins
                 HandInstance.BPGUI.DisableTerminal();
                 HandInstance.BPGUI.HideProgressBar();
 
+                HandInstance.BPGUI.BatonPassAnnoucement(Color.white, "Resolving");
+                Resolver.SetAllDirty(true);
                 HandInstance.BPGUI.BatonPassAnnoucement(Color.green, "success");
             }
             if (firsttime == false)
             {
                 HandInstance.BPGUI.HideGUI(2);
             }
-
 
 
             USAPI.BroadcastTextureFinished(new USAPI.TextureLoadEventArgs(failed));

@@ -28,12 +28,9 @@ namespace UltraSkins.Fractal
                     string swapname;
                     foreach (Material mat in CoinRenderer.materials)
                     {
-                        iChange = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                        swapname = "Swapped_" + swapType + "_" + mat.name;
-                        if (!HoldEm.Instance.MaterialNames.ContainsKey(swapname))
+                        if (!Resolver.CheckExist(mat.name))
                         {
-                            string textureName = (mat.HasProperty("_MainTex") && mat.mainTexture != null) ? mat.mainTexture.name : null;
-                            HoldEm.Instance.MaterialNames.Add(swapname, textureName);
+                            Resolver.CacheMaterialState(mat);
                         }
                     }
                 }
