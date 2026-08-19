@@ -1,5 +1,6 @@
 ﻿using BatonPassLogger;
 using System.Collections.Generic;
+using UltraSkins.Fractal;
 using UltraSkins.Utils;
 using UnityEngine;
 
@@ -14,9 +15,9 @@ namespace UltraSkins
     public class HoldEm
     {
         public static HoldEm Instance { get; private set; }
+      
 
-
-
+        
         public Dictionary<string, Texture> autoSwapCache = new Dictionary<string, Texture>();
         public Dictionary<string, string> MaterialNames = new Dictionary<string, string>();
         public Dictionary<string, Texture2D> IconCache = new Dictionary<string, Texture2D>();

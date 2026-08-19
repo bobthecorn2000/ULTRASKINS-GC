@@ -9,6 +9,7 @@ using UltraSkins.Utils;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
+using static UltraSkins.Fractal.BaseFractal;
 using static UltraSkins.ULTRASKINHand;
 
 namespace UltraSkins.Harmonic
@@ -53,6 +54,18 @@ namespace UltraSkins.Harmonic
         }
 
 
+        [HarmonyPatch(typeof(PrismHarmonicHook), "Start")]
+        [HarmonyPostfix]
+        public static void HarmonicTagStart(PrismHarmonicHook __instance)
+        {
+            if (!__instance.GetComponent<ArmFractal>())
+            {
+
+                ArmFractal fract = __instance.gameObject.AddComponent<ArmFractal>();
+                fract.Init(__instance);
+                fract.PrepareSwap();
+            }
+        }
 
         [HarmonyPatch(typeof(ShopZone), "Start")]
         [HarmonyPostfix]
@@ -102,13 +115,48 @@ namespace UltraSkins.Harmonic
         }
 
 
-        [HarmonyPatch(typeof(PWepTag),"Start")]
+        //[HarmonyPatch(typeof(PWepTag),"Start")]
+        //[HarmonyPostfix]
+        //public static void CreatePreviewFractals(PWepTag __instance)
+        //{
+
+        //}
+
+        //NOTE: THIS IS THE SAWBLADE LAUNCHER
+        //They share the same class and internally sawblades are called nails, not to be confused with the nails shot from the nailgun
+        //which are not swapped with this method
+        [HarmonyPatch(typeof(Nailgun), "Start")]
         [HarmonyPostfix]
-        public static void CreatePreviewFractals(PWepTag __instance)
+        public static void NGSetup(Nailgun __instance)
         {
+            if (__instance.altVersion)
+            {
+                GameObject nail = __instance.nail;
+                GameObject heatNail = __instance.heatedNail;
+                GameObject magNail = __instance.magnetNail;
+                GameObject nailMR = nail.transform.GetChild(0).gameObject;
+                GameObject hotNailMR = heatNail.transform.GetChild(0).gameObject;
+                if (!nailMR.GetComponent<NailFractal>() && nail.TryGetComponent<Nail>(out Nail NailOb))
+                {
+
+                    NailFractal fract = nailMR.AddComponent<NailFractal>();
+                    fract.Init(NailOb);
+                    fract.PrepareSwap();
+                    
+                }
+                if (!hotNailMR.GetComponent<NailFractal>() && heatNail.TryGetComponent<Nail>(out Nail HotNailOb))
+                {
+
+                    NailFractal fract = hotNailMR.AddComponent<NailFractal>();
+                    fract.Init(HotNailOb);
+                    fract.PrepareSwap();
+
+                }
+            }
+
+            
 
         }
-
 
         [HarmonyPatch(typeof(RocketLauncher), "Start")]
         [HarmonyPostfix]
@@ -163,9 +211,10 @@ namespace UltraSkins.Harmonic
 
             ArmFractal igf = null;
             bool dontInit = false;
+            GameObject go;
             if (__instance.altVersion)
             {
-                GameObject go = __instance.transform.Find("Revolver_Rerigged_Alternate/RightArm").gameObject;
+                go = __instance.transform.Find("Revolver_Rerigged_Alternate/RightArm").gameObject;
                 if (go)
                 {
 
@@ -183,7 +232,7 @@ namespace UltraSkins.Harmonic
             }
             else
             {
-                GameObject go = __instance.transform.Find("Revolver_Rerigged_Standard/RightArm").gameObject;
+                go = __instance.transform.Find("Revolver_Rerigged_Standard/RightArm").gameObject;
                 if (go)
                 {
                     if (!go.GetComponent<ArmFractal>())
@@ -202,6 +251,15 @@ namespace UltraSkins.Harmonic
 
                 igf.Init(__instance);
                 igf.PrepareSwap();
+            }
+            if (go)
+            {
+                if (!go.GetComponent<PrismColorGetter>())
+                {
+                    PrismColorGetter pcg = go.gameObject.AddComponent<PrismColorGetter>();
+                    pcg.weaponName = "MainArm";
+                    pcg.ForceStart();
+                }
             }
 
 
@@ -277,7 +335,19 @@ namespace UltraSkins.Harmonic
                 }
                 if (!model.GetComponent<PrismColorGetter>())
                 {
-                    //todo add prismcolorgetter
+                    PrismColorGetter pcg = model.gameObject.AddComponent<PrismColorGetter>();
+                    
+                    
+                    switch (__instance.type)
+                    {
+                        case FistType.Standard:
+                            pcg.weaponName = "Feedbacker";
+                            break;
+                        case FistType.Heavy:
+                            pcg.weaponName = "KnuckleBlaster";
+                            break;
+                    }
+                    pcg.ForceStart();
                 }
             }
             catch (Exception Ex)
@@ -307,7 +377,11 @@ namespace UltraSkins.Harmonic
                 }
                 if (!hookmodel.GetComponent<PrismColorGetter>())
                 {
-                    //todo add prismcolorgetter
+                    PrismColorGetter pcg = hookmodel.gameObject.AddComponent<PrismColorGetter>();
+                    pcg.weaponName = "Whiplash";
+                    pcg.ForceStart();
+
+                    
                 }
             }
             catch (Exception Ex)
@@ -329,7 +403,9 @@ namespace UltraSkins.Harmonic
                 }
                 if (!model.GetComponent<PrismColorGetter>())
                 {
-                    //todo add prismcolorgetter
+                    PrismColorGetter pcg = model.gameObject.AddComponent<PrismColorGetter>();
+                    pcg.weaponName = "Whiplash";
+                    pcg.ForceStart();
                 }
             }
             catch (Exception Ex)
@@ -359,7 +435,7 @@ namespace UltraSkins.Harmonic
     [HarmonyPatch]
     public class HarmonyProjectilePatcher : MonoBehaviour
     {
-        [HarmonyPatch(typeof(Nail), "Start")]
+/*        [HarmonyPatch(typeof(Nail), "Start")]
         [HarmonyPostfix]
         public static void NailPost(Nail __instance)
         {
@@ -375,9 +451,9 @@ namespace UltraSkins.Harmonic
             }
 
 
-        }
+        }*/
 
-        [HarmonyPatch(typeof(Magnet), "Start")]
+/*        [HarmonyPatch(typeof(Magnet), "Start")]
         [HarmonyPostfix]
         public static void MagnetPost(Magnet __instance)
         {
@@ -388,7 +464,7 @@ namespace UltraSkins.Harmonic
                 fract.Init(__instance);
                 fract.PrepareSwap();
             }
-        }
+        }*/
 
     }
 }

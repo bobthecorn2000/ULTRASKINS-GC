@@ -145,13 +145,13 @@ namespace UltraSkins.UI
                             UltraskinsConfigmenu = Instantiate(prefabmenu);
 
 
-                            Transform[] listobjects = UltraskinsConfigmenu.GetComponentsInChildren<Transform>();
-                            foreach (Transform objects in listobjects)
-                            {
+                            //Transform[] listobjects = UltraskinsConfigmenu.GetComponentsInChildren<Transform>();
+                            //foreach (Transform objects in listobjects)
+                            //{
                                 //BatonPass(objects.name);
-                            }
+                            //}
                             Editorpanel = UltraskinsConfigmenu.transform.Find("Canvas/editor").gameObject;
-
+                            GameObject Canvaspanel = UltraskinsConfigmenu.transform.Find("Canvas").gameObject;
                             Animator menuanimator = Editorpanel.gameObject.GetComponent<Animator>();
                             MenuManager Mman = UltraskinsConfigmenu.AddComponent<MenuManager>();
                             Editorpanel.SetActive(false);
@@ -175,7 +175,7 @@ namespace UltraSkins.UI
                             Editorpanel.GetComponent<AnimationEventToUltraskinsEvent>().OnAnimationTriggered.AddListener(() => Closeskineditor(mainmenu, Editorpanel, fallNoiseOff));
                             BatonPass.Debug("binding apply button");
                             GameObject ApplyButton = Editorpanel.transform.Find("PanelMiddle/Apply").gameObject;
-
+                            EMM.RefreshButton.onClick.AddListener(() => Mman.RefreshHandlerPage());
                             //ObjectActivateInSequence activateanimator = contentfolder.AddComponent<ObjectActivateInSequence>();
                             BatonPass.Debug("generating buttons");
                             Mman.GenerateButtons();
@@ -194,6 +194,10 @@ namespace UltraSkins.UI
                                 EMM.ThunderstoreFixButton.SetActive(true);
                                 Mman.PopulateThunderstoreMenu(EMM.thunderstoreHandle,EMM);
                             }
+                            EMM.SettingsButton.onClick.AddListener(() => sMan.ESCobject.GetComponent<MenuEsc>().previousPage = Canvaspanel);
+                            
+
+
                             // Now load the ultraskins button
                             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/ultraskinsmenubutton.prefab").Completed += buttonHandle =>
                             {
@@ -266,6 +270,7 @@ namespace UltraSkins.UI
                     catch (Exception ex)
                     {
                         BatonPass.Warn("Users custom settings dont exist, using defaults CODE -\"MCREATE-MAKETHEMENU-USERSETTINGSFILE-CORRUPTED_OR_MISSING\"");
+                    BatonPass.Warn(ex.ToString());
                     }
                     BatonPass.Debug("loading settings options");
                     try

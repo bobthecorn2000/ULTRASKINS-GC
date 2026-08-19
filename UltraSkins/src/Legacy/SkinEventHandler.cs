@@ -20,46 +20,53 @@ namespace UltraSkins.Utils
 
     [Obsolete]
 	public class SkinEventHandler : MonoBehaviour
-	{
+    {
         //static PluginConfigurator config;
-        
-        
-        
+
+
+        [Obsolete]
         public GameObject Activator;
-		public string path;
-		public string pname;
+        [Obsolete]
+        public string path;
+        [Obsolete]
+        public string pname;
+        [Obsolete]
 		public static ULTRASKINHand UKSH = ULTRASKINHand.HandInstance;
+
+        [Obsolete("use Utils.Metadata")]
         public class Metadata
         {
             public string FileVersion { get; set; }
             public string FileName { get; set; }
             public string FileDescription { get; set; }
         }
+
+        [Obsolete("use Utils.AppliedSkinSaveInfo")]
         public class saveinfo
         {
             public string ModVersion { get; set; }
             public string[] SkinLocation { get; set; }
         }
-/*        private void Update()
-		{
-			if (Activator != null && Activator.activeSelf)
-			{
-				Activator.SetActive(false);
-				UKSH.ReloadTextures(false, path);
-				string[] folder = GetModFolderPath();
-				TextureOverWatch[] TOWS = GameObject.FindWithTag("MainCamera").GetComponentsInChildren<TextureOverWatch>(true);
-                ULTRASKINHand.BatonPass("update ran");
-				foreach (TextureOverWatch TOW in TOWS)
-				{
-					if (TOW && TOW.gameObject)
-					{
-						TOW.enabled = true;
-                    }
-				}
-                
-			}
-		}*/
+        /*        private void Update()
+                {
+                    if (Activator != null && Activator.activeSelf)
+                    {
+                        Activator.SetActive(false);
+                        UKSH.ReloadTextures(false, path);
+                        string[] folder = GetModFolderPath();
+                        TextureOverWatch[] TOWS = GameObject.FindWithTag("MainCamera").GetComponentsInChildren<TextureOverWatch>(true);
+                        ULTRASKINHand.BatonPass("update ran");
+                        foreach (TextureOverWatch TOW in TOWS)
+                        {
+                            if (TOW && TOW.gameObject)
+                            {
+                                TOW.enabled = true;
+                            }
+                        }
 
+                    }
+                }*/
+        [Obsolete("Use ProfileService.Instance.DataFile")]
         public static string getDataFile()
         {
             
@@ -80,6 +87,8 @@ namespace UltraSkins.Utils
             }
                 return ProfDir;
         }
+
+        [Obsolete("Use ProfileService.Instance.SaveDataDirectory")]
         public static string getUserSettingsLoc()
         {
 
@@ -101,6 +110,7 @@ namespace UltraSkins.Utils
             return ProfDir;
         }
 
+        [Obsolete("use AppliedSkinSaveSerialization.Load()")]
         public string[] GetModFolderPath()
         {
             BatonPass.Debug("BATON PASS: GETMODFOLDERPATH()");
@@ -203,6 +213,7 @@ namespace UltraSkins.Utils
                     return deserializedData;
         }
 
+        [Obsolete("use ProfileService.GetActiveSearchPaths()")]
         public static Dictionary<String,String> GetCurrentLocations()
         {
 
@@ -233,7 +244,7 @@ namespace UltraSkins.Utils
             }
             return Locations;
         }
-        [Obsolete]
+        [Obsolete("Use AppliedSkinSaveSerialization.Save()")]
         public class StringSerializer
         {
             public void SerializeStringToFile(string[] data, string filePath)
@@ -294,6 +305,10 @@ namespace UltraSkins.Utils
                 return data;
             }
         }
+
+
+
+        [Obsolete("To be removed. no replacement planned")]
         public static void ExtractSkin(string skinFilePath, string storage)
         {
             string extractFolder = Path.Combine(skinFilePath, Path.GetFileNameWithoutExtension(storage));
@@ -327,10 +342,10 @@ namespace UltraSkins.Utils
                 
             }
 
-        
 
 
 
+        [Obsolete("To be removed. no replacement planned")]
         static void ExtractFromZlibStream(ZlibStream zlibStream, string extractFolder)
         {
             
@@ -390,7 +405,7 @@ namespace UltraSkins.Utils
 
             }
         }
-
+        [Obsolete("To be removed. no replacement planned")]
         static string ReadLineFromZlibStream(ZlibStream zlibStream)
         {
             try
@@ -413,7 +428,7 @@ namespace UltraSkins.Utils
                 return null;
             }
         }
-
+        [Obsolete("Use ProfileService.MMI")]
         public static string[] GetThunderstoreProfileName()
         {
             string dllLocation = Assembly.GetExecutingAssembly().Location;

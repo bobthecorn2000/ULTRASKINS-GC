@@ -8,14 +8,29 @@ using static UltraSkins.ULTRASKINHand;
 namespace UltraSkins.Legacy
 {
     //tempcomment5
+
+
+    // Use fractal its faster and better and really only use this if you need auto detection on an object and are to lazy to just make a class that inherits from Fractal" +
+    //even though its way easier then figuring out what this does
+    [Obsolete("Use Fractal.")]
 	public class TextureOverWatch : MonoBehaviour
-	{
-		public Material[] cachedMaterials;
-		public Renderer renderer;
-		public bool forceswap;
-		string swapType = "weapon";
+    {
+
+
+        [Obsolete]
+        public Material[] cachedMaterials;
+        [Obsolete]
+        public Renderer renderer;
+        [Obsolete]
+        public bool forceswap;
+        [Obsolete]
+        string swapType = "weapon";
+        [Obsolete]
         public string iChange;
-		void OnEnable()
+
+
+        [Obsolete("Use Fractal. also why are you calling onEnable manually")]
+        void OnEnable()
 		{
             ShotgunHammer hammerInstance = GetComponentInParent<ShotgunHammer>();
             Coin coin = GetComponentInParent<Coin>();
@@ -83,10 +98,10 @@ namespace UltraSkins.Legacy
 			
 		}
 
-        
 
 
-		public void UpdateMaterials()
+        [Obsolete("Dont use this. it duplicated materials every time it runs Use Fractal")]
+        public void UpdateMaterials()
 		{
             if (renderer && renderer.materials != cachedMaterials)
 			{
@@ -102,9 +117,10 @@ namespace UltraSkins.Legacy
 
 
     }
-
-public class TowStorage : MonoBehaviour
+    [Obsolete("I dont even remember what this does but im scared that removing this will break something")]
+    public class TowStorage : MonoBehaviour
     {
+        [Obsolete("I dont even remember what this does but im scared that removing this will break something")]
         [SerializeField]public List<TextureOverWatch> TOWS;
     }
 }

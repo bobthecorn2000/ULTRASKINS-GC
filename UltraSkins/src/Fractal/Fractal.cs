@@ -18,6 +18,9 @@ namespace UltraSkins.Fractal
         protected SwapType swapType = SwapType.Unknown;
         protected SubType subType = SubType.Generic;
         protected bool NewFract = true;
+        //SubTarget renderers will need to be inited the first time its used
+        protected Dictionary<GameObject, Renderer> SubTargetRenderers;
+        protected bool usesSubRenderers;
 
         protected bool HasDoneColorSwap = false;
 
@@ -31,6 +34,7 @@ namespace UltraSkins.Fractal
             Coin,
             Magnet,
             Chainsaw,
+            SawBlade,
         }
 
         public enum SubType
@@ -42,6 +46,7 @@ namespace UltraSkins.Fractal
             Hammer,
             SandBox,
             RightArm,
+            Silver,
         }
 
         
@@ -49,7 +54,7 @@ namespace UltraSkins.Fractal
 
         public void Init()
         {
-
+            BatonPass.Info("A Fractal has been inited with no paramaters. unexpected functionality may occur");
         }
 
 
@@ -58,10 +63,6 @@ namespace UltraSkins.Fractal
             swapType = SwapType.Magnet;
         }
 
-        public void Init(Nail nail)
-        {
-            swapType = SwapType.Nail;
-        }
 
 
 
@@ -124,6 +125,44 @@ namespace UltraSkins.Fractal
             
         }
 
+        protected virtual void setupSubTargetRenderer(GameObject rendObject)
+        {
+            SubTargetRenderers ??= new Dictionary<GameObject, Renderer>();
+            try
+            {
+
+                //WEEWOO WEEWOO OLD CODE THATS HERE FOR REFERENCE
+                Renderer renderthing = rendObject.GetComponent<Renderer>();
+                if (renderthing != null)
+                {
+                    if (!SubTargetRenderers.ContainsKey(rendObject))
+                    {
+                        SubTargetRenderers.Add(rendObject,renderthing);
+                        //cachedMaterials = renderer.materials;
+                        foreach (Material mat in renderthing.materials)
+                        {
+
+                            if (!Resolver.CheckExist(mat.name))
+                            {
+                                Resolver.CacheMaterialState(mat);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    BatonPass.Warn($"a Fractal of type {swapType} {subType} has attempted to setup a subtarget renderer with a gameobject that doesnt contain a renderer");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                BatonPass.Error("Renderer could not be set up, Code-\"BASEFRACTAL-SUBRENDERERSETUP-EX\" ");
+            }
+
+
+        }
+
         //protected int WorkingIndex = 0;
         public virtual void UpdateMaterials()
         {
@@ -137,6 +176,19 @@ namespace UltraSkins.Fractal
                     PerformTheSwap(materials[i], forceswap);
                 }
                 ;
+            }
+            if (usesSubRenderers)
+            {
+                foreach (KeyValuePair<GameObject,Renderer> kvp in SubTargetRenderers)
+                {
+                    Material[] materials = kvp.Value.materials;
+                    for (int i = 0; i < materials.Length; i++)
+                    {
+                        //WorkingIndex = i;
+                        PerformTheSwap(materials[i], forceswap);
+                    }
+                ;
+                }
             }
             else
             {
@@ -259,7 +311,7 @@ namespace UltraSkins.Fractal
                 }
                 texturename = Resolver.RecallSingle(mat.name, "_MainTex");
 
-                BatonPass.Debug("requested " + mat.name + " got " + texturename + " State was " + matdirty + "Fractal new?:" + NewFract);
+                BatonPass.Debug("requested " + mat.name + " got " + texturename + " State was " + matdirty + " Fractal new?:" + NewFract);
                 NewFract = false;
                 DoSwapLogic(mat, texturename);
 

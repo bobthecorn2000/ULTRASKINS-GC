@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace UltraSkins
 {
-    internal static class USC
+    public static class USC
     {
         public const string PLUGIN_NAME = "UltraSkins";
         public const string PLUGIN_GUID = "ultrakill.UltraSkins.bobthecorn";
@@ -91,5 +91,14 @@ namespace UltraSkins
 
         //Generic Names
         public const string NullTextureName = "NullTexture";
+
+        public enum Severity
+        {
+            Info,
+            Warning,
+            Error,
+            Critical,
+        }
+
     }
 }

@@ -65,7 +65,7 @@ namespace UltraSkins
                 }
             }
 
-            return null;
+            return path;
         }
 
 

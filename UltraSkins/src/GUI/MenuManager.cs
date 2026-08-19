@@ -30,6 +30,7 @@ using Unity.Audio;
 
 
 
+
 namespace UltraSkins.UI
 {
     internal class MenuManager : MonoBehaviour
@@ -132,7 +133,7 @@ namespace UltraSkins.UI
                                     foreach (string path in PD.SubDirectories)
                                     {
                                         
-                                        UnsafeNotice safe = CheckIfUnsafe(path);
+                                        FileSafety.UnsafeNotice safe = FileSafety.CheckIfUnsafe(path);
                                         if (safe.IsSafe)
                                         {
                                             string subsubfolder = Path.Combine(subfolder, path);
@@ -189,7 +190,7 @@ namespace UltraSkins.UI
         }
 
 
-
+        
         /// <summary>
         /// Builds a single prefab button based on a file path and places it as a child of a gameobject
         /// </summary>
@@ -278,10 +279,10 @@ namespace UltraSkins.UI
                         }
                         if (!string.IsNullOrWhiteSpace(MD.IconOveride))
                         {
-                            UnsafeNotice unsafeNotice = CheckIfUnsafe(MD.IconOveride);
+                            FileSafety.UnsafeNotice unsafeNotice = FileSafety.CheckIfUnsafe(MD.IconOveride);
                             if (unsafeNotice.IsSafe)
                             {
-                                ICFinder(subfolder, BEM, MD.IconOveride);
+                                //Iconic.ICFinder(subfolder, MD.IconOveride);
                             }
                             else
                             {
@@ -290,7 +291,7 @@ namespace UltraSkins.UI
                         }
                         else
                         {
-                            ICFinder(subfolder, BEM);
+                            //Iconic.ICFinder(subfolder);
                         }
 
 
@@ -301,7 +302,7 @@ namespace UltraSkins.UI
                         BEM.SkinName = folder;
                         BEM.ET = ButtonEnableManager.ErrorType.Warning;
                         warningMessage = "The metadata file is null";
-                        ICFinder(subfolder, BEM);
+                        //Iconic.ICFinder(subfolder);
                     }
                     if (warningMessage != null)
                     {
@@ -335,47 +336,7 @@ namespace UltraSkins.UI
 
         }
 
-        public async void ICFinder(string subfolder, ButtonEnableManager BEM, string IconName = "icon.png")
-        {
-            try
-            {
-                string subhash = subfolder.GetHashCode().ToString();
-                if (HoldEm.Instance.IconCache.TryGetValue(subhash, out Texture2D icon))
-                {
-                    BEM.RawIcon = icon;
-                    BEM.RawIcon.Apply();
-                }
-                else
-                {
-                    string path = Path.Combine(subfolder, IconName);
-                    if (File.Exists(path))
-                    {
-                        BatonPass.Debug("Searching for icon " + path);
-                        byte[] image = await LoadSingleIcon(path);
-                        Texture2D texture2D = new Texture2D(2, 2);
-                        texture2D.name = IconName;
-
-                        BatonPass.Debug("Creating " + texture2D.name);
-                        BEM.RawIcon = texture2D;
-                        texture2D.filterMode = FilterMode.Point;
-
-                        HoldEm.Bet(HoldEm.HoldemType.IC, subhash, texture2D);
-                        BEM.RawIcon.LoadImage(image);
-                        BEM.RawIcon.Apply();
-                    }
-
-
-
-                }
-            }
-            catch (Exception ex)
-            {
-
-                BatonPass.Error($"{ex.Message}, Code -\"MMAN-ICFINDER-EX\"");
-                BatonPass.Error(ex.ToString());
-
-            }
-        }
+        
         [Obsolete]
         void orderifier(ObjectActivateInSequence activateanimator, GameObject contentfolder)
         {
@@ -557,7 +518,11 @@ namespace UltraSkins.UI
                 GameObject USbutton = child.gameObject;
                 BatonPass.Debug("working on " + USbutton.name);
                 ButtonEnableManager bem = USbutton.GetComponent<ButtonEnableManager>();
-                validButtons.Add(bem.filePath);
+                if (bem)
+                {
+                    validButtons.Add(bem.filePath);
+                }
+                
             }
             string[] paths = validButtons.ToArray();
             TextileService.Instance.RefreshSkins(paths);
@@ -582,15 +547,7 @@ namespace UltraSkins.UI
         }
 
 
-        public async Task<byte[]> LoadSingleIcon(string path)
-        {
-            if (File.Exists(path))
-            {
-                byte[] data = await File.ReadAllBytesAsync(path);
-                return data;
-            }
-            return null;
-        }
+        
 
 
         // In Editor Skin Maker thing
@@ -611,7 +568,7 @@ namespace UltraSkins.UI
             infobox.ForceSetThrobber(0, Color.white);
             infobox.StartThrobber();
             CampCreator.TEMPGCMD tempSkinInfo = camp.GatherInfo();
-            UnsafeNotice NameCheck = CheckIfUnsafe(tempSkinInfo.Name);
+            FileSafety.UnsafeNotice NameCheck = FileSafety.CheckIfUnsafe(tempSkinInfo.Name);
             if (!NameCheck.IsSafe)
             {
                 // Stop the throbber at 45 degrees
@@ -907,73 +864,7 @@ namespace UltraSkins.UI
         }
 
 
-        public UnsafeNotice CheckIfUnsafe(string input)
-        {
-            string normalized = input.Replace('\\', '/');
 
-
-            if (normalized.Contains("../"))
-            {
-                return UnsafeNotice.Unsafe("I know what your trying to do (._.)", "Please do not try and escape the confines of the Ultraskins folder (../).");
-            }
-            if (normalized.StartsWith("/"))
-            {
-                return UnsafeNotice.Unsafe("Save root folder access for another day", "Slashes are not permitted");
-
-            }
-            try
-            {
-                if (Path.IsPathRooted(input))
-                {
-                    return UnsafeNotice.Unsafe("Unfortunately we dont support your... \"unique\" name", "Skins may only be created in the Ultraskins folder");
-                }
-            }
-            catch (ArgumentException) { }  // invalid chars caught below
-
-
-
-            char[] invalidChars = Path.GetInvalidFileNameChars();
-            char[] foundInvalid = input.Where(c => invalidChars.Contains(c)).Distinct().ToArray();
-            if (foundInvalid.Length > 0)
-            {
-                if (foundInvalid.Length == 1)
-                {
-                    return UnsafeNotice.Unsafe("Hmm I dont recognize that symbol", $"Invalid character: {string.Join(" ", foundInvalid)}");
-                }
-                return UnsafeNotice.Unsafe("Sorry Ultraskins names may not contain ancient runes", $"Invalid characters: {string.Join(" ", foundInvalid)}");
-            }
-            string cleaned = new string(input.Where(c => !char.IsWhiteSpace(c)).ToArray());
-            if (USC.ReservedNameJokes.TryGetValue(cleaned, out string value))
-            {
-                if (cleaned == "OG-SKINS")
-                {
-                    return UnsafeNotice.Unsafe(value, $"The name \"{cleaned}\" may not be used because I said so");
-                }
-                return UnsafeNotice.Unsafe(value, $"The name \"{cleaned}\" may not be used because microsoft said so");
-            }
-
-
-
-
-            return UnsafeNotice.Safe();
-        }
-
-        public struct UnsafeNotice
-        {
-            public bool IsSafe;
-            public string Reason1;
-            public string Reason2;
-            public UnsafeNotice(bool isSafe, string reason1, string reason2 = "")
-            {
-                IsSafe = isSafe;
-                Reason1 = reason1;
-                Reason2 = reason2;
-
-            }
-
-            public static UnsafeNotice Safe() => new UnsafeNotice(true, "", "");
-            public static UnsafeNotice Unsafe(string reason1, string reason2 = "") => new UnsafeNotice(false, reason1, reason2);
-        }
 
 
 
@@ -982,17 +873,25 @@ namespace UltraSkins.UI
         /// </summary>
         public void RefreshHandlerPage()
         {
-            int childCount = RefreshableContentFolder.transform.childCount;
-            for (int i = childCount - 1; i >= 0; i--)
+            int childCountD = DisabledContentFolder.transform.childCount;
+            int childCountE = EnabledContentFolder.transform.childCount;
+            for (int i = childCountD - 1; i >= 0; i--)
             {
-                GameObject child = RefreshableContentFolder.transform.GetChild(i).gameObject;
+                GameObject child = DisabledContentFolder.transform.GetChild(i).gameObject;
+                GameObject.Destroy(child);
+            }
+            for (int i = childCountD - 2; i >= 0; i--)
+            {
+                GameObject child = EnabledContentFolder.transform.GetChild(i).gameObject;
                 GameObject.Destroy(child);
             }
             DisabledContentFolder.SetActive(false);
+            EnabledContentFolder.SetActive(false);
             //loadedButtons.Clear();
             // AvailbleSkins.Clear();
             GenerateButtons();
             DisabledContentFolder.SetActive(true);
+            EnabledContentFolder.SetActive(true);
 
         }
 
@@ -1260,147 +1159,11 @@ namespace UltraSkins.UI
 
 
 
-    /// <summary>
-    /// Metadata Object
-    /// </summary>
-    class GCMD
-    {
-        public string SkinName { get; set; }
-        public string Description { get; set; }
-        public string Author { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string? IconOveride { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string? Version { get; set; }
-        public string PackFormat { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public Dictionary<string, string>? SupportedPlugins { get; set; }
+
+
     }
-
-    /// <summary>
-    /// Pack Object
-    /// </summary>
-    class GCPACK
-    {
-        public string PackName { get; set; }
-        public string[] SubDirectories { get; set; }
-    }
-    class metadataReader
-    {
-        public GCMD ReadMD(string file)
-        {
-          
-          string GCMDreader = File.ReadAllText(file);
-            try
-            {
-                GCMD gcmd = JsonConvert.DeserializeObject<GCMD>(GCMDreader);
-                return gcmd;
-            }
-            catch (JsonReaderException ex) {
-                BatonPass.Warn($"The metadata.GCMD File located at \"{file}\" could not be read, We think the error happened around line: {ex.LineNumber} character: {ex.LinePosition} . Code -\"MMAN-MDR-READMD-METADATA_READ_WARNING\"");
-                return null;
-            }
-
-        }
-        public GCPACK ReadPack(string file)
-        {
-
-            string GCMDreader = File.ReadAllText(file);
-            try
-            {
-                GCPACK gcPack = JsonConvert.DeserializeObject<GCPACK>(GCMDreader);
-                return gcPack;
-            }
-            catch (JsonReaderException ex) {
-                BatonPass.Warn($"The Pack.GCMD File located at \"{file}\" could not be read, We think the error happened around line: {ex.LineNumber} character: {ex.LinePosition} . Code -\"MMAN-MDR-READPACK-PACK_READ_WARNING\"");
-                return null;
-
-
-            }
-;
-        }
-        public TSjson ReadTSmani(string file)
-        {
-            string Jsonreader = File.ReadAllText(file);
-            try
-            {
-                TSjson tsjson = JsonConvert.DeserializeObject<TSjson>(Jsonreader);
-                return tsjson;
-            }
-            catch(JsonReaderException ex)
-            {
-                BatonPass.Warn($"The manifest.json File located at \"{file}\" could not be read, We think the error happened around line: {ex.LineNumber} character: {ex.LinePosition} . Code -\"MMAN-MDR-TSMANI-THUNDERSTORE_MANIFEST_READ_WARNING\"");
-                return null;
-            }
-        }
-    }
-    internal struct MDWriteReturn
-    {
-        bool worked;
-        string message;
-        internal MDWriteReturn(bool Worked, string Message) { 
-            worked = Worked;
-            message = Message;
-
-        }
-        public static MDWriteReturn good() => new MDWriteReturn(true, "");
-        public static MDWriteReturn bad(string message) => new MDWriteReturn(false, message);
-    }
-
-    class metadataWriter
-    {
-        public async Task<MDWriteReturn> WriteMD(string Folder,GCMD gcmd)
-        {
-            
-            string filepath = Path.Combine(Folder, USC.MDFILE);
-            try
-            {
-
-                
-
-                    if (File.Exists(filepath))
-                    {
-                        throw new BPFileExistsExc(filepath);
-                    }
-                    var MD = JsonConvert.SerializeObject(gcmd);
-                    await File.WriteAllTextAsync(filepath, MD);
-                
-                        return MDWriteReturn.good();
-            }
-            catch (JsonException ex)
-            {
-                BatonPass.Error($"\"{filepath}\" failed to serialize . Code -\"MMAN-MDW-WRITEMD-METADATA_WRITE_FAILURE\"");
-                BatonPass.Error(ex.ToString());
-                return MDWriteReturn.bad($"\"{filepath}\" failed to serialize .");
-            }
-            catch (BPFileExistsExc ex)
-            {
-                BatonPass.Error($"\"{filepath}\" already exists . Code -\"MMAN-MDW-WRITEMD-METADATA_ALREADY_EXISTS\"");
-                BatonPass.Error(ex.ToString());
-                return MDWriteReturn.bad($"\"{filepath}\" already exists ."); 
-            }
-            catch (Exception ex)
-            {
-
-                BatonPass.Error($"an error occurred while trying to create {filepath}. Code -\"MMAN-MDW-WRITEMD-EX\"");
-                BatonPass.Error(ex.ToString());
-                return MDWriteReturn.bad($"an error occurred while trying to create {filepath}"); 
-            }
+   
 
 
 
-        }
-    }
-    public class TSjson
-    {
-
-
-
-        public string name { get; set; }
-        public string description { get; set; }
-
-        public string version_number { get; set; }
-    }
-
-}
 

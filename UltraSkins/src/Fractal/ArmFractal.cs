@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using BatonPassLogger;
 using Sandbox.Arm;
+using UltraSkins.UI;
 using UnityEngine;
 
 namespace UltraSkins.Fractal
@@ -10,7 +11,31 @@ namespace UltraSkins.Fractal
     public class ArmFractal : IlluminatedGenericFractal
     {
 
+        public void Init(PrismHarmonicHook pHH)
+        {
+            swapType = SwapType.Arm;
+            switch (pHH.HarmonicTag)
+            {
+                case "MainArm":
+                    subType = SubType.RightArm;
+                    varcolor = 0;
+                    break;
+                case "Feedbacker":
+                    subType = SubType.FB;
+                    varcolor = 0;
+                    break;
+                case "KnuckleBlaster":
+                    subType = SubType.KB;
+                    varcolor = 2;
+                    break;
+                case "Whiplash":
+                    subType = SubType.WL;
+                    varcolor = 1;
+                    break;
 
+
+            }
+        }
         public void Init(Punch P)
         {
             swapType = SwapType.Arm;

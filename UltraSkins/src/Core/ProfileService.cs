@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UltraSkins.Utils;
 
@@ -15,9 +16,9 @@ namespace UltraSkins
 
 
         /// <summary>
-        /// The Directory to the Profile subfolder. at ultraskinsGC-V2/SaveData/buildtype or profiletype/profilename
+        /// The Directory to the Profile subfolder. at ultraskinsGC-V2/SaveData/buildtype or ultraskinsGC-V2/SaveData/profiletype/profilename
         /// </summary>
-        public string ProfileDirectory { get; private set; }
+        public string SaveDataDirectory { get; private set; }
 
 
         /// <summary>
@@ -42,7 +43,14 @@ namespace UltraSkins
         /// </summary>
         public string DataFile { get; private set; }
 
+
+        /// <summary>
+        /// an object containing the current Mod managers type
+        /// </summary>
         public ModManagerInfo MMI { get; private set; }
+
+
+        private List<SearchableSkinProfileInfo> SkinSearchDirectories = new List<SearchableSkinProfileInfo>();
 
         public static ServiceStartPackage StartService(ProfileService SelfObject)
         {
@@ -56,33 +64,98 @@ namespace UltraSkins
 
             //find if we are running in a mod manager
             BatonPass.Debug("scanning for a mod manager");
-            SelfObject.MMI = USFileUtilities.GetThunderstoreProfileName();
+            SelfObject.MMI = USFileUtilities.GetCurrentModManagerInfo();
             if (SelfObject.MMI == null)
             {
                 BatonPass.Debug("none found");
-                SelfObject.ProfileDirectory = Path.Combine(USC.GCDIR, USC.SAVEDATA, USC.BUILDTYPE);
+                SelfObject.SaveDataDirectory = Path.Combine(USC.GCDIR, USC.SAVEDATA, USC.BUILDTYPE);
 
             }
             else
             {
                 BatonPass.Info($"The Mod Manager {SelfObject.MMI.DirectoryType} was found. Setting Profile Name to {SelfObject.MMI.ProfileName}");
-                SelfObject.ProfileDirectory = Path.Combine(USC.GCDIR, USC.SAVEDATA, SelfObject.MMI.DirectoryType, SelfObject.MMI.ProfileName);
+                SelfObject.SaveDataDirectory = Path.Combine(USC.GCDIR, USC.SAVEDATA, SelfObject.MMI.DirectoryType.ToString(), SelfObject.MMI.ProfileName);
             }
-            SelfObject.DataFile = Path.Combine(SelfObject.ProfileDirectory, USC.DATAFILE);
+            SelfObject.DataFile = Path.Combine(SelfObject.SaveDataDirectory, USC.DATAFILE);
 
 
             Instance = SelfObject;
             return new ServiceStartPackage(true, "ProfileInfo was started Correctly");
         }
 
+
+        public static void AddDirToSearch(SkinProfileDirType ProfType,string ProfName,string profPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static Dictionary<string, string> GetActiveSearchPaths()
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
+
+
+
+    public enum SkinProfileDirType
+    {
+        Other,
+        Global,
+        Version,
+        R2modman,
+        Thunderstore,
+        Gale, //gale is unsupported but this is here for if its added later
+        
+
+    }
+
+    public enum ModManagerType
+    {
+        Unknown,
+        R2modman,
+        Thunderstore,
+        Gale, //gale is unsupported but this is here for if its added later
+
+    }
+
+
+    public class SearchableSkinProfileInfo
+    {
+        public SkinProfileDirType DirectoryType { get; private set; }
+        public string ProfileName { get; private set; }
+
+        public DirectoryInfo ProfileLocation { get; private set; }
+
+        public List<SkinPackData> ProfileSkinPacks { get; private set; } = new List<SkinPackData>();
+
+        public bool ShouldSearch { get; set; }
+
+        public SearchableSkinProfileInfo(SkinProfileDirType dirtype, string profName, string profLocation,bool searchable = true)
+        {
+            BatonPass.Debug($"Making Search Location for {dirtype.ToString()}:{profName} at {profLocation} ");
+            ProfileLocation = new DirectoryInfo(profLocation);
+            if (!ProfileLocation.Exists)
+            {
+                throw new DirectoryNotFoundException();
+            }
+            //SkinPackFolders = ProfileLocation.GetDirectories().ToList();
+        }
+
+        public void RefreshSubFolders()
+        {
+            //SkinPackFolders = ProfileLocation.GetDirectories().ToList();
+        }
+
     }
 
     internal class ModManagerInfo
     {
-        public string DirectoryType { get; private set; }
+        public ModManagerType DirectoryType { get; private set; }
         public string ProfileName { get; private set; }
 
-        public ModManagerInfo(string dirtype, string proftype)
+        public ModManagerInfo(ModManagerType dirtype, string proftype)
         {
             DirectoryType = dirtype;
             ProfileName = proftype;
