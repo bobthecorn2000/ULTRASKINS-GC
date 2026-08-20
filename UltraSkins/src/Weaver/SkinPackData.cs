@@ -12,9 +12,10 @@ using TMPro;
 using UltraSkins.UI;
 using UltraSkins.Utils;
 using UnityEngine;
-using static System.Net.WebRequestMethods;
 
-namespace UltraSkins.Utils
+
+namespace UltraSkins.Weaver
+
 {
     public class SkinPackData
     {
@@ -59,10 +60,10 @@ namespace UltraSkins.Utils
             directoryInfo = dirInfo;
             skinProfType = sProfDirType;
             SetupMetadata();
-            FileInfo[] packs = directoryInfo.GetFiles(USC.PACKFILE);
-            if (packs.Length > 0)
+            bool haspacks = directoryInfo.EnumerateFiles(USC.PACKFILE).Any();
+            if (haspacks)
             {
-                BatonPass.Error("The Pack {name} contains a pack.GCMD file which is currently unsupported.");
+                BatonPass.Error($"The Pack {Name} contains a pack.GCMD file which is currently unsupported.");
             }
             FileInfo[] allImages = directoryInfo.GetFiles("*.png");
             ImageCount = allImages.Length;

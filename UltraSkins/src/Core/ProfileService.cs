@@ -120,6 +120,15 @@ namespace UltraSkins
 
     }
 
+    public enum FolderStructureType
+    {
+        Raw,
+        Loose,
+        MultiPack,
+        CompressedZip,
+        CompressedGCSKIN,
+    }
+
 
     public class SearchableSkinProfileInfo
     {
@@ -140,12 +149,41 @@ namespace UltraSkins
             {
                 throw new DirectoryNotFoundException();
             }
+            ProfileName = profName;
+            ShouldSearch = searchable;
+            DirectoryType = dirtype;
+            RefreshSubFolders();
             //SkinPackFolders = ProfileLocation.GetDirectories().ToList();
         }
 
         public void RefreshSubFolders()
         {
+            ProfileSkinPacks.Clear();
+            DirectoryInfo[] subDirs = ProfileLocation.GetDirectories();
+
+            foreach (DirectoryInfo subfolder in subDirs)
+            {
+                if (DirectoryType == SkinProfileDirType.Version || DirectoryType == SkinProfileDirType.Global)
+                {
+                    SkinPackData skinpackdata = new SkinPackData(subfolder, DirectoryType);
+                    ProfileSkinPacks.Add(skinpackdata);
+                }
+                else
+                {
+                    if (subfolder.EnumerateFiles(USC.MDFILE).Any())
+                    {
+
+                    }
+                    
+                }
+
+            }
             //SkinPackFolders = ProfileLocation.GetDirectories().ToList();
+        }
+
+        private void DetermineFolderType()
+        {
+
         }
 
     }
