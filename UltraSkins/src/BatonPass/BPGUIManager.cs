@@ -11,6 +11,7 @@ using UnityEngine.UI;
 namespace BatonPassLogger.GUI
 {
     [ConfigureSingleton(SingletonFlags.PersistAutoInstance)]
+    [Obsolete("Use BatonTouch from the USUI.dll")]
     public class BPGUIManager : MonoSingleton<BPGUIManager>
     {
         public static BPGUIManager BPGUIinstance { get; set; }

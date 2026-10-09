@@ -27,7 +27,9 @@ using BepInEx;
 using System.Diagnostics;
 using BatonPassLogger.GUI;
 using Unity.Audio;
-
+using UltraSkins.UI.Camp;
+using UltraSkins.UI.Creator;
+using UltraSkins.UI.Migrator;
 
 
 
@@ -93,7 +95,7 @@ namespace UltraSkins.UI
         public void GenerateButtons()
         {
 
-            Dictionary<string, string> Locations = SkinEventHandler.GetCurrentLocations();
+            Dictionary<string, string> Locations = ProfileService.GetActiveSearchPaths();
             metadataReader MDR = new metadataReader();
             AvailbleSkins.Clear();
             Addressables.LoadAssetAsync<GameObject>("Assets/ultraskins/ultraskinsButton.prefab").Completed += buttonHandle =>
@@ -416,7 +418,7 @@ namespace UltraSkins.UI
         [Obsolete("To Be Removed")]
         public void GenerateButtons(GameObject contentfolder)
         {
-            Dictionary<string, string> Locations = SkinEventHandler.GetCurrentLocations();
+            Dictionary<string, string> Locations = ProfileService.GetActiveSearchPaths();
             metadataReader MDR = new metadataReader();
 
             AvailbleSkins.Clear();

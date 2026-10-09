@@ -4,7 +4,7 @@ using System.IO;
 using GameConsole;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
-using Ionic.Zlib;
+//using Ionic.Zlib;
 using System;
 
 using BatonPassLogger;
@@ -15,6 +15,7 @@ using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 #pragma warning disable
+/*
 namespace UltraSkins.Utils
 {
 
@@ -40,32 +41,32 @@ namespace UltraSkins.Utils
             public string FileName { get; set; }
             public string FileDescription { get; set; }
         }
-
-        [Obsolete("use Utils.AppliedSkinSaveInfo")]
-        public class saveinfo
-        {
-            public string ModVersion { get; set; }
-            public string[] SkinLocation { get; set; }
-        }
-        /*        private void Update()
+        /*
+                [Obsolete("use Utils.AppliedSkinSaveInfo")]
+                public class saveinfo
                 {
-                    if (Activator != null && Activator.activeSelf)
-                    {
-                        Activator.SetActive(false);
-                        UKSH.ReloadTextures(false, path);
-                        string[] folder = GetModFolderPath();
-                        TextureOverWatch[] TOWS = GameObject.FindWithTag("MainCamera").GetComponentsInChildren<TextureOverWatch>(true);
-                        ULTRASKINHand.BatonPass("update ran");
-                        foreach (TextureOverWatch TOW in TOWS)
+                    public string ModVersion { get; set; }
+                    public string[] SkinLocation { get; set; }
+                }
+                /*        private void Update()
                         {
-                            if (TOW && TOW.gameObject)
+                            if (Activator != null && Activator.activeSelf)
                             {
-                                TOW.enabled = true;
+                                Activator.SetActive(false);
+                                UKSH.ReloadTextures(false, path);
+                                string[] folder = GetModFolderPath();
+                                TextureOverWatch[] TOWS = GameObject.FindWithTag("MainCamera").GetComponentsInChildren<TextureOverWatch>(true);
+                                ULTRASKINHand.BatonPass("update ran");
+                                foreach (TextureOverWatch TOW in TOWS)
+                                {
+                                    if (TOW && TOW.gameObject)
+                                    {
+                                        TOW.enabled = true;
+                                    }
+                                }
+
                             }
                         }
-
-                    }
-                }*/
         [Obsolete("Use ProfileService.Instance.DataFile")]
         public static string getDataFile()
         {
@@ -333,6 +334,7 @@ namespace UltraSkins.Utils
                     Console.WriteLine($"  Description: {metadata.FileDescription}");*/
 
                     // Decompress the remaining content
+                    /*
                     using (ZlibStream zlibStream = new ZlibStream(zipFileStream, CompressionMode.Decompress))
                     {
                         ExtractFromZlibStream(zlibStream, extractFolder);
@@ -427,7 +429,7 @@ namespace UltraSkins.Utils
                 
                 return null;
             }
-        }
+        } */ /*
         [Obsolete("Use ProfileService.MMI")]
         public static string[] GetThunderstoreProfileName()
         {
@@ -474,4 +476,4 @@ namespace UltraSkins.Utils
 
     }
 }
-
+*/

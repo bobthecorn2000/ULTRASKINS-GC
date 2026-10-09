@@ -12,7 +12,7 @@ using TMPro;
 using UltraSkins.UI;
 using UltraSkins.Utils;
 using UnityEngine;
-
+using UltraSkins.UI.Camp;
 
 namespace UltraSkins.Weaver
 
@@ -23,6 +23,7 @@ namespace UltraSkins.Weaver
         DirectoryInfo directoryInfo;
         string folderName;
         SkinProfileDirType skinProfType;
+        public FolderStructureType StructType { get; private set; }
         List<SkinPackNotice> notices = new List<SkinPackNotice>();
         public int ImageCount { get; private set; } = 0;
         public List<FileInfo> Images { get; private set; } = new List<FileInfo>();
@@ -48,7 +49,7 @@ namespace UltraSkins.Weaver
         public bool hasPlugins { get; private set; } = false;
 
 
-        public SkinPackData(DirectoryInfo dirInfo, SkinProfileDirType sProfDirType)
+        public SkinPackData(DirectoryInfo dirInfo, SkinProfileDirType sProfDirType,FolderStructureType FST)
         {
             BatonPass.Debug("Constructing Info for:" + dirInfo.Name);
             folderName = dirInfo.Name;
@@ -57,17 +58,14 @@ namespace UltraSkins.Weaver
                 BatonPass.Error($"{folderName} does not exist");
                 throw new DirectoryNotFoundException();
             }
+            StructType = FST;
             directoryInfo = dirInfo;
             skinProfType = sProfDirType;
             SetupMetadata();
-            bool haspacks = directoryInfo.EnumerateFiles(USC.PACKFILE).Any();
-            if (haspacks)
-            {
-                BatonPass.Error($"The Pack {Name} contains a pack.GCMD file which is currently unsupported.");
-            }
             FileInfo[] allImages = directoryInfo.GetFiles("*.png");
             ImageCount = allImages.Length;
-            
+            BatonPass.Debug("Finished Constructing Info for:" + dirInfo.Name);
+
         }
         void SetupMetadata()
             {

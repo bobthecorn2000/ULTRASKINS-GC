@@ -16,8 +16,9 @@ using UltraSkins.Utils;
 using BatonPassLogger.GUI;
 using System.Threading.Tasks;
 using BepInEx.Bootstrap;
-
-
+using UltraSkins.Configuration;
+using UltraSkins.UI.Camp;
+using UltraSkins.UI.Animation;
 
 //using UnityEngine.UIElements;
 
@@ -261,7 +262,7 @@ namespace UltraSkins.UI
                     HoldEm.Instance.ogSkinsManager = instance.GetComponent<OGSkinsManager>();
                     sMan.aboutMenu.SetAboutVersionInfo(USC.VERSION, USC.BUILDTYPE, USC.GCSKINVERSION, USC.SupportedPackFormats);
                     sMan.aboutMenu.HPtag.SetActive(BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.flazhik.handpaint"));
-                    string usersettings = SkinEventHandler.getUserSettingsLoc();
+                    string usersettings = ProfileService.Instance.SaveDataDirectory;
                     BatonPass.Debug("loading user settings");
                     try
                     {

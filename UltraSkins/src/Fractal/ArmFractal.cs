@@ -5,7 +5,7 @@ using BatonPassLogger;
 using Sandbox.Arm;
 using UltraSkins.UI;
 using UnityEngine;
-
+using UltraSkins.Prism;
 namespace UltraSkins.Fractal
 {
     public class ArmFractal : IlluminatedGenericFractal

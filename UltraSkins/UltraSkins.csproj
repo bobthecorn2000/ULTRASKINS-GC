@@ -17,7 +17,6 @@
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
-    <PackageReference Include="Iconic.Zlib.Netstandard" Version="1.0.0" />
     <PackageReference Include="Mono.pdb2mdb" Version="0.1.0.20130128" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Text.Json" Version="9.0.0-preview.3.24172.9" />
@@ -32,9 +31,11 @@
       <HintPath>libs\Assembly-CSharp.dll</HintPath>
 		<Private>False</Private>
     </Reference>
-	  <Reference Include="usUI">
-		  <HintPath>unity\usUI.dll</HintPath>
+	  <Reference Include="UnityEngine.InputLegacyModule">
+		  <HintPath>libs\UnityEngine.InputLegacyModule.dll</HintPath>
+		  <Private>False</Private>
 	  </Reference>
+
 	  <Reference Include="Plog">
 		  <HintPath>libs\plog.dll</HintPath>
 		  <Private>False</Private>
@@ -108,6 +109,10 @@
 		  <HintPath>libs\UnityEngine.AnimationModule.dll</HintPath>
 		  <Private>False</Private>
 	  </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="src\Prism\" />
   </ItemGroup>
   
 

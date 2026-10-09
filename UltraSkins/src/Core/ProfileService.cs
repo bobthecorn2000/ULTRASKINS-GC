@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UltraSkins.Utils;
+using UltraSkins.Weaver;
 
 namespace UltraSkins
 {
@@ -84,7 +85,7 @@ namespace UltraSkins
         }
 
 
-        public static void AddDirToSearch(SkinProfileDirType ProfType,string ProfName,string profPath)
+        public static void AddDirToSearch(SkinProfileDirType ProfType, string ProfName, string profPath)
         {
             throw new NotImplementedException();
         }
@@ -99,94 +100,7 @@ namespace UltraSkins
 
 
 
-    public enum SkinProfileDirType
-    {
-        Other,
-        Global,
-        Version,
-        R2modman,
-        Thunderstore,
-        Gale, //gale is unsupported but this is here for if its added later
-        
 
-    }
-
-    public enum ModManagerType
-    {
-        Unknown,
-        R2modman,
-        Thunderstore,
-        Gale, //gale is unsupported but this is here for if its added later
-
-    }
-
-    public enum FolderStructureType
-    {
-        Raw,
-        Loose,
-        MultiPack,
-        CompressedZip,
-        CompressedGCSKIN,
-    }
-
-
-    public class SearchableSkinProfileInfo
-    {
-        public SkinProfileDirType DirectoryType { get; private set; }
-        public string ProfileName { get; private set; }
-
-        public DirectoryInfo ProfileLocation { get; private set; }
-
-        public List<SkinPackData> ProfileSkinPacks { get; private set; } = new List<SkinPackData>();
-
-        public bool ShouldSearch { get; set; }
-
-        public SearchableSkinProfileInfo(SkinProfileDirType dirtype, string profName, string profLocation,bool searchable = true)
-        {
-            BatonPass.Debug($"Making Search Location for {dirtype.ToString()}:{profName} at {profLocation} ");
-            ProfileLocation = new DirectoryInfo(profLocation);
-            if (!ProfileLocation.Exists)
-            {
-                throw new DirectoryNotFoundException();
-            }
-            ProfileName = profName;
-            ShouldSearch = searchable;
-            DirectoryType = dirtype;
-            RefreshSubFolders();
-            //SkinPackFolders = ProfileLocation.GetDirectories().ToList();
-        }
-
-        public void RefreshSubFolders()
-        {
-            ProfileSkinPacks.Clear();
-            DirectoryInfo[] subDirs = ProfileLocation.GetDirectories();
-
-            foreach (DirectoryInfo subfolder in subDirs)
-            {
-                if (DirectoryType == SkinProfileDirType.Version || DirectoryType == SkinProfileDirType.Global)
-                {
-                    SkinPackData skinpackdata = new SkinPackData(subfolder, DirectoryType);
-                    ProfileSkinPacks.Add(skinpackdata);
-                }
-                else
-                {
-                    if (subfolder.EnumerateFiles(USC.MDFILE).Any())
-                    {
-
-                    }
-                    
-                }
-
-            }
-            //SkinPackFolders = ProfileLocation.GetDirectories().ToList();
-        }
-
-        private void DetermineFolderType()
-        {
-
-        }
-
-    }
 
     internal class ModManagerInfo
     {
@@ -200,3 +114,4 @@ namespace UltraSkins
         }
     }
 }
+

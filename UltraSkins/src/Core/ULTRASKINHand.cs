@@ -16,6 +16,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UltraSkins.Configuration;
 using static UltraSkins.API.USAPI;
 using static UltraSkins.HoldEm;
 
@@ -48,7 +49,7 @@ namespace UltraSkins
         public BPGUIManager BPGUI;
         private bool firstmenu = true;
         public bool swapped = false;
-        public UltraSkins.UI.SettingsManager settingsmanager;
+        public UltraSkins.Configuration.SettingsManager settingsmanager;
         public Legacy.TowStorage PtowStorage;
         public CompatLayer compatlayer = new CompatLayer();
         public bool UsingCompatLayer = false;      
@@ -76,7 +77,7 @@ namespace UltraSkins
             BatonPass.Debug("Plugin path set to " + USC.MODPATH);
             BatonPass.Debug("NAVI: APPDATAPATH AT: " + USC.GCDIR);
             BatonPass.Info("Loading UI Code");
-            Assembly.Load(File.ReadAllBytes(Path.Combine(USC.MODPATH, "usUI.dll")));
+            //Assembly.Load(File.ReadAllBytes(Path.Combine(USC.MODPATH, "usUI.dll")));
             BatonPass.Info("Loading Content Catalog");
             var catalog = Addressables.LoadContentCatalogAsync(Path.Combine(USC.MODPATH, "catalog.json"), true).WaitForCompletion();
 
